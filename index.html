@@ -94,30 +94,6 @@
     .pill.unlocked { color: #bbf7d0; border-color: rgba(34,197,94,.35); }
     .pill.unsaved { color: #fde68a; border-color: rgba(245,158,11,.35); }
 
-    .security-strip {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 10px;
-      margin-bottom: 18px;
-    }
-
-    .security-cell {
-      background: var(--surface);
-      border: 1px solid var(--line);
-      border-radius: 9px;
-      padding: 10px 12px;
-    }
-
-    .security-cell strong {
-      display: block;
-      font-size: .82rem;
-      margin-bottom: 2px;
-    }
-
-    .security-cell span {
-      color: var(--muted);
-      font-size: .73rem;
-    }
 
     .main-grid {
       display: grid;
@@ -502,9 +478,7 @@
     .compact { font-size: .72rem; color: var(--muted); }
 
     @media (max-width: 900px) {
-      .main-grid { grid-template-columns: 1fr; }
-      .security-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    }
+      .main-grid { grid-template-columns: 1fr; } }
 
     @media (max-width: 700px) {
       .app-shell { padding: 14px; }
@@ -515,7 +489,6 @@
     }
 
     @media (max-width: 480px) {
-      .security-strip { grid-template-columns: 1fr; }
       .card { padding: 15px; }
       .lock-details { grid-template-columns: 1fr; }
       .credential-main { grid-template-columns: 1fr; }
