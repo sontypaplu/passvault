@@ -1,702 +1,561 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="referrer" content="no-referrer">
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'; connect-src 'none'; img-src 'none'; media-src 'none'; frame-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline' 'wasm-unsafe-eval'; worker-src blob:">
-  <meta name="theme-color" content="#111111">
-  <title>Pass Vault — Offline Password Manager</title>
-  <style>
-    :root {
-      color-scheme: dark;
-      --bg: #111111;
-      --surface: #171717;
-      --card: #1E1E1E;
-      --card2: #202020;
-      --line: #303030;
-      --line-strong: #414141;
-      --text: #FFFFFF;
-      --muted: #A5A5A5;
-      --subtle: #747474;
-      --accent: #3B82F6;
-      --accent-hover: #2563EB;
-      --success: #22C55E;
-      --warning: #F59E0B;
-      --danger: #EF4444;
-      --focus: rgba(59,130,246,.28);
-      --radius: 12px;
-    }
-
-    * { box-sizing: border-box; }
-
-    html, body {
-      margin: 0;
-      min-height: 100%;
-      background: var(--bg);
-      color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    }
-
-    body { min-height: 100vh; }
-    button, input, select, textarea { font: inherit; }
-    button { -webkit-tap-highlight-color: transparent; }
-
-    .app-shell {
-      width: min(1180px, 100%);
-      margin: 0 auto;
-      padding: 22px;
-    }
-
-    header.app-header {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 18px;
-      margin-bottom: 18px;
-    }
-
-    .brand h1 {
-      margin: 0;
-      font-size: clamp(1.65rem, 3vw, 2.2rem);
-      letter-spacing: -.02em;
-    }
-
-    .brand p {
-      margin: 5px 0 0;
-      color: var(--muted);
-      font-size: .9rem;
-    }
-
-    .status-cluster {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-    }
-
-    .pill {
-      display: inline-flex;
-      align-items: center;
-      min-height: 30px;
-      padding: 5px 10px;
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      background: #151515;
-      color: var(--muted);
-      font-size: .75rem;
-      font-weight: 700;
-      letter-spacing: .04em;
-      text-transform: uppercase;
-    }
-
-    .pill.unlocked { color: #bbf7d0; border-color: rgba(34,197,94,.35); }
-    .pill.unsaved { color: #fde68a; border-color: rgba(245,158,11,.35); }
-
-
-    .main-grid {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
-      gap: 18px;
-      align-items: start;
-    }
-
-    .card {
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      padding: 19px;
-      box-shadow: 0 9px 30px rgba(0,0,0,.20);
-    }
-
-    .card + .card { margin-top: 18px; }
-
-    .card-head {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 14px;
-      margin-bottom: 16px;
-    }
-
-    .card-head h2, .card-head h3 {
-      margin: 0;
-      font-size: 1.03rem;
-    }
-
-    .card-head p {
-      margin: 4px 0 0;
-      color: var(--muted);
-      font-size: .8rem;
-    }
-
-    .access-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 15px;
-    }
-
-    .panel {
-      border: 1px solid var(--line);
-      background: #191919;
-      border-radius: 10px;
-      padding: 15px;
-    }
-
-    .panel h3 {
-      margin: 0 0 12px;
-      font-size: .94rem;
-    }
-
-    .field { margin-bottom: 13px; }
-    .field:last-child { margin-bottom: 0; }
-
-    .field label, .form-label {
-      display: block;
-      margin-bottom: 6px;
-      font-size: .79rem;
-      font-weight: 650;
-    }
-
-    .hint {
-      display: block;
-      margin-top: 5px;
-      color: var(--subtle);
-      font-size: .72rem;
-      line-height: 1.35;
-    }
-
-    input, textarea, select {
-      width: 100%;
-      border: 1px solid var(--line-strong);
-      border-radius: 8px;
-      background: #121212;
-      color: var(--text);
-      outline: none;
-    }
-
-    input, select {
-      min-height: 43px;
-      padding: 9px 11px;
-    }
-
-    textarea {
-      min-height: 96px;
-      padding: 10px 11px;
-      resize: vertical;
-      line-height: 1.4;
-    }
-
-    input::placeholder, textarea::placeholder { color: #606060; }
-
-    input:focus, textarea:focus, select:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px var(--focus);
-    }
-
-    input:disabled, textarea:disabled, select:disabled {
-      opacity: .55;
-      cursor: not-allowed;
-    }
-
-    button {
-      min-height: 41px;
-      padding: 8px 13px;
-      border: 1px solid transparent;
-      border-radius: 8px;
-      background: var(--accent);
-      color: #fff;
-      font-weight: 680;
-      cursor: pointer;
-    }
-
-    button:hover:not(:disabled) { background: var(--accent-hover); }
-    button:focus-visible { outline: 3px solid var(--focus); outline-offset: 1px; }
-    button:disabled { opacity: .42; cursor: not-allowed; }
-
-    button.secondary {
-      background: transparent;
-      border-color: var(--line-strong);
-      color: var(--text);
-    }
-
-    button.secondary:hover:not(:disabled) { background: #262626; }
-
-    button.danger {
-      background: transparent;
-      border-color: rgba(239,68,68,.42);
-      color: #fca5a5;
-    }
-
-    button.danger:hover:not(:disabled) { background: rgba(239,68,68,.07); }
-
-    .button-row { display: flex; flex-wrap: wrap; gap: 8px; }
-    .button-row.end { justify-content: flex-end; }
-    .button-row .grow { flex: 1 1 auto; }
-
-    .status-line {
-      min-height: 22px;
-      margin: 13px 0 0;
-      color: var(--muted);
-      font-size: .78rem;
-    }
-
-    .status-line.success { color: #86efac; }
-    .status-line.warning { color: #fcd34d; }
-    .status-line.error { color: #fca5a5; }
-
-    .strength-box { margin-top: 8px; }
-    .strength-bar {
-      height: 6px;
-      background: #262626;
-      border-radius: 999px;
-      overflow: hidden;
-    }
-    .strength-fill { height: 100%; width: 0; background: var(--success); }
-    .strength-text { margin-top: 5px; color: var(--muted); font-size: .72rem; }
-
-    .hidden { display: none !important; }
-
-    .vault-toolbar {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      align-items: center;
-    }
-
-    .button-link {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 40px;
-      padding: 8px 13px;
-      border: 1px solid var(--line-strong);
-      border-radius: 9px;
-      background: transparent;
-      color: var(--text);
-      font-weight: 650;
-      text-decoration: none;
-    }
-
-    .button-link:hover { background: #252525; }
-
-    .search-row {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
-      gap: 9px;
-      margin-bottom: 12px;
-    }
-
-    .credential-list { display: grid; gap: 9px; }
-
-    .credential-item {
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      background: #181818;
-      padding: 12px;
-    }
-
-    .credential-main {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
-      gap: 12px;
-      align-items: start;
-    }
-
-    .credential-title {
-      margin: 0;
-      font-size: .9rem;
-      font-weight: 700;
-      overflow-wrap: anywhere;
-    }
-
-    .credential-user, .credential-url {
-      margin-top: 3px;
-      color: var(--muted);
-      font-size: .75rem;
-      overflow-wrap: anywhere;
-    }
-
-    .credential-url { color: #8ab4f8; }
-
-    .credential-actions {
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-    }
-
-    .credential-actions button {
-      min-height: 34px;
-      padding: 6px 9px;
-      font-size: .72rem;
-    }
-
-    .credential-secret {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
-      gap: 7px;
-      margin-top: 9px;
-    }
-
-    .credential-secret input {
-      min-height: 37px;
-      font-size: .78rem;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
-    }
-
-    .empty-state {
-      border: 1px dashed var(--line-strong);
-      border-radius: 10px;
-      padding: 22px 14px;
-      text-align: center;
-      color: var(--muted);
-      font-size: .8rem;
-    }
-
-    .generator-grid {
-      display: grid;
-      grid-template-columns: 145px 1fr;
-      gap: 12px;
-      align-items: start;
-    }
-
-    .check-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 7px 10px;
-    }
-
-    .check {
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      min-height: 32px;
-      color: var(--muted);
-      font-size: .77rem;
-    }
-
-    .check input {
-      width: 16px;
-      min-height: auto;
-      accent-color: var(--accent);
-    }
-
-    .generated-box { margin-top: 12px; }
-    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; }
-
-    .security-list {
-      display: grid;
-      gap: 7px;
-      margin: 0;
-      padding: 0;
-      list-style: none;
-    }
-
-    .security-list li {
-      border-bottom: 1px solid #2a2a2a;
-      padding: 7px 0;
-      color: var(--muted);
-      font-size: .76rem;
-    }
-
-    .security-list li:last-child { border-bottom: 0; }
-    .security-list strong { color: var(--text); }
-
-    .info-box {
-      padding: 11px;
-      border: 1px solid var(--line);
-      border-radius: 9px;
-      background: #171717;
-      color: var(--muted);
-      font-size: .74rem;
-      line-height: 1.45;
-    }
-
-    .lock-screen {
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      background: #181818;
-      padding: 18px;
-      text-align: center;
-    }
-
-    .lock-screen h2 { margin: 0 0 7px; font-size: 1.1rem; }
-    .lock-screen p { margin: 0 auto 15px; max-width: 600px; color: var(--muted); font-size: .8rem; }
-
-    .lock-details {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-      margin: 13px 0 16px;
-    }
-
-    .lock-detail {
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: #131313;
-      padding: 9px;
-    }
-
-    .lock-detail strong { display: block; font-size: .78rem; }
-    .lock-detail span { color: var(--muted); font-size: .68rem; }
-
-    .footer {
-      margin-top: 18px;
-      text-align: center;
-      color: #666;
-      font-size: .69rem;
-      line-height: 1.4;
-    }
-
-    .kbd {
-      display: inline-block;
-      padding: 1px 5px;
-      border: 1px solid #3a3a3a;
-      border-bottom-width: 2px;
-      border-radius: 4px;
-      background: #151515;
-      color: #bbb;
-      font-family: ui-monospace, monospace;
-      font-size: .68rem;
-    }
-
-    .file-picker { display: none; }
-
-    .danger-note {
-      border-color: rgba(239,68,68,.35);
-      color: #fca5a5;
-      background: rgba(239,68,68,.05);
-    }
-
-    .privacy-blur {
-      filter: blur(10px);
-      user-select: none;
-    }
-
-    .compact { font-size: .72rem; color: var(--muted); }
-
-    @media (max-width: 900px) {
-      .main-grid { grid-template-columns: 1fr; } }
-
-    @media (max-width: 700px) {
-      .app-shell { padding: 14px; }
-      header.app-header { flex-direction: column; }
-      .status-cluster { justify-content: flex-start; }
-      .access-grid { grid-template-columns: 1fr; }
-      .generator-grid { grid-template-columns: 1fr; }
-    }
-
-    @media (max-width: 480px) {
-      .card { padding: 15px; }
-      .lock-details { grid-template-columns: 1fr; }
-      .credential-main { grid-template-columns: 1fr; }
-      .credential-actions { justify-content: flex-start; }
-      .search-row { grid-template-columns: 1fr; }
-      .button-row button { flex: 1 1 100%; }
-      .credential-actions button { flex: 0 1 auto; }
-    }
-
-    @media print {
-      body { display: none !important; }
-    }
-  </style>
+  <meta name="theme-color" content="#F5F7FB">
+  <title>PassVault — Password Manager</title>
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f4f7fb;
+  --surface: #ffffff;
+  --surface-subtle: #f8fafc;
+  --surface-hover: #f3f6fa;
+  --sidebar: rgba(255,255,255,.95);
+  --border: #e2e8f0;
+  --border-strong: #cbd5e1;
+  --text: #1f2937;
+  --text-strong: #0f172a;
+  --muted: #64748b;
+  --subtle: #94a3b8;
+  --accent: #4f6ef7;
+  --accent-hover: #415fe7;
+  --accent-soft: #eef2ff;
+  --accent-border: #cfd8ff;
+  --success: #14845f;
+  --success-soft: #ecfdf5;
+  --success-border: #b7ead4;
+  --warning: #a16207;
+  --warning-soft: #fffbeb;
+  --warning-border: #fde7a8;
+  --danger: #c2414f;
+  --danger-soft: #fff1f2;
+  --danger-border: #fecdd3;
+  --input: #ffffff;
+  --ring: 0 0 0 3px rgba(79,110,247,.15);
+  --shadow-xs: 0 1px 2px rgba(15,23,42,.04);
+  --shadow-sm: 0 8px 22px rgba(15,23,42,.06);
+  --shadow-lg: 0 24px 64px rgba(15,23,42,.10);
+  --radius-sm: 10px;
+  --radius: 14px;
+  --radius-lg: 20px;
+  --sidebar-width: 236px;
+}
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0b1018;
+  --surface: #111925;
+  --surface-subtle: #151f2d;
+  --surface-hover: #1a2636;
+  --sidebar: rgba(13,20,30,.96);
+  --border: #243244;
+  --border-strong: #34465c;
+  --text: #dbe4ef;
+  --text-strong: #f8fafc;
+  --muted: #9aa9bc;
+  --subtle: #6f8197;
+  --accent: #7894ff;
+  --accent-hover: #91a8ff;
+  --accent-soft: #172448;
+  --accent-border: #304782;
+  --success: #69d7a8;
+  --success-soft: #102a21;
+  --success-border: #255c49;
+  --warning: #f1c76c;
+  --warning-soft: #2b2414;
+  --warning-border: #66532a;
+  --danger: #ff939f;
+  --danger-soft: #321a20;
+  --danger-border: #6f3540;
+  --input: #0e1621;
+  --ring: 0 0 0 3px rgba(120,148,255,.18);
+  --shadow-xs: 0 1px 2px rgba(0,0,0,.18);
+  --shadow-sm: 0 12px 28px rgba(0,0,0,.22);
+  --shadow-lg: 0 28px 72px rgba(0,0,0,.34);
+}
+
+* { box-sizing: border-box; }
+html { min-height: 100%; background: var(--bg); }
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--text);
+  background: var(--bg);
+  font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.45;
+  letter-spacing: -.008em;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+button, input, select, textarea { font: inherit; }
+button, a { -webkit-tap-highlight-color: transparent; }
+button { cursor: pointer; }
+button:disabled { cursor: not-allowed; opacity: .52; }
+a { color: inherit; }
+.hidden { display: none !important; }
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; letter-spacing: 0; }
+.privacy-blur { filter: blur(9px); user-select: none; }
+
+/* Brand */
+.brand { display: flex; align-items: center; gap: 11px; min-width: 0; }
+.brand-mark {
+  width: 38px; height: 38px; flex: 0 0 auto; border-radius: 11px;
+  display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 15px;
+  background: linear-gradient(145deg, #6f87ff, #405fe2);
+  box-shadow: 0 8px 20px rgba(79,110,247,.22), inset 0 1px 0 rgba(255,255,255,.28);
+}
+.brand-copy { min-width: 0; }
+.brand-title { color: var(--text-strong); font-size: 15px; font-weight: 780; letter-spacing: -.025em; }
+.brand-sub { margin-top: 1px; color: var(--subtle); font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Controls */
+button, .button-link {
+  min-height: 40px; border: 1px solid transparent; border-radius: 10px; padding: 0 13px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  color: #fff; background: var(--accent); font-weight: 720; font-size: 12px; line-height: 1;
+  text-decoration: none; box-shadow: var(--shadow-xs);
+  transition: background .15s ease, border-color .15s ease, color .15s ease, box-shadow .15s ease, transform .15s ease;
+}
+button:not(:disabled):active, .button-link:active { transform: translateY(1px); }
+button:not(.secondary):not(.danger):not(.theme-toggle):not(.nav-link):hover:not(:disabled), .primary-button:hover:not(:disabled) { background: var(--accent-hover); }
+button.secondary, .button-link, .theme-toggle {
+  color: var(--text); background: var(--surface); border-color: var(--border-strong); box-shadow: var(--shadow-xs);
+}
+button.secondary:hover:not(:disabled), .button-link:hover, .theme-toggle:hover { background: var(--surface-hover); border-color: var(--accent-border); }
+button.danger { color: var(--danger); background: transparent; border-color: var(--danger-border); box-shadow: none; }
+button.danger:hover:not(:disabled) { background: var(--danger-soft); }
+button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible, summary:focus-visible { outline: none; box-shadow: var(--ring); }
+.grow { flex: 1 1 auto; }
+.button-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.button-row.end { justify-content: flex-end; }
+.theme-toggle { min-width: 40px; padding: 0 11px; }
+.theme-symbol { width: 17px; font-size: 14px; line-height: 1; }
+
+/* Forms */
+.field { margin-bottom: 14px; }
+.field:last-child { margin-bottom: 0; }
+.field label, .form-label { display: block; margin-bottom: 6px; color: var(--text-strong); font-size: 11.5px; font-weight: 700; }
+input, textarea, select {
+  width: 100%; border: 1px solid var(--border-strong); border-radius: 10px; background: var(--input); color: var(--text-strong);
+  outline: none; box-shadow: inset 0 1px 0 rgba(255,255,255,.025);
+  transition: background .15s ease, border-color .15s ease, box-shadow .15s ease;
+}
+input, select { min-height: 42px; padding: 9px 11px; }
+textarea { min-height: 112px; padding: 10px 11px; resize: vertical; line-height: 1.5; }
+input:hover, textarea:hover, select:hover { border-color: var(--accent-border); }
+input:focus, textarea:focus, select:focus { border-color: var(--accent); box-shadow: var(--ring); }
+input:disabled, textarea:disabled, select:disabled { opacity: .58; }
+input::placeholder, textarea::placeholder { color: var(--subtle); }
+.hint { display: block; margin-top: 6px; color: var(--subtle); font-size: 10px; line-height: 1.45; }
+.check { display: flex !important; align-items: center; gap: 8px; color: var(--muted) !important; font-size: 11px !important; font-weight: 620 !important; }
+.check input { width: 16px; height: 16px; min-height: auto; flex: 0 0 auto; accent-color: var(--accent); }
+.file-picker { display: none; }
+
+/* Status */
+.status-line { min-height: 18px; margin-top: 9px; color: var(--muted); font-size: 10.5px; line-height: 1.45; }
+.status-line.success { color: var(--success); }
+.status-line.warning { color: var(--warning); }
+.status-line.error { color: var(--danger); }
+#globalStatus:not(:empty) {
+  position: fixed; right: 20px; bottom: 20px; z-index: 80; width: min(420px, calc(100vw - 40px));
+  min-height: 44px; margin: 0; padding: 12px 14px; border: 1px solid var(--border-strong); border-radius: 12px;
+  background: var(--surface); box-shadow: var(--shadow-lg); color: var(--text); font-weight: 650;
+}
+#globalStatus.success:not(:empty) { border-color: var(--success-border); background: var(--success-soft); color: var(--success); }
+#globalStatus.warning:not(:empty) { border-color: var(--warning-border); background: var(--warning-soft); color: var(--warning); }
+#globalStatus.error:not(:empty) { border-color: var(--danger-border); background: var(--danger-soft); color: var(--danger); }
+.compatibility-banner {
+  position: fixed; left: 50%; top: 16px; z-index: 100; transform: translateX(-50%); width: min(760px, calc(100vw - 32px));
+  padding: 13px 15px; border: 1px solid var(--danger-border); border-radius: 12px; background: var(--danger-soft); color: var(--danger);
+  box-shadow: var(--shadow-sm); font-size: 11px; line-height: 1.5;
+}
+
+/* Locked screen */
+.locked-view { min-height: 100vh; display: grid; grid-template-rows: auto 1fr; }
+.lock-topbar { width: min(1120px, calc(100% - 40px)); margin: 0 auto; padding: 24px 0; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.lock-main { width: min(980px, calc(100% - 40px)); margin: 0 auto; padding: 34px 0 64px; display: grid; align-content: center; }
+.lock-intro { text-align: center; max-width: 600px; margin: 0 auto 26px; }
+.lock-eyebrow { display: none; }
+.lock-intro h1 { margin: 0 0 8px; color: var(--text-strong); font-size: clamp(29px, 4vw, 40px); letter-spacing: -.045em; line-height: 1.08; }
+.lock-intro p { margin: 0 auto; max-width: 560px; color: var(--muted); font-size: 12px; line-height: 1.6; }
+.access-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: stretch; }
+.access-card {
+  min-width: 0; padding: 22px; border: 1px solid var(--border); border-radius: var(--radius-lg);
+  background: var(--surface); box-shadow: var(--shadow-sm);
+}
+.access-card.primary-access { border-color: var(--accent-border); box-shadow: 0 16px 42px rgba(79,110,247,.08); }
+.card-kicker { display: none; }
+.card-title-row { margin-bottom: 18px; }
+.card-title-row h2 { margin: 0 0 5px; color: var(--text-strong); font-size: 17px; letter-spacing: -.025em; }
+.card-title-row p { margin: 0; color: var(--muted); font-size: 10.5px; line-height: 1.5; }
+.file-selection { display: flex; align-items: center; gap: 10px; padding: 9px; border: 1px solid var(--border); border-radius: 11px; background: var(--surface-subtle); }
+.file-selection .file-meta { min-width: 0; flex: 1; }
+.file-selection .file-meta strong { display: block; color: var(--text-strong); font-size: 11px; }
+.file-selection .file-meta span { display: block; margin-top: 2px; color: var(--subtle); font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.strength-box { margin-top: 8px; }
+.strength-bar { height: 5px; overflow: hidden; border-radius: 999px; background: var(--surface-hover); }
+.strength-fill { width: 0; height: 100%; background: var(--success); border-radius: inherit; transition: width .18s ease; }
+.strength-text { margin-top: 5px; color: var(--muted); font-size: 9.8px; }
+.lock-security-strip, .lock-footer { display: none; }
+
+.advanced-options { margin: 4px 0 15px; border: 1px solid var(--border); border-radius: 11px; background: var(--surface-subtle); overflow: hidden; }
+.advanced-options summary { list-style: none; cursor: pointer; padding: 11px 12px; color: var(--muted); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: space-between; }
+.advanced-options summary::-webkit-details-marker { display: none; }
+.advanced-options summary::after { content: "+"; color: var(--subtle); font-size: 15px; font-weight: 500; }
+.advanced-options[open] summary::after { content: "−"; }
+.advanced-options[open] summary { border-bottom: 1px solid var(--border); color: var(--text-strong); }
+.advanced-options-body { padding: 13px 12px 2px; }
+
+/* Application shell */
+.app-layout { min-height: 100vh; display: grid; grid-template-columns: var(--sidebar-width) minmax(0, 1fr); }
+.sidebar {
+  position: sticky; top: 0; height: 100vh; z-index: 20; display: flex; flex-direction: column; gap: 22px;
+  padding: 20px 14px; border-right: 1px solid var(--border); background: var(--sidebar); backdrop-filter: blur(18px);
+}
+.sidebar .brand { padding: 2px 8px 10px; }
+.nav-group { display: grid; gap: 4px; }
+.nav-label { padding: 0 9px 6px; color: var(--subtle); font-size: 9px; font-weight: 800; letter-spacing: .11em; text-transform: uppercase; }
+.nav-link {
+  min-height: 40px; justify-content: flex-start; width: 100%; padding: 0 10px; color: var(--muted);
+  background: transparent; border-color: transparent; box-shadow: none; font-size: 11.5px; font-weight: 680;
+}
+.nav-link:hover { background: var(--surface-hover); color: var(--text-strong); }
+.nav-link.active { color: var(--accent); background: var(--accent-soft); border-color: transparent; }
+.nav-icon { width: 20px; text-align: center; font-size: 12px; opacity: .9; }
+.nav-badge { display: none; }
+.sidebar-bottom { margin-top: auto; display: grid; gap: 10px; }
+.security-mini { display: none; }
+.sidebar-bottom .theme-toggle { width: 100%; justify-content: flex-start; }
+
+.main-shell { min-width: 0; padding: 20px 24px 28px; }
+.topbar { min-height: 58px; display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+.page-heading { min-width: 0; }
+.page-heading h1 { margin: 0; color: var(--text-strong); font-size: 20px; font-weight: 780; letter-spacing: -.035em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.page-heading p { display: none; }
+.top-actions { margin-left: auto; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.pill {
+  min-height: 30px; padding: 0 10px; display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--border); border-radius: 999px;
+  background: var(--surface); color: var(--muted); font-size: 9px; font-weight: 800; letter-spacing: .055em;
+}
+.pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--subtle); }
+.pill.unlocked { border-color: var(--success-border); color: var(--success); background: var(--success-soft); }
+.pill.unlocked::before { background: var(--success); box-shadow: 0 0 0 3px rgba(20,132,95,.10); }
+.pill.unsaved { border-color: var(--warning-border); color: var(--warning); background: var(--warning-soft); }
+.pill.unsaved::before { background: var(--warning); }
+
+.workspace { display: grid; grid-template-columns: minmax(320px, 39%) minmax(430px, 1fr); gap: 14px; align-items: stretch; min-height: 640px; }
+.card { border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); box-shadow: var(--shadow-xs); }
+.list-pane { min-width: 0; display: flex; flex-direction: column; overflow: hidden; }
+.list-head { padding: 14px; border-bottom: 1px solid var(--border); background: var(--surface); }
+.list-head-title { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.list-head-title strong { color: var(--text-strong); font-size: 12px; }
+.list-head-title span { display: none; }
+.search-row { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 8px; }
+.search-wrap { position: relative; }
+.search-wrap::before { content: "⌕"; position: absolute; left: 12px; top: 50%; transform: translateY(-53%); color: var(--subtle); font-size: 16px; pointer-events: none; }
+.search-wrap input { padding-left: 34px; }
+.credential-list { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 7px; display: grid; align-content: start; gap: 5px; scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent; }
+.credential-item { padding: 12px; border: 1px solid transparent; border-radius: 11px; background: transparent; transition: background .15s ease, border-color .15s ease, box-shadow .15s ease; }
+.credential-item:hover { background: var(--surface-subtle); border-color: var(--border); }
+.credential-main { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 10px; align-items: start; }
+.credential-title { margin: 0; color: var(--text-strong); font-size: 12px; font-weight: 760; overflow-wrap: anywhere; }
+.credential-user, .credential-url { margin-top: 3px; color: var(--muted); font-size: 10px; overflow-wrap: anywhere; }
+.credential-url { color: var(--accent); }
+.credential-item .hint { margin-top: 5px; max-height: 30px; overflow: hidden; }
+.credential-actions { display: flex; gap: 5px; flex-wrap: wrap; justify-content: flex-end; }
+.credential-actions button { min-height: 28px; padding: 0 8px; border-radius: 7px; font-size: 9px; box-shadow: none; }
+.credential-secret { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 7px; margin-top: 8px; }
+.credential-secret input { min-height: 34px; font-size: 10.5px; }
+.credential-secret button { min-height: 34px; }
+.empty-state { margin: 8px; padding: 34px 16px; border: 1px dashed var(--border-strong); border-radius: 11px; background: var(--surface-subtle); color: var(--muted); text-align: center; font-size: 10.5px; line-height: 1.55; }
+
+.editor-pane { min-width: 0; overflow: hidden; }
+.editor-hero { padding: 17px 19px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 11px; }
+.editor-icon { width: 38px; height: 38px; flex: 0 0 auto; border: 1px solid var(--accent-border); border-radius: 10px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); font-size: 15px; font-weight: 800; }
+.editor-copy { min-width: 0; }
+.editor-copy h2 { margin: 0; color: var(--text-strong); font-size: 15px; letter-spacing: -.02em; }
+.editor-copy p { display: none; }
+.editor-content { padding: 18px 19px 19px; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
+.form-grid .field.full { grid-column: 1 / -1; }
+.editor-footer { display: flex; justify-content: space-between; gap: 12px; align-items: center; padding-top: 2px; }
+.editor-footer .status-line { flex: 1; margin: 0; }
+
+.secondary-grid { margin-top: 14px; display: grid; grid-template-columns: minmax(0,1.15fr) minmax(320px,.85fr); gap: 14px; align-items: start; }
+.section-card { padding: 17px; }
+.section-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.section-head h3 { margin: 0; color: var(--text-strong); font-size: 13px; letter-spacing: -.015em; }
+.section-head p { display: none; }
+.section-badge { display: none; }
+.generator-grid { display: grid; grid-template-columns: 140px 1fr; gap: 12px; }
+.check-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px 10px; align-content: center; }
+.generated-box { margin-top: 12px; }
+.settings-stack { display: grid; gap: 14px; }
+.setting-card { padding: 11px; border: 1px solid var(--border); border-radius: 11px; background: var(--surface-subtle); }
+.setting-card + .setting-card { margin-top: 9px; }
+.setting-card .field { margin: 0; }
+.info-box { display: none; }
+.security-list { display: none; }
+.settings-stack > .card:nth-child(n+2) { display: none; }
+.footer { display: none; }
+.kbd { display: inline-block; padding: 1px 5px; border: 1px solid var(--border-strong); border-radius: 5px; background: var(--surface-subtle); color: var(--muted); font-family: ui-monospace, monospace; }
+
+@media (max-width: 1100px) {
+  :root { --sidebar-width: 210px; }
+  .workspace { grid-template-columns: minmax(285px, 38%) minmax(390px, 1fr); }
+  .top-actions .theme-toggle { min-width: 40px; }
+  .top-actions .theme-label { display: none; }
+}
+@media (max-width: 900px) {
+  .access-grid, .secondary-grid { grid-template-columns: 1fr; }
+  .app-layout { grid-template-columns: 1fr; }
+  .sidebar { position: relative; height: auto; padding: 11px 14px; border-right: 0; border-bottom: 1px solid var(--border); display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 12px; }
+  .sidebar .brand { padding: 0; }
+  .sidebar .brand-sub, .nav-label { display: none; }
+  .nav-group { display: flex; justify-content: center; flex-wrap: wrap; }
+  .nav-link { width: auto; min-height: 36px; }
+  .sidebar-bottom { margin: 0; }
+  .sidebar-bottom .theme-toggle { width: 40px; min-width: 40px; padding: 0; justify-content: center; }
+  .sidebar-bottom .theme-label { display: none; }
+  .main-shell { padding: 17px; }
+  .workspace { grid-template-columns: 1fr; min-height: 0; }
+  .credential-list { max-height: 420px; }
+}
+@media (max-width: 650px) {
+  .lock-topbar, .lock-main { width: min(100% - 24px, 980px); }
+  .lock-topbar { padding-top: 14px; }
+  .lock-main { padding-top: 16px; }
+  .lock-intro { margin-bottom: 18px; }
+  .access-card { padding: 16px; }
+  .main-shell { padding: 13px; }
+  .topbar { align-items: flex-start; flex-wrap: wrap; }
+  .top-actions { width: 100%; margin-left: 0; justify-content: flex-start; }
+  .form-grid, .generator-grid, .check-grid { grid-template-columns: 1fr; }
+  .form-grid .field.full { grid-column: auto; }
+  .sidebar { grid-template-columns: 1fr auto; }
+  .nav-group { grid-column: 1 / -1; justify-content: flex-start; overflow-x: auto; flex-wrap: nowrap; padding-bottom: 2px; }
+  .nav-link { white-space: nowrap; }
+  .sidebar-bottom { grid-column: 2; grid-row: 1; }
+  .editor-footer { align-items: stretch; flex-direction: column; }
+  .top-actions .pill { display: none; }
+}
+@media (max-width: 430px) {
+  .button-row > * { flex: 1 1 100%; }
+  .top-actions > * { flex: 1 1 auto; }
+  .credential-main { grid-template-columns: 1fr; }
+  .credential-actions { justify-content: flex-start; }
+  .credential-secret { grid-template-columns: minmax(0,1fr) 64px; }
+}
+@media print { body { display: none !important; } }
+</style>
 </head>
 <body>
-  <div class="app-shell" id="app">
-    <header class="app-header">
+  <div id="compatibilityError" class="compatibility-banner hidden" role="alert"></div>
+
+  <section id="lockedView" class="locked-view">
+    <header class="lock-topbar">
       <div class="brand">
-        <h1>Pass Vault</h1>
-        <p>Professional offline password manager • memory-only session</p>
+        <div class="brand-mark" aria-hidden="true">P</div>
+        <div class="brand-copy"><div class="brand-title">PassVault</div><div class="brand-sub">Password Manager</div></div>
       </div>
-      <div class="status-cluster" aria-live="polite">
-        <span id="vaultStatus" class="pill">LOCKED</span>
-        <span id="dirtyStatus" class="pill hidden">UNSAVED CHANGES</span>
-      </div>
+      <button class="theme-toggle" type="button" data-theme-toggle aria-label="Toggle light and dark theme">
+        <span class="theme-symbol" aria-hidden="true">☾</span><span class="theme-label">Dark mode</span>
+      </button>
     </header>
 
-      <div id="compatibilityError" class="card hidden danger-note" role="alert"></div>
-
-    <section id="lockedView">
-      <div class="card">
-        <div class="card-head">
-          <div>
-            <h2>Vault Access</h2>
-            <p>Create a new encrypted vault or import an existing vault file.</p>
-          </div>
-        </div>
-
-        <div class="access-grid">
-          <form class="panel" id="createVaultForm" autocomplete="off">
-            <h3>Create New Vault</h3>
-
-            <div class="field">
-              <label for="newVaultName">Vault name</label>
-              <input id="newVaultName" maxlength="128" autocomplete="off" spellcheck="false" placeholder="Personal Vault">
-            </div>
-
-            <div class="field">
-              <label for="newKdfProfile">Argon2id security profile</label>
-              <select id="newKdfProfile">
-                <option value="standard" selected>Standard — 256 MiB / 4 iterations / 4 lanes</option>
-                <option value="mobile">Compatibility — 64 MiB / 4 iterations / 2 lanes</option>
-              </select>
-              <span class="hint">Standard is the recommended profile. Compatibility deliberately uses less memory for devices that cannot allocate the standard profile.</span>
-            </div>
-
-            <div class="field">
-              <label for="newMaster">Master password</label>
-              <input id="newMaster" type="password" maxlength="256" autocomplete="new-password" spellcheck="false">
-              <span class="hint">Minimum 16 characters. 20+ characters with high unpredictability is recommended.</span>
-              <div id="newMasterStrength" class="strength-box" aria-live="polite">
-                <div class="strength-bar"><div id="newMasterStrengthFill" class="strength-fill"></div></div>
-                <div id="newMasterStrengthText" class="strength-text">Enter a master password.</div>
-              </div>
-            </div>
-
-            <div class="field">
-              <label for="newMasterConfirm">Confirm master password</label>
-              <input id="newMasterConfirm" type="password" maxlength="256" autocomplete="new-password" spellcheck="false">
-            </div>
-
-            <div class="field">
-              <label class="check"><input id="newPepperEnabled" type="checkbox"> Require an optional secret pepper</label>
-              <span class="hint">A pepper is never saved in the vault. Losing it makes the vault unrecoverable.</span>
-            </div>
-
-            <div class="field hidden" id="newPepperField">
-              <label for="newPepper">Secret pepper</label>
-              <input id="newPepper" type="password" maxlength="256" autocomplete="off" spellcheck="false">
-            </div>
-
-            <div class="button-row">
-              <button id="createVaultButton" class="grow" type="submit">Create & Unlock</button>
-            </div>
-            <div id="createStatus" class="status-line" role="status" aria-live="polite"></div>
-          </form>
-
-          <div class="panel">
-            <h3>Open Existing Vault</h3>
-
-            <div class="field">
-              <span class="form-label">Encrypted vault file</span>
-              <input id="vaultFile" class="file-picker" type="file" accept=".json,.pvault,.pvault.json,application/json,text/json">
-              <div class="button-row">
-                <button id="chooseVaultFile" class="secondary" type="button">Choose Vault File</button>
-              </div>
-              <span id="selectedFileName" class="hint">No vault selected.</span>
-            </div>
-
-            <div class="field">
-              <label for="unlockMaster">Master password</label>
-              <input id="unlockMaster" type="password" maxlength="256" autocomplete="off" spellcheck="false">
-            </div>
-
-            <div class="field">
-              <label for="unlockPepper">Secret pepper</label>
-              <input id="unlockPepper" type="password" maxlength="256" autocomplete="off" spellcheck="false">
-              <span id="unlockPepperHint" class="hint">Leave empty unless the vault was created with a pepper.</span>
-            </div>
-
-            <div class="button-row">
-              <button id="unlockVaultButton" class="grow" type="button">Unlock Vault</button>
-            </div>
-            <div id="unlockStatus" class="status-line" role="status" aria-live="polite"></div>
-          </div>
-        </div>
-
-        <div class="info-box" style="margin-top:15px">
-          <strong>Important:</strong> Pass does not persist the master password, pepper, decrypted vault, or encryption key in browser storage. Closing or refreshing the page destroys the unlocked session. Keep your exported encrypted vault file backed up yourself.
-        </div>
+    <main class="lock-main">
+      <div class="lock-intro">
+        <div class="lock-eyebrow">Secure access</div>
+        <h1>Your secure password vault.</h1>
+        <p>Create a new vault or unlock an existing encrypted vault file.</p>
       </div>
-    </section>
 
-    <section id="unlockedView" class="hidden">
-      <div class="main-grid">
-        <div>
-          <div class="card">
-            <div class="card-head">
-              <div>
-                <h2 id="vaultTitle">Vault</h2>
-                <p id="vaultMetaText">Unlocked in memory.</p>
+      <div class="access-grid">
+        <form class="access-card" id="createVaultForm" autocomplete="off">
+          <div class="card-title-row">
+            <div class="card-kicker">New vault</div>
+            <h2>Create a vault</h2>
+            <p>Set a vault name and master password.</p>
+          </div>
+
+          <div class="field">
+            <label for="newVaultName">Vault name</label>
+            <input id="newVaultName" maxlength="128" autocomplete="off" spellcheck="false" placeholder="Personal Vault">
+          </div>
+          <div class="field">
+            <label for="newMaster">Master password</label>
+            <input id="newMaster" type="password" maxlength="256" autocomplete="new-password" spellcheck="false" placeholder="Create a strong master password">
+            <span class="hint">Use at least 16 characters.</span>
+            <div id="newMasterStrength" class="strength-box" aria-live="polite">
+              <div class="strength-bar"><div id="newMasterStrengthFill" class="strength-fill"></div></div>
+              <div id="newMasterStrengthText" class="strength-text">Enter a master password.</div>
+            </div>
+          </div>
+          <div class="field">
+            <label for="newMasterConfirm">Confirm password</label>
+            <input id="newMasterConfirm" type="password" maxlength="256" autocomplete="new-password" spellcheck="false">
+          </div>
+          <details class="advanced-options">
+            <summary>Advanced security options</summary>
+            <div class="advanced-options-body">
+              <div class="field">
+                <label for="newKdfProfile">Security profile</label>
+                <select id="newKdfProfile">
+                  <option value="standard" selected>Standard — 256 MiB / 4 iterations / 4 lanes</option>
+                  <option value="mobile">Compatibility — 64 MiB / 4 iterations / 2 lanes</option>
+                </select>
               </div>
-              <div class="vault-toolbar">
-                <button id="exportVaultButton" type="button">Export Vault</button>
-                <a id="downloadVaultLink" class="button-link hidden" href="#" download>Download Encrypted Vault</a>
-                <button id="lockVaultButton" class="secondary" type="button">Lock</button>
+              <div class="field">
+                <label class="check"><input id="newPepperEnabled" type="checkbox"> Require secret pepper</label>
+              </div>
+              <div class="field hidden" id="newPepperField">
+                <label for="newPepper">Secret pepper</label>
+                <input id="newPepper" type="password" maxlength="256" autocomplete="off" spellcheck="false">
               </div>
             </div>
+          </details>
+          <div class="button-row"><button id="createVaultButton" class="grow" type="submit">Create vault</button></div>
+          <div id="createStatus" class="status-line" role="status" aria-live="polite"></div>
+        </form>
 
-            <div class="search-row">
-              <input id="credentialSearch" type="search" maxlength="256" autocomplete="off" spellcheck="false" placeholder="Search websites, usernames, URLs, or notes">
-              <button id="addCredentialButton" type="button">Add Credential</button>
+        <section class="access-card primary-access" aria-labelledby="openVaultTitle">
+          <div class="card-title-row">
+            <div class="card-kicker">Existing vault</div>
+            <h2 id="openVaultTitle">Unlock vault</h2>
+            <p>Choose your encrypted vault file and enter the master password.</p>
+          </div>
+
+          <div class="field">
+            <span class="form-label">Encrypted vault file</span>
+            <input id="vaultFile" class="file-picker" type="file" accept=".json,.pvault,.pvault.json,application/json,text/json">
+            <div class="file-selection">
+              <div class="file-meta"><strong>Vault file</strong><span id="selectedFileName">No file selected</span></div>
+              <button id="chooseVaultFile" class="secondary" type="button">Browse</button>
             </div>
+          </div>
+          <div class="field">
+            <label for="unlockMaster">Master password</label>
+            <input id="unlockMaster" type="password" maxlength="256" autocomplete="off" spellcheck="false" placeholder="Master password">
+          </div>
+          <div class="field">
+            <label for="unlockPepper">Secret pepper</label>
+            <input id="unlockPepper" type="password" maxlength="256" autocomplete="off" spellcheck="false" placeholder="Optional">
+            <span id="unlockPepperHint" class="hint">Leave blank unless your vault uses a secret pepper.</span>
+          </div>
+          <div class="button-row"><button id="unlockVaultButton" class="grow" type="button">Unlock vault</button></div>
+          <div id="unlockStatus" class="status-line" role="status" aria-live="polite"></div>
+        </section>
+      </div>
+    </main>
+  </section>
 
+  <section id="unlockedView" class="hidden">
+    <div class="app-layout">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">P</div>
+          <div class="brand-copy"><div class="brand-title">PassVault</div><div class="brand-sub">Password Manager</div></div>
+        </div>
+
+        <nav class="nav-group" aria-label="Vault navigation">
+          <div class="nav-label">Workspace</div>
+          <a class="nav-link active" href="#vaultWorkspace"><span class="nav-icon">▦</span><span>Vault</span><span class="nav-badge">Local</span></a>
+          <a class="nav-link" href="#passwordGeneratorPanel"><span class="nav-icon">✦</span><span>Generator</span></a>
+          <a class="nav-link" href="#securitySettingsPanel"><span class="nav-icon">⌾</span><span>Settings</span></a>
+        </nav>
+
+        <div class="sidebar-bottom">
+          <button class="theme-toggle" type="button" data-theme-toggle aria-label="Toggle light and dark theme">
+            <span class="theme-symbol" aria-hidden="true">☾</span><span class="theme-label">Dark mode</span>
+          </button>
+        </div>
+      </aside>
+
+      <main class="main-shell">
+        <header class="topbar">
+          <div class="page-heading">
+            <h1 id="vaultTitle">Vault</h1>
+            <p id="vaultMetaText">Unlocked in memory.</p>
+          </div>
+          <div class="top-actions">
+            <span id="vaultStatus" class="pill">LOCKED</span>
+            <span id="dirtyStatus" class="pill unsaved hidden">UNSAVED CHANGES</span>
+            <button id="exportVaultButton" type="button">Save encrypted vault</button>
+            <a id="downloadVaultLink" class="button-link hidden" href="#" download>Download Encrypted Vault</a>
+            <button id="lockVaultButton" class="secondary" type="button">Lock vault</button>
+          </div>
+        </header>
+
+        <section class="workspace" id="vaultWorkspace">
+          <div class="card list-pane">
+            <div class="list-head">
+              <div class="list-head-title"><strong>Credentials</strong><span>Encrypted</span></div>
+              <div class="search-row">
+                <div class="search-wrap"><input id="credentialSearch" type="search" maxlength="256" autocomplete="off" spellcheck="false" placeholder="Search credentials"></div>
+                <button id="addCredentialButton" type="button">Add</button>
+              </div>
+            </div>
             <div id="credentialList" class="credential-list"></div>
           </div>
 
-          <div class="card" id="credentialEditorCard">
-            <div class="card-head">
-              <div>
-                <h2 id="editorTitle">Add Credential</h2>
-                <p>Credentials are held in memory while the vault is unlocked.</p>
-              </div>
+          <div class="card editor-pane" id="credentialEditorCard">
+            <div class="editor-hero">
+              <div class="editor-icon" aria-hidden="true">＋</div>
+              <div class="editor-copy"><h2 id="editorTitle">Add Credential</h2><p>Credential editor</p></div>
             </div>
-
-            <form id="credentialForm" autocomplete="off">
-              <input id="editingCredentialId" type="hidden">
-              <div class="field">
-                <label for="credentialTitle">Website / Application</label>
-                <input id="credentialTitle" maxlength="256" autocomplete="off" spellcheck="false" placeholder="Amazon">
-              </div>
-
-              <div class="field">
-                <label for="credentialUrl">Website URL</label>
-                <input id="credentialUrl" type="url" maxlength="2048" autocomplete="off" spellcheck="false" placeholder="https://www.amazon.com/">
-              </div>
-
-              <div class="field">
-                <label for="credentialUsername">Username / Email</label>
-                <input id="credentialUsername" maxlength="512" autocomplete="off" spellcheck="false" placeholder="name@example.com">
-              </div>
-
-              <div class="field">
-                <label for="credentialPassword">Password</label>
-                <div class="credential-secret">
-                  <input id="credentialPassword" type="password" maxlength="2048" autocomplete="new-password" spellcheck="false" placeholder="Password">
-                  <button id="toggleCredentialPassword" class="secondary" type="button">Show</button>
+            <div class="editor-content">
+              <form id="credentialForm" autocomplete="off">
+                <input id="editingCredentialId" type="hidden">
+                <div class="form-grid">
+                  <div class="field">
+                    <label for="credentialTitle">Name</label>
+                    <input id="credentialTitle" maxlength="256" autocomplete="off" spellcheck="false" placeholder="Website or app">
+                  </div>
+                  <div class="field">
+                    <label for="credentialUrl">URL</label>
+                    <input id="credentialUrl" type="url" maxlength="2048" autocomplete="off" spellcheck="false" placeholder="https://www.amazon.com/">
+                  </div>
+                  <div class="field full">
+                    <label for="credentialUsername">Username or email</label>
+                    <input id="credentialUsername" maxlength="512" autocomplete="off" spellcheck="false" placeholder="name@example.com">
+                  </div>
+                  <div class="field full">
+                    <label for="credentialPassword">Password</label>
+                    <div class="credential-secret">
+                      <input id="credentialPassword" type="password" maxlength="2048" autocomplete="new-password" spellcheck="false" placeholder="Password">
+                      <button id="toggleCredentialPassword" class="secondary" type="button">Show</button>
+                    </div>
+                  </div>
+                  <div class="field full">
+                    <label for="credentialNotes">Notes</label>
+                    <textarea id="credentialNotes" maxlength="4096" autocomplete="off" spellcheck="false" placeholder="Optional notes"></textarea>
+                  </div>
                 </div>
-              </div>
-
-              <div class="field">
-                <label for="credentialNotes">Notes</label>
-                <textarea id="credentialNotes" maxlength="4096" autocomplete="off" spellcheck="false" placeholder="Optional notes"></textarea>
-              </div>
-
-              <div class="button-row">
-                <button type="submit">Save Credential</button>
-                <button id="cancelEditButton" class="secondary" type="button">Cancel</button>
-              </div>
-              <div id="credentialStatus" class="status-line" role="status" aria-live="polite"></div>
-            </form>
-          </div>
-        </div>
-
-        <aside>
-          <div class="card">
-            <div class="card-head">
-              <div>
-                <h3>Password Generator</h3>
-                <p>Cryptographically secure generation.</p>
-              </div>
+                <div class="editor-footer">
+                  <div id="credentialStatus" class="status-line" role="status" aria-live="polite"></div>
+                  <div class="button-row end">
+                    <button id="cancelEditButton" class="secondary" type="button">Cancel</button>
+                    <button type="submit">Save credential</button>
+                  </div>
+                </div>
+              </form>
             </div>
+          </div>
+        </section>
 
+        <section class="secondary-grid">
+          <div class="card section-card" id="passwordGeneratorPanel">
+            <div class="section-head">
+              <div><h3>Password generator</h3><p>Generate a strong password.</p></div>
+              <span class="section-badge">Local generation</span>
+            </div>
             <div class="generator-grid">
-              <div class="field">
-                <label for="generatorLength">Length</label>
-                <select id="generatorLength"></select>
-              </div>
+              <div class="field"><label for="generatorLength">Length</label><select id="generatorLength"></select></div>
               <div class="check-grid">
                 <label class="check"><input id="genUpper" type="checkbox" checked> Uppercase</label>
                 <label class="check"><input id="genLower" type="checkbox" checked> Lowercase</label>
@@ -704,7 +563,6 @@
                 <label class="check"><input id="genSymbols" type="checkbox" checked> Symbols</label>
               </div>
             </div>
-
             <div class="generated-box">
               <label class="form-label" for="generatedPassword">Generated password</label>
               <div class="credential-secret">
@@ -713,75 +571,61 @@
               </div>
               <div id="generatorEntropy" class="hint">Approximate entropy: —</div>
             </div>
-
             <div class="button-row" style="margin-top:10px">
-              <button id="generatePasswordButton" class="grow" type="button">Generate</button>
+              <button id="generatePasswordButton" class="grow" type="button">Generate Password</button>
               <button id="copyGeneratedButton" class="secondary" type="button" disabled>Copy</button>
             </div>
             <div id="generatorStatus" class="status-line" role="status" aria-live="polite"></div>
           </div>
 
-          <div class="card">
-            <div class="card-head">
-              <div>
-                <h3>Session Security</h3>
-                <p>These values are intentionally not persistent.</p>
+          <div class="settings-stack" id="securitySettingsPanel">
+            <div class="card section-card">
+              <div class="section-head"><div><h3>Security settings</h3><p>Session preferences.</p></div></div>
+              <div class="setting-card">
+                <div class="field"><label for="sessionTimeout">Auto-lock after inactivity</label>
+                  <select id="sessionTimeout">
+                    <option value="300000">5 minutes</option><option value="600000" selected>10 minutes</option><option value="900000">15 minutes</option><option value="1800000">30 minutes</option>
+                  </select>
+                  
+                </div>
+              </div>
+              <div class="setting-card">
+                <div class="field"><label for="clipboardTimeout">Clipboard clear after password copy</label>
+                  <select id="clipboardTimeout"><option value="15000">15 seconds</option><option value="30000" selected>30 seconds</option><option value="60000">60 seconds</option></select>
+                  
+                </div>
               </div>
             </div>
-
-            <div class="field">
-              <label for="sessionTimeout">Auto-lock after inactivity</label>
-              <select id="sessionTimeout">
-                <option value="300000">5 minutes</option>
-                <option value="600000" selected>10 minutes</option>
-                <option value="900000">15 minutes</option>
-                <option value="1800000">30 minutes</option>
-              </select>
-            </div>
-
-            <div class="field">
-              <label for="clipboardTimeout">Clipboard clear after password copy</label>
-              <select id="clipboardTimeout">
-                <option value="15000">15 seconds</option>
-                <option value="30000" selected>30 seconds</option>
-                <option value="60000">60 seconds</option>
-              </select>
-              <span class="hint">Browsers restrict clipboard inspection. Clearing is best-effort and can fail if permission is denied.</span>
-            </div>
-
-            <div class="info-box">
-              <strong>Visibility lock:</strong> leaving this tab or hiding the page locks the vault and clears decrypted data from the interface. A normal browser page cannot guarantee screenshot blocking or screen-recording prevention.
-            </div>
           </div>
+        </section>
 
-          <div class="card">
-            <div class="card-head">
-              <div>
-                <h3>Security Information</h3>
-                <p>What the protection model does and does not cover.</p>
-              </div>
-            </div>
-            <ul class="security-list">
-              <li><strong>At rest:</strong> vault contents are encrypted before export.</li>
-              <li><strong>KDF:</strong> Argon2id with versioned parameters.</li>
-              <li><strong>Encryption:</strong> AES-256-GCM with a fresh 96-bit nonce per export.</li>
-              <li><strong>Salt:</strong> unique 32-byte random salt per vault.</li>
-              <li><strong>Key:</strong> AES CryptoKey is non-extractable in Web Crypto.</li>
-              <li><strong>Storage:</strong> no localStorage, sessionStorage, cookies, IndexedDB, or database.</li>
-              <li><strong>Network:</strong> application policy blocks external connections.</li>
-              <li><strong>Threat limit:</strong> a compromised OS/browser/extensions may observe memory or keystrokes.</li>
-            </ul>
-          </div>
-        </aside>
-      </div>
-    </section>
-
-    <div id="globalStatus" class="status-line" style="margin-top:12px" role="status" aria-live="polite"></div>
-    <div class="footer">
-      PASS VAULT • Versioned encrypted file format • AES-256-GCM • Argon2id v1.3 • No persistent browser storage
-      <br>Press <span class="kbd">Esc</span> to clear sensitive form fields. Visibility changes lock the vault.
+        <div id="globalStatus" class="status-line" role="status" aria-live="polite"></div>
+      </main>
     </div>
-  </div>
+  </section>
+
+  <script>
+  (() => {
+    const root = document.documentElement;
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    const applyTheme = (theme) => {
+      const dark = theme === 'dark';
+      root.dataset.theme = dark ? 'dark' : 'light';
+      if (metaTheme) metaTheme.setAttribute('content', dark ? '#0B0E13' : '#F5F7FB');
+      document.querySelectorAll('[data-theme-toggle]').forEach((button) => {
+        button.setAttribute('aria-pressed', String(dark));
+        const symbol = button.querySelector('.theme-symbol');
+        const label = button.querySelector('.theme-label');
+        if (symbol) symbol.textContent = dark ? '☀' : '☾';
+        if (label) label.textContent = dark ? 'Light mode' : 'Dark mode';
+      });
+    };
+    applyTheme('light');
+    document.querySelectorAll('[data-theme-toggle]').forEach((button) => {
+      button.addEventListener('click', () => applyTheme(root.dataset.theme === 'dark' ? 'light' : 'dark'));
+    });
+  })();
+  </script>
 
 <script>
 "use strict";
@@ -799,8 +643,8 @@
  * 5. No vault, master password, pepper, plaintext credential, or encryption key
  *    is written to browser storage. The user must explicitly export the
  *    encrypted vault file.
- * 6. On lock, page hide, inactivity timeout, or explicit cleanup, in-memory
- *    references and sensitive form fields are cleared as a best effort.
+ * 6. On manual lock, inactivity timeout, page exit, or explicit cleanup,
+ *    in-memory references and sensitive form fields are cleared as a best effort.
  *
  * IMPORTANT LIMITATION:
  * Ordinary browser JavaScript cannot guarantee physical memory erasure and cannot
@@ -918,6 +762,8 @@ const state = {
   sessionTimeoutMs: 600000,
   clipboardTimeoutMs: CLIPBOARD_DEFAULT_MS,
   clipboardTimer: null,
+  clipboardClearDeadline: 0,
+  clipboardPending: false,
   failedAttempts: 0,
   blockedUntil: 0,
   retryDelayUntil: 0,
@@ -2016,20 +1862,61 @@ async function writeClipboard(text) {
   return true;
 }
 
+async function clearClipboardBestEffort({ announce = true } = {}) {
+  if (!state.clipboardPending) return true;
+
+  let cleared = false;
+
+  /*
+   * Clipboard APIs are controlled by the browser/OS and may reject writes after
+   * focus is lost or while a page is unloading. Try the modern API first.
+   */
+  if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
+    try {
+      await navigator.clipboard.writeText("");
+      cleared = true;
+    } catch {
+      // A visible-document fallback is attempted below.
+    }
+  }
+
+  /*
+   * For file:// or restricted contexts where navigator.clipboard is unavailable,
+   * replace the secret with a harmless space while the document can still own a
+   * selection. This is intentionally not attempted once the page is hidden.
+   */
+  if (!cleared && document.visibilityState === "visible") {
+    try {
+      await writeClipboard(" ");
+      cleared = true;
+    } catch {
+      // Best-effort only. Keep the scheduled retry alive if the page still exists.
+    }
+  }
+
+  if (cleared) {
+    if (state.clipboardTimer) clearTimeout(state.clipboardTimer);
+    state.clipboardTimer = null;
+    state.clipboardClearDeadline = 0;
+    state.clipboardPending = false;
+    if (announce) setGlobalStatus("Password clipboard was cleared.", "success");
+    return true;
+  }
+
+  if (announce) {
+    setGlobalStatus("The browser did not permit automatic clipboard clearing. Clear the system clipboard manually.", "warning");
+  }
+  return false;
+}
+
 function scheduleClipboardClear() {
   if (state.clipboardTimer) clearTimeout(state.clipboardTimer);
-  state.clipboardTimer = setTimeout(async () => {
+
+  state.clipboardPending = true;
+  state.clipboardClearDeadline = Date.now() + state.clipboardTimeoutMs;
+  state.clipboardTimer = setTimeout(() => {
     state.clipboardTimer = null;
-    if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
-      try {
-        await navigator.clipboard.writeText("");
-        setGlobalStatus("Password clipboard was cleared.", "success");
-      } catch {
-        setGlobalStatus("The browser did not permit automatic clipboard clearing.", "warning");
-      }
-    } else {
-      setGlobalStatus("Automatic clipboard clearing is unavailable in this browser context.", "warning");
-    }
+    void clearClipboardBestEffort({ announce: true });
   }, state.clipboardTimeoutMs);
 }
 
@@ -2040,7 +1927,7 @@ async function handleCreateVault(event) {
   if (Date.now() < state.blockedUntil || Date.now() < state.retryDelayUntil) return;
 
   let master = els.newMaster.value;
-  let pepper = els.newPepper.value;
+  let pepper = els.newPepperEnabled.checked ? els.newPepper.value : "";
   let salt = null;
   let key = null;
   try {
@@ -2339,10 +2226,10 @@ function lockVault(reason = "Vault locked.") {
   if (state.locked) return;
   if (state.dirty && reason === "Manual lock" && !window.confirm("There are unsaved changes. Locking now will discard them. Continue?")) return;
 
-  if (state.clipboardTimer) {
-    clearTimeout(state.clipboardTimer);
-    state.clipboardTimer = null;
-  }
+  /*
+   * Do not clear copied passwords early when the vault locks. The clipboard
+   * deadline is independent from the vault session and remains scheduled.
+   */
 
   if (els.downloadVaultLink.dataset.objectUrl) {
     URL.revokeObjectURL(els.downloadVaultLink.dataset.objectUrl);
@@ -2498,12 +2385,17 @@ function handleSessionSettings() {
 }
 
 function handlePageVisibility() {
-  if (document.hidden && !state.locked) {
-    /*
-     * Browsers cannot guarantee screenshot blocking. Hiding the page is one of
-     * the few standard signals available, so the vault is locked immediately.
-     */
-    lockVault("Vault locked because the page became hidden.");
+  /*
+   * Changing tabs must not lock the vault and must not clear a copied password
+   * before its selected deadline. If a hidden-tab timer was throttled or a
+   * clipboard write was denied while hidden, retry as soon as the page becomes
+   * visible after the deadline has elapsed.
+   */
+  if (!document.hidden) {
+    updateInactivityLock();
+    if (state.clipboardPending && Date.now() >= state.clipboardClearDeadline) {
+      void clearClipboardBestEffort({ announce: true });
+    }
   }
 }
 
@@ -2517,7 +2409,12 @@ function handleFocus() {
   document.querySelectorAll("input, textarea, .credential-secret input").forEach((element) => {
     element.classList.remove("privacy-blur");
   });
-  markActivity();
+
+  /* Focus alone is not user activity. Preserve the original inactivity clock. */
+  updateInactivityLock();
+  if (state.clipboardPending && Date.now() >= state.clipboardClearDeadline) {
+    void clearClipboardBestEffort({ announce: true });
+  }
 }
 
 function handleEscape() {
@@ -2525,7 +2422,18 @@ function handleEscape() {
   setGlobalStatus("Sensitive fields were cleared.", "success");
 }
 
+function handlePageExit() {
+  /*
+   * A browser page cannot keep JavaScript timers alive after the tab is destroyed.
+   * If the page closes before the selected clipboard deadline, this is the final
+   * best-effort opportunity to clear it. Tab switching does not call this path.
+   */
+  if (state.clipboardPending) void clearClipboardBestEffort({ announce: false });
+  clearSensitiveFieldsEverywhere();
+}
+
 function beforeUnload(event) {
+  if (state.clipboardPending) void clearClipboardBestEffort({ announce: false });
   if (!state.locked && state.dirty) {
     event.preventDefault();
     event.returnValue = "";
@@ -2536,7 +2444,14 @@ function beforeUnload(event) {
 function initializeEvents() {
   els.createVaultForm.addEventListener("submit", handleCreateVault);
   els.newMaster.addEventListener("input", updateMasterStrength);
-  els.newPepperEnabled.addEventListener("change", () => els.newPepperField.classList.toggle("hidden", !els.newPepperEnabled.checked));
+  els.newPepperEnabled.addEventListener("change", () => {
+    const enabled = els.newPepperEnabled.checked;
+    els.newPepperField.classList.toggle("hidden", !enabled);
+    if (!enabled) {
+      els.newPepper.value = "";
+      setStatus(els.createStatus, "Secret pepper cleared because pepper protection was disabled.", "success");
+    }
+  });
   els.chooseVaultFile.addEventListener("click", () => els.vaultFile.click());
   els.vaultFile.addEventListener("change", handleFileChoose);
   els.unlockVaultButton.addEventListener("click", handleUnlockVault);
@@ -2568,6 +2483,7 @@ function initializeEvents() {
   window.addEventListener("blur", handleBlur);
   window.addEventListener("focus", handleFocus);
   document.addEventListener("keydown", (event) => { if (event.key === "Escape") handleEscape(); });
+  window.addEventListener("pagehide", handlePageExit);
   window.addEventListener("beforeunload", beforeUnload);
   setInterval(updateInactivityLock, 1000);
   setInterval(updateAccessLockoutStatus, 250);
