@@ -352,253 +352,527 @@ input::placeholder, textarea::placeholder { color: var(--subtle); }
   .credential-secret { grid-template-columns: minmax(0,1fr) 64px; }
 }
 @media print { body { display: none !important; } }
+
+/* ── PassVault interface refresh · presentation only ── */
+/* The original light/dark color tokens stay intact. The changes here affect only presentation. */
+:root { --sidebar-width: 268px; --radius: 17px; --radius-lg: 24px; --shadow-sm: 0 12px 32px rgba(24,39,75,.05); }
+body { font-size: 14px; letter-spacing: -.01em; }
+button, .button-link { min-height: 43px; font-size: 12.5px; font-weight: 680; border-radius: 10px; padding-inline: 17px; }
+button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; box-shadow: var(--ring); }
+input, select { min-height: 47px; padding: 11px 13px; font-size: 13.5px; }
+textarea { min-height: 122px; padding: 12px 13px; font-size: 13px; }
+.field { margin-bottom: 21px; }
+.field label, .form-label { margin-bottom: 9px; font-size: 12px; font-weight: 700; }
+.hint { margin-top: 8px; font-size: 11.5px; line-height: 1.55; color: var(--muted); }
+.status-line { min-height: 18px; font-size: 11.5px; line-height: 1.6; }
+.brand-mark { width: 42px; height: 42px; border-radius: 13px; display: grid; place-items: center; }
+.brand-mark svg { width: 22px; height: 22px; }
+.brand-title { font-size: 17px; letter-spacing: -.045em; }
+.brand-sub { margin-top: 2px; font-size: 10.5px; letter-spacing: .01em; color: var(--muted); }
+.theme-toggle { border-color: var(--border); min-width: 42px; border-radius: 10px; }
+.theme-symbol { font-size: 16px; }
+.theme-label { font-size: 12px; }
+
+/* Screen 1 · minimalist entry gate */
+.entry-view { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; background: radial-gradient(ellipse 58% 48% at 48% 41%, rgba(113,137,251,.075), transparent 78%), var(--bg); }
+html[data-theme="dark"] .entry-view { background: radial-gradient(ellipse 55% 55% at 48% 42%, rgba(100,121,232,.075), transparent 78%), var(--bg); }
+.entry-topbar, .lock-topbar { width: min(1190px, calc(100% - 72px)); margin: 0 auto; padding: 30px 0; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.entry-main { flex: 1; display: grid; place-items: center; padding: 34px 20px 60px; }
+.entry-card { width: min(100%, 450px); padding: 43px 42px 37px; border: 1px solid var(--border); border-radius: 22px; box-shadow: 0 22px 75px rgba(15,23,42,.07), 0 2px 6px rgba(15,23,42,.025); background: var(--surface); }
+.entry-symbol { margin-bottom: 28px; }
+.entry-symbol .brand-mark { width: 55px; height: 55px; border-radius: 16px; }
+.entry-symbol .brand-mark svg { width: 29px; height: 29px; }
+.entry-eyebrow { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; color: var(--accent); font-size: 10px; font-weight: 800; letter-spacing: .12em; }
+.entry-dot, .small-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+.entry-card h1 { margin: 0; color: var(--text-strong); font-size: clamp(27px, 4vw, 32px); line-height: 1.2; font-weight: 760; letter-spacing: -.055em; }
+.entry-subtitle { color: var(--muted); margin: 10px 0 34px; line-height: 1.6; font-size: 13px; }
+.input-with-action { position: relative; }
+.input-with-action input { padding-right: 77px; }
+.field-reveal { position: absolute; right: 7px; top: 7px; min-height: 33px; padding: 0 11px; color: var(--muted); font-size: 11px; font-weight: 750; border: 0; box-shadow: none; background: transparent; }
+.field-reveal:hover { background: var(--surface-hover) !important; color: var(--text-strong); }
+.entry-status { margin: -7px 0 8px; }
+.entry-status:empty { display: none; }
+.entry-card .field { margin-bottom: 21px; }
+.access-submit { width: 100%; display: flex; justify-content: space-between; min-height: 49px; padding: 0 15px 0 19px; font-size: 13px; }
+.button-arrow { width: 20px; height: 20px; display: inline-flex; }
+.button-arrow svg { width: 20px; height: 20px; }
+.entry-disclaimer { border-top: 1px solid var(--border); margin-top: 30px; padding-top: 18px; font-size: 11px; line-height: 1.6; color: var(--subtle); }
+.entry-footer, .lock-page-footer { text-align: center; padding: 0 20px 28px; font-size: 11px; color: var(--subtle); }
+.entry-footer span { margin: 0 6px; }
+
+/* Screen 2 · separate unlock and create views */
+.locked-view { min-height: 100vh; min-height: 100dvh; grid-template-rows: auto 1fr auto; background: radial-gradient(ellipse 50% 40% at 50% 45%, rgba(113,137,251,.06), transparent 85%), var(--bg); }
+.lock-main { width: min(900px, calc(100% - 40px)); padding: 30px 0 60px; align-content: center; }
+.access-shell { width: min(100%, 510px); margin: 0 auto; }
+.access-screen-head { text-align: center; margin-bottom: 29px; }
+.page-kicker { display: inline-flex; align-items: center; gap: 8px; color: var(--accent); font-size: 10px; font-weight: 800; letter-spacing: .13em; }
+.access-screen-head h1 { margin: 13px 0 9px; font-size: clamp(26px, 4vw, 34px); color: var(--text-strong); font-weight: 770; letter-spacing: -.055em; }
+.access-screen-head p { margin: 0 auto; max-width: 390px; font-size: 13px; line-height: 1.6; color: var(--muted); }
+.access-card, .access-card.primary-access { width: 100%; padding: 34px; border: 1px solid var(--border); border-radius: 19px; background: var(--surface); box-shadow: var(--shadow-sm); }
+.access-card .card-title-row { margin-bottom: 26px; }
+.screen-icon { width: 42px; height: 42px; display: grid; place-items: center; border: 1px solid var(--accent-border); border-radius: 12px; background: var(--accent-soft); color: var(--accent); margin-bottom: 19px; }
+.screen-icon svg { width: 21px; height: 21px; }
+.access-card .card-title-row h2 { margin: 0 0 6px; font-size: 18px; font-weight: 750; }
+.access-card .card-title-row p { font-size: 12px; line-height: 1.55; }
+.file-selection { padding: 11px; border-radius: 11px; background: var(--surface-subtle); }
+.file-selection .file-meta strong { font-size: 12px; }
+.file-selection .file-meta span { font-size: 11px; }
+.file-selection button { min-width: 77px; }
+.access-card .button-row button { min-height: 48px; font-size: 13px; }
+.access-switch { margin: 25px auto 0; display: flex; justify-content: center; align-items: center; gap: 8px; flex-wrap: wrap; color: var(--muted); font-size: 12px; }
+.text-action { min-height: 28px; border: none; padding: 0 4px; color: var(--accent); background: transparent; box-shadow: none; font-size: 12px; font-weight: 750; }
+.text-action svg { width: 14px; height: 14px; }
+.text-action:hover:not(:disabled) { background: transparent !important; color: var(--accent-hover); }
+.advanced-options { margin: 10px 0 21px; }
+.advanced-options summary { min-height: 44px; font-size: 12px; }
+.advanced-options-body { padding: 18px 15px 4px; }
+.strength-text { font-size: 11px; line-height: 1.5; }
+
+/* Unlocked shell */
+.app-layout { grid-template-columns: var(--sidebar-width) minmax(0, 1fr); }
+.sidebar { gap: 38px; padding: 28px 18px 22px; border-right: 1px solid var(--border); box-shadow: none; }
+.sidebar-brand { padding: 0 10px; }
+.sidebar-brand .brand-mark { width: 41px; height: 41px; }
+.nav-group { display: grid; align-content: start; gap: 5px; }
+.nav-label { display: block; padding: 0 12px 14px; font-size: 10px; color: var(--subtle); letter-spacing: .14em; }
+.nav-link { width: 100%; min-height: 46px; gap: 13px; padding: 0 13px; text-align: left; color: var(--muted); font-size: 12.5px; font-weight: 660; border-radius: 11px; }
+.nav-link.active { color: var(--accent); background: var(--accent-soft); }
+.nav-link.active::after { content: ""; width: 5px; height: 5px; margin-left: auto; border-radius: 50%; background: currentColor; }
+.nav-icon { width: 19px; height: 19px; flex: 0 0 auto; display: inline-flex; justify-content: center; align-items: center; }
+.nav-icon svg { width: 19px; height: 19px; }
+.sidebar-bottom { gap: 18px; }
+.sidebar-note { display: flex; gap: 10px; padding: 17px 13px; background: var(--surface-subtle); border: 1px solid var(--border); border-radius: 13px; }
+.sidebar-note-symbol { color: var(--accent); font-size: 18px; line-height: 1; }
+.sidebar-note strong { display: block; font-size: 11.5px; color: var(--text-strong); margin-bottom: 4px; }
+.sidebar-note span:last-child { display: block; color: var(--muted); font-size: 10.5px; line-height: 1.6; }
+.sidebar-bottom .theme-toggle { width: 100%; min-height: 43px; padding-inline: 12px; justify-content: flex-start; gap: 10px; box-shadow: none; }
+.main-shell { width: min(100%, 1600px); padding: 30px clamp(20px, 3.4vw, 54px) 66px; }
+.topbar { min-height: 94px; margin: 0 0 40px; padding-bottom: 25px; align-items: center; gap: 18px; border-bottom: 1px solid var(--border); }
+.top-kicker { font-size: 9.5px; color: var(--accent); letter-spacing: .13em; font-weight: 850; margin: 0 0 7px; }
+.page-heading h1 { font-size: clamp(22px, 2.5vw, 28px); font-weight: 780; letter-spacing: -.055em; line-height: 1.2; }
+.page-heading p { display: block; margin: 8px 0 0; font-size: 11px; line-height: 1.5; color: var(--muted); }
+.top-actions { gap: 9px; }
+.top-actions #exportVaultButton { white-space: nowrap; }
+.top-actions #lockVaultButton { white-space: nowrap; }
+.pill { min-height: 29px; font-size: 9px; }
+.app-page { animation: fade-in .18s ease-out; }
+@keyframes fade-in { from { opacity: .4; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+.section-introduction { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin: 0 0 24px; }
+.section-overline { font-size: 10px; font-weight: 800; letter-spacing: .12em; color: var(--accent); }
+.section-introduction h2 { margin: 7px 0 5px; font-size: clamp(18px, 2vw, 21px); font-weight: 760; letter-spacing: -.035em; color: var(--text-strong); }
+.section-introduction p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.6; }
+.section-aside { white-space: nowrap; font-size: 10px; color: var(--subtle); }
+.card { border-radius: 17px; border-color: var(--border); box-shadow: var(--shadow-xs); }
+.workspace { grid-template-columns: minmax(280px, .91fr) minmax(400px, 1.13fr); gap: 19px; min-height: 660px; align-items: stretch; }
+.list-pane { min-height: 620px; }
+.list-head { padding: 23px; }
+.list-head-title { margin-bottom: 17px; }
+.list-head-title strong { font-size: 14px; font-weight: 760; }
+.list-head-title span { display: inline; color: var(--subtle); font-size: 10px; }
+.search-row { gap: 10px; }
+.search-wrap::before { left: 13px; font-size: 19px; }
+.search-wrap input { padding-left: 39px; }
+.search-row button { min-height: 47px; padding-inline: 20px; }
+.credential-list { gap: 7px; padding: 11px; }
+.credential-item { padding: 17px 15px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); }
+.credential-item:hover { background: var(--surface-subtle); border-color: var(--accent-border); }
+.credential-title { font-size: 13.5px; }
+.credential-user, .credential-url { margin-top: 5px; font-size: 11px; }
+.credential-item .hint { max-height: none; }
+.credential-actions { gap: 5px; }
+.credential-actions button { min-height: 31px; font-size: 10px; padding: 0 10px; }
+.credential-secret { gap: 9px; }
+.credential-secret input, .credential-secret button { min-height: 43px; }
+.credential-secret button { min-width: 65px; }
+.credential-secret input { font-size: 12.5px; }
+.empty-state { padding: 60px 20px; margin: 13px; font-size: 12px; line-height: 1.8; }
+.editor-hero { padding: 24px 26px 21px; gap: 13px; }
+.editor-icon { width: 44px; height: 44px; border-radius: 12px; font-size: 22px; }
+.editor-copy h2 { font-size: 16px; }
+.editor-copy p { display: block; margin: 3px 0 0; color: var(--muted); font-size: 11px; }
+.editor-content { padding: 28px 26px 27px; }
+.form-grid { gap: 0 17px; }
+.editor-footer { padding-top: 10px; }
+.editor-footer .button-row { flex-wrap: nowrap; }
+
+/* True separate tool and settings pages */
+.tools-layout { display: grid; grid-template-columns: minmax(390px, 1.3fr) minmax(270px, .7fr); align-items: start; gap: 20px; }
+.section-card { padding: 29px; }
+.section-head { margin-bottom: 25px; }
+.section-head h3 { font-size: 16px; font-weight: 760; letter-spacing: -.03em; }
+.section-head p { display: block; margin: 6px 0 0; font-size: 12px; color: var(--muted); }
+.section-badge { display: inline-flex; padding: 6px 10px; background: var(--accent-soft); color: var(--accent); border-radius: 999px; font-size: 10px; font-weight: 760; white-space: nowrap; }
+.generator-grid { grid-template-columns: 185px 1fr; gap: 19px; align-items: start; }
+.check-grid { gap: 13px 15px; padding-top: 3px; }
+.check { font-size: 12px !important; }
+.generated-box { margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--border); }
+.generated-box .credential-secret { margin-top: 11px; }
+.generated-box #generatedPassword { font-size: 13px; }
+.guidance-card { padding: 30px; }
+.guidance-symbol { width: 47px; height: 47px; padding: 11px; color: var(--accent); background: var(--accent-soft); border: 1px solid var(--accent-border); border-radius: 13px; }
+.guidance-symbol svg { display: block; width: 23px; height: 23px; }
+.guidance-card h3 { margin: 21px 0 9px; font-size: 19px; letter-spacing: -.035em; color: var(--text-strong); line-height: 1.3; }
+.guidance-card p { margin: 0; font-size: 12px; line-height: 1.8; color: var(--muted); }
+.guidance-separator { height: 1px; background: var(--border); margin: 25px 0 21px; }
+.guidance-label, .info-eyebrow { color: var(--accent); font-size: 10px; font-weight: 800; letter-spacing: .12em; }
+.guidance-link { margin-top: 25px; }
+.guidance-link svg { width: 14px; height: 14px; }
+.settings-layout { display: grid; grid-template-columns: minmax(360px, 1.1fr) minmax(270px, .9fr); align-items: start; gap: 20px; }
+.settings-stack { display: block; }
+.setting-card { padding: 18px 19px; background: var(--surface-subtle); }
+.setting-card + .setting-card { margin-top: 15px; }
+.setting-card .field { margin: 0; }
+.setting-card .field label { margin-bottom: 12px; }
+.settings-info-card { padding: 30px; }
+.settings-info-card h3 { margin: 10px 0; font-size: 18px; letter-spacing: -.035em; color: var(--text-strong); }
+.settings-info-card p { margin: 0 0 24px; color: var(--muted); font-size: 12px; line-height: 1.8; }
+.settings-info-row { display: flex; justify-content: space-between; gap: 15px; padding: 15px 0; border-top: 1px solid var(--border); font-size: 11px; }
+.settings-info-row span { color: var(--muted); }
+.settings-info-row strong { color: var(--text-strong); font-weight: 740; text-align: right; }
+#globalStatus:not(:empty) { right: 23px; bottom: 23px; z-index: 100; font-size: 12px; }
+
+@media (max-width: 1230px) {
+  :root { --sidebar-width: 234px; }
+  .sidebar { padding-inline: 14px; }
+  .main-shell { padding-inline: 24px; }
+  .tools-layout { grid-template-columns: minmax(335px, 1.2fr) minmax(240px, .8fr); }
+  .workspace { grid-template-columns: minmax(270px, .94fr) minmax(350px, 1.06fr); }
+}
+@media (max-width: 1020px) {
+  .topbar { align-items: flex-start; flex-direction: column; }
+  .top-actions { width: 100%; margin-left: 0; justify-content: flex-start; }
+  .workspace { grid-template-columns: 1fr; min-height: unset; }
+  .list-pane { min-height: 0; }
+  .credential-list { min-height: 140px; max-height: 410px; }
+  .tools-layout, .settings-layout { grid-template-columns: 1fr; }
+  .guidance-card { max-width: none; }
+}
+@media (max-width: 900px) {
+  .app-layout { grid-template-columns: 1fr; }
+  .sidebar { position: relative; top: auto; height: auto; grid-template-columns: auto 1fr auto; gap: 14px; padding: 16px 22px; align-items: center; border-right: none; border-bottom: 1px solid var(--border); }
+  .sidebar-brand { padding: 0; }
+  .sidebar .brand-sub { display: none; }
+  .nav-group { display: flex; gap: 5px; justify-content: center; flex-wrap: wrap; }
+  .nav-link { width: auto; gap: 7px; min-height: 41px; padding: 0 11px; white-space: nowrap; }
+  .nav-link.active::after { display: none; }
+  .sidebar-bottom { margin: 0; }
+  .sidebar-note { display: none; }
+  .sidebar-bottom .theme-toggle { width: 41px; min-width: 41px; padding: 0; justify-content: center; }
+  .sidebar-bottom .theme-label { display: none; }
+  .main-shell { padding: 29px 25px 54px; }
+  .topbar { margin-bottom: 27px; }
+}
+@media (max-width: 650px) {
+  .entry-topbar, .lock-topbar { width: min(100% - 32px, 1190px); padding: 18px 0; }
+  .entry-main { padding: 12px 16px 33px; }
+  .entry-card { padding: 31px 23px 25px; border-radius: 18px; }
+  .entry-footer, .lock-page-footer { padding-bottom: 20px; }
+  .lock-main { width: min(100% - 32px, 900px); padding: 25px 0 45px; }
+  .access-card, .access-card.primary-access { padding: 23px 20px; }
+  .access-screen-head { margin-bottom: 23px; }
+  .sidebar { grid-template-columns: 1fr auto; padding: 13px 15px; }
+  .sidebar-brand .brand-title { font-size: 16px; }
+  .nav-group { grid-column: 1 / -1; grid-row: 2; justify-content: flex-start; overflow-x: auto; flex-wrap: nowrap; padding-bottom: 2px; }
+  .sidebar-bottom { grid-column: 2; grid-row: 1; }
+  .nav-link { font-size: 11.5px; }
+  .nav-icon, .nav-icon svg { width: 17px; height: 17px; }
+  .main-shell { padding: 24px 15px 45px; }
+  .topbar { min-height: 0; padding-bottom: 21px; }
+  .top-actions { display: flex; gap: 7px; }
+  .top-actions #exportVaultButton { flex: 1 1 auto; }
+  .top-actions #lockVaultButton { flex: 0 0 auto; }
+  .top-actions .pill { display: none; }
+  .section-introduction { margin-bottom: 19px; }
+  .section-aside { display: none; }
+  .list-head { padding: 17px; }
+  .editor-hero { padding: 19px; }
+  .editor-content { padding: 20px 18px 23px; }
+  .form-grid { grid-template-columns: 1fr; }
+  .form-grid .field.full { grid-column: auto; }
+  .section-card, .settings-info-card, .guidance-card { padding: 22px 19px; }
+  .generator-grid, .check-grid { grid-template-columns: 1fr; }
+  .check-grid { grid-template-columns: 1fr 1fr; }
+  .section-head { flex-wrap: wrap; }
+}
+@media (max-width: 430px) {
+  .entry-card h1 { font-size: 28px; }
+  .top-actions button { font-size: 11.5px; padding-inline: 10px; }
+  .credential-main { grid-template-columns: 1fr; }
+  .credential-actions { justify-content: flex-start; }
+  .button-row > * { flex: 1 1 auto; }
+  .editor-footer { flex-direction: column; align-items: stretch; }
+  .editor-footer .button-row { justify-content: stretch; }
+}
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; } }
+
 </style>
 </head>
 <body>
   <div id="compatibilityError" class="compatibility-banner hidden" role="alert"></div>
 
-  <section id="lockedView" class="locked-view">
-    <header class="lock-topbar">
-      <div class="brand">
-        <div class="brand-mark" aria-hidden="true">P</div>
-        <div class="brand-copy"><div class="brand-title">PassVault</div><div class="brand-sub">Password Manager</div></div>
-      </div>
-      <button class="theme-toggle" type="button" data-theme-toggle aria-label="Toggle light and dark theme">
-        <span class="theme-symbol" aria-hidden="true">☾</span><span class="theme-label">Dark mode</span>
-      </button>
-    </header>
 
-    <main class="lock-main">
-      <div class="lock-intro">
-        <div class="lock-eyebrow">Secure access</div>
-        <h1>Your secure password vault.</h1>
-        <p>Create a new vault or unlock an existing encrypted vault file.</p>
-      </div>
-
-      <div class="access-grid">
-        <form class="access-card" id="createVaultForm" autocomplete="off">
-          <div class="card-title-row">
-            <div class="card-kicker">New vault</div>
-            <h2>Create a vault</h2>
-            <p>Set a vault name and master password.</p>
-          </div>
-
+  <section id="loginView" class="entry-view" aria-label="PassVault entry">
+    <header class="entry-topbar"><div class="brand"><div class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="5.7" y="10.4" width="12.6" height="10" rx="2.2"/><path d="M8.6 10.4V7.6a3.4 3.4 0 0 1 6.8 0v2.8"/><circle cx="12" cy="15.4" r="1" fill="currentColor" stroke="none"/></svg></div><div class="brand-copy"><div class="brand-title">PassVault</div><div class="brand-sub">Password manager</div></div></div><button class="theme-toggle" type="button" data-theme-toggle aria-label="Toggle light and dark theme"><span class="theme-symbol" aria-hidden="true">☾</span><span class="theme-label">Dark mode</span></button></header>
+    <main class="entry-main">
+      <div class="entry-card">
+        <div class="entry-symbol" aria-hidden="true"><div class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="5.7" y="10.4" width="12.6" height="10" rx="2.2"/><path d="M8.6 10.4V7.6a3.4 3.4 0 0 1 6.8 0v2.8"/><circle cx="12" cy="15.4" r="1" fill="currentColor" stroke="none"/></svg></div></div>
+        <div class="entry-eyebrow"><span class="entry-dot"></span> PRIVATE ACCESS</div>
+        <h1>Welcome back.</h1>
+        <p class="entry-subtitle">Enter your access password to continue.</p>
+        <form id="accessLoginForm" autocomplete="off">
           <div class="field">
-            <label for="newVaultName">Vault name</label>
-            <input id="newVaultName" maxlength="128" autocomplete="off" spellcheck="false" placeholder="Personal Vault">
-          </div>
-          <div class="field">
-            <label for="newMaster">Master password</label>
-            <input id="newMaster" type="password" maxlength="256" autocomplete="new-password" spellcheck="false" placeholder="Create a strong master password">
-            <span class="hint">Use at least 16 characters.</span>
-            <div id="newMasterStrength" class="strength-box" aria-live="polite">
-              <div class="strength-bar"><div id="newMasterStrengthFill" class="strength-fill"></div></div>
-              <div id="newMasterStrengthText" class="strength-text">Enter a master password.</div>
+            <label for="accessPassword">Access password</label>
+            <div class="input-with-action">
+              <input id="accessPassword" type="password" maxlength="256" placeholder="Enter access password" autocomplete="off" spellcheck="false" required autofocus>
+              <button id="toggleAccessPassword" class="field-reveal" type="button" aria-label="Show access password">Show</button>
             </div>
           </div>
-          <div class="field">
-            <label for="newMasterConfirm">Confirm password</label>
-            <input id="newMasterConfirm" type="password" maxlength="256" autocomplete="new-password" spellcheck="false">
-          </div>
-          <details class="advanced-options">
-            <summary>Advanced security options</summary>
-            <div class="advanced-options-body">
-              <div class="field">
-                <label for="newKdfProfile">Security profile</label>
-                <select id="newKdfProfile">
-                  <option value="standard" selected>Standard — 256 MiB / 4 iterations / 4 lanes</option>
-                  <option value="mobile">Compatibility — 64 MiB / 4 iterations / 2 lanes</option>
-                </select>
-              </div>
-              <div class="field">
-                <label class="check"><input id="newPepperEnabled" type="checkbox"> Require secret pepper</label>
-              </div>
-              <div class="field hidden" id="newPepperField">
-                <label for="newPepper">Secret pepper</label>
-                <input id="newPepper" type="password" maxlength="256" autocomplete="off" spellcheck="false">
-              </div>
-            </div>
-          </details>
-          <div class="button-row"><button id="createVaultButton" class="grow" type="submit">Create vault</button></div>
-          <div id="createStatus" class="status-line" role="status" aria-live="polite"></div>
+          <div id="accessStatus" class="status-line entry-status" role="status" aria-live="polite"></div>
+          <button id="accessSubmit" class="access-submit" type="submit">Continue <span class="button-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></span></button>
         </form>
+        <div class="entry-disclaimer">Your access password is different from your vault master password.</div>
+      </div>
+    </main>
+    <footer class="entry-footer">PassVault <span aria-hidden="true">·</span> Local-first password manager</footer>
+  </section>
 
-        <section class="access-card primary-access" aria-labelledby="openVaultTitle">
-          <div class="card-title-row">
-            <div class="card-kicker">Existing vault</div>
-            <h2 id="openVaultTitle">Unlock vault</h2>
-            <p>Choose your encrypted vault file and enter the master password.</p>
+  <section id="lockedView" class="locked-view hidden" aria-label="Vault access">
+    <header class="lock-topbar"><div class="brand"><div class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="5.7" y="10.4" width="12.6" height="10" rx="2.2"/><path d="M8.6 10.4V7.6a3.4 3.4 0 0 1 6.8 0v2.8"/><circle cx="12" cy="15.4" r="1" fill="currentColor" stroke="none"/></svg></div><div class="brand-copy"><div class="brand-title">PassVault</div><div class="brand-sub">Password manager</div></div></div><button class="theme-toggle" type="button" data-theme-toggle aria-label="Toggle light and dark theme"><span class="theme-symbol" aria-hidden="true">☾</span><span class="theme-label">Dark mode</span></button></header>
+    <main class="lock-main">
+      <div class="access-shell">
+        <section id="unlockVaultScreen" class="access-screen" aria-labelledby="openVaultTitle">
+          <div class="access-screen-head">
+            <span class="page-kicker"><span class="small-dot"></span> YOUR WORKSPACE</span>
+            <h1>Unlock your vault</h1>
+            <p>Access your saved passwords from an encrypted vault file.</p>
           </div>
-
-          <div class="field">
-            <span class="form-label">Encrypted vault file</span>
-            <input id="vaultFile" class="file-picker" type="file" accept=".json,.pvault,.pvault.json,application/json,text/json">
-            <div class="file-selection">
-              <div class="file-meta"><strong>Vault file</strong><span id="selectedFileName">No file selected</span></div>
-              <button id="chooseVaultFile" class="secondary" type="button">Browse</button>
-            </div>
+          <section aria-labelledby="openVaultTitle" class="access-card access-form primary-access">
+<div class="card-title-row"><span class="screen-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 2.8h7l4 4V21H7a2 2 0 0 1-2-2V4.8a2 2 0 0 1 2-2Z"/><path d="M14 3v5h5M9 13h6m-6 4h6"/></svg></span>
+<div class="card-kicker">Existing vault</div>
+<h2 id="openVaultTitle">Unlock vault</h2>
+<p>Select your encrypted file and enter its master password.</p>
+</div>
+<div class="field">
+<span class="form-label">Encrypted vault file</span>
+<input accept=".json,.pvault,.pvault.json,application/json,text/json" class="file-picker" id="vaultFile" type="file"/>
+<div class="file-selection">
+<div class="file-meta"><strong>Vault file</strong><span id="selectedFileName">No file selected</span></div>
+<button class="secondary" id="chooseVaultFile" type="button">Browse</button>
+</div>
+</div>
+<div class="field">
+<label for="unlockMaster">Master password</label>
+<input autocomplete="off" id="unlockMaster" maxlength="256" placeholder="Master password" spellcheck="false" type="password"/>
+</div>
+<div class="field">
+<label for="unlockPepper">Secret pepper</label>
+<input autocomplete="off" id="unlockPepper" maxlength="256" placeholder="Optional" spellcheck="false" type="password"/>
+<span class="hint" id="unlockPepperHint">Leave blank unless your vault uses a secret pepper.</span>
+</div>
+<div class="button-row"><button class="grow" id="unlockVaultButton" type="button">Unlock vault</button></div>
+<div aria-live="polite" class="status-line" id="unlockStatus" role="status"></div>
+</section>
+          <div class="access-switch">New to PassVault? <button class="text-action" type="button" data-access-target="create">Create a new vault <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button></div>
+        </section>
+        <section id="createVaultScreen" class="access-screen hidden" aria-label="Create a new vault">
+          <div class="access-screen-head">
+            <span class="page-kicker"><span class="small-dot"></span> GET STARTED</span>
+            <h1>Create a new vault</h1>
+            <p>Start with a new encrypted file protected by your master password.</p>
           </div>
-          <div class="field">
-            <label for="unlockMaster">Master password</label>
-            <input id="unlockMaster" type="password" maxlength="256" autocomplete="off" spellcheck="false" placeholder="Master password">
-          </div>
-          <div class="field">
-            <label for="unlockPepper">Secret pepper</label>
-            <input id="unlockPepper" type="password" maxlength="256" autocomplete="off" spellcheck="false" placeholder="Optional">
-            <span id="unlockPepperHint" class="hint">Leave blank unless your vault uses a secret pepper.</span>
-          </div>
-          <div class="button-row"><button id="unlockVaultButton" class="grow" type="button">Unlock vault</button></div>
-          <div id="unlockStatus" class="status-line" role="status" aria-live="polite"></div>
+          <form autocomplete="off" class="access-card access-form" id="createVaultForm">
+<div class="card-title-row"><span class="screen-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2.6"/><path d="M3.5 10h17M9 10v10"/></svg></span>
+<div class="card-kicker">New vault</div>
+<h2>Create your vault</h2>
+<p>Choose a name and a strong master password to get started.</p>
+</div>
+<div class="field">
+<label for="newVaultName">Vault name</label>
+<input autocomplete="off" id="newVaultName" maxlength="128" placeholder="Personal Vault" spellcheck="false"/>
+</div>
+<div class="field">
+<label for="newMaster">Master password</label>
+<input autocomplete="new-password" id="newMaster" maxlength="256" placeholder="Create a strong master password" spellcheck="false" type="password"/>
+<span class="hint">Use at least 16 characters.</span>
+<div aria-live="polite" class="strength-box" id="newMasterStrength">
+<div class="strength-bar"><div class="strength-fill" id="newMasterStrengthFill"></div></div>
+<div class="strength-text" id="newMasterStrengthText">Enter a master password.</div>
+</div>
+</div>
+<div class="field">
+<label for="newMasterConfirm">Confirm password</label>
+<input autocomplete="new-password" id="newMasterConfirm" maxlength="256" spellcheck="false" type="password"/>
+</div>
+<details class="advanced-options">
+<summary>Advanced security options</summary>
+<div class="advanced-options-body">
+<div class="field">
+<label for="newKdfProfile">Security profile</label>
+<select id="newKdfProfile">
+<option selected="" value="standard">Standard — 256 MiB / 4 iterations / 4 lanes</option>
+<option value="mobile">Compatibility — 64 MiB / 4 iterations / 2 lanes</option>
+</select>
+</div>
+<div class="field">
+<label class="check"><input id="newPepperEnabled" type="checkbox"/> Require secret pepper</label>
+</div>
+<div class="field hidden" id="newPepperField">
+<label for="newPepper">Secret pepper</label>
+<input autocomplete="off" id="newPepper" maxlength="256" spellcheck="false" type="password"/>
+</div>
+</div>
+</details>
+<div class="button-row"><button class="grow" id="createVaultButton" type="submit">Create vault</button></div>
+<div aria-live="polite" class="status-line" id="createStatus" role="status"></div>
+</form>
+          <div class="access-switch">Already have a vault? <button class="text-action" type="button" data-access-target="unlock">Unlock your vault <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button></div>
         </section>
       </div>
     </main>
+    <footer class="lock-page-footer">Your vault is encrypted locally. Keep a copy of every saved vault file.</footer>
   </section>
 
   <section id="unlockedView" class="hidden">
     <div class="app-layout">
-      <aside class="sidebar">
-        <div class="brand">
-          <div class="brand-mark" aria-hidden="true">P</div>
-          <div class="brand-copy"><div class="brand-title">PassVault</div><div class="brand-sub">Password Manager</div></div>
-        </div>
-
+      <aside class="sidebar" aria-label="Application sidebar">
+        <div class="sidebar-brand"><div class="brand"><div class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="5.7" y="10.4" width="12.6" height="10" rx="2.2"/><path d="M8.6 10.4V7.6a3.4 3.4 0 0 1 6.8 0v2.8"/><circle cx="12" cy="15.4" r="1" fill="currentColor" stroke="none"/></svg></div><div class="brand-copy"><div class="brand-title">PassVault</div><div class="brand-sub">Password manager</div></div></div></div>
         <nav class="nav-group" aria-label="Vault navigation">
-          <div class="nav-label">Workspace</div>
-          <a class="nav-link active" href="#vaultWorkspace"><span class="nav-icon">▦</span><span>Vault</span><span class="nav-badge">Local</span></a>
-          <a class="nav-link" href="#passwordGeneratorPanel"><span class="nav-icon">✦</span><span>Generator</span></a>
-          <a class="nav-link" href="#securitySettingsPanel"><span class="nav-icon">⌾</span><span>Settings</span></a>
+          <div class="nav-label">WORKSPACE</div>
+          <button class="nav-link active" type="button" data-page-target="vault" aria-current="page"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2.6"/><path d="M3.5 10h17M9 10v10"/></svg></span><span>My vault</span></button>
+          <button class="nav-link" type="button" data-page-target="generator"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2.8 1.9 6.7L20.6 12l-6.7 2.5-1.9 6.7-2-6.7L3.4 12l6.6-2.5L12 2.8Z"/><path d="m19 2 .7 2.3L22 5l-2.3.7L19 8l-.7-2.3L16 5l2.3-.7L19 2Z"/></svg></span><span>Password generator</span></button>
+          <button class="nav-link" type="button" data-page-target="settings"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="9" cy="6" r="2" fill="var(--surface)"/><circle cx="16" cy="12" r="2" fill="var(--surface)"/><circle cx="10" cy="18" r="2" fill="var(--surface)"/></svg></span><span>Settings</span></button>
         </nav>
-
         <div class="sidebar-bottom">
-          <button class="theme-toggle" type="button" data-theme-toggle aria-label="Toggle light and dark theme">
-            <span class="theme-symbol" aria-hidden="true">☾</span><span class="theme-label">Dark mode</span>
-          </button>
+          <div class="sidebar-note"><span class="sidebar-note-symbol">◈</span><div><strong>Local by design</strong><span>Save your encrypted file to keep changes.</span></div></div>
+          <button class="theme-toggle" type="button" data-theme-toggle aria-label="Toggle light and dark theme"><span class="theme-symbol" aria-hidden="true">☾</span><span class="theme-label">Dark mode</span></button>
         </div>
       </aside>
-
       <main class="main-shell">
         <header class="topbar">
-          <div class="page-heading">
-            <h1 id="vaultTitle">Vault</h1>
-            <p id="vaultMetaText">Unlocked in memory.</p>
-          </div>
+          <div class="page-heading"><div class="top-kicker" id="topKicker">WORKSPACE / MY VAULT</div><h1 id="vaultTitle">Vault</h1><p id="vaultMetaText">Unlocked in memory.</p></div>
           <div class="top-actions">
             <span id="vaultStatus" class="pill">LOCKED</span>
             <span id="dirtyStatus" class="pill unsaved hidden">UNSAVED CHANGES</span>
             <button id="exportVaultButton" type="button">Save encrypted vault</button>
-            <a id="downloadVaultLink" class="button-link hidden" href="#" download>Download Encrypted Vault</a>
+            <a id="downloadVaultLink" class="button-link hidden" href="#" download>Download encrypted vault</a>
             <button id="lockVaultButton" class="secondary" type="button">Lock vault</button>
           </div>
         </header>
-
-        <section class="workspace" id="vaultWorkspace">
-          <div class="card list-pane">
-            <div class="list-head">
-              <div class="list-head-title"><strong>Credentials</strong><span>Encrypted</span></div>
-              <div class="search-row">
-                <div class="search-wrap"><input id="credentialSearch" type="search" maxlength="256" autocomplete="off" spellcheck="false" placeholder="Search credentials"></div>
-                <button id="addCredentialButton" type="button">Add</button>
-              </div>
-            </div>
-            <div id="credentialList" class="credential-list"></div>
-          </div>
-
-          <div class="card editor-pane" id="credentialEditorCard">
-            <div class="editor-hero">
-              <div class="editor-icon" aria-hidden="true">＋</div>
-              <div class="editor-copy"><h2 id="editorTitle">Add Credential</h2><p>Credential editor</p></div>
-            </div>
-            <div class="editor-content">
-              <form id="credentialForm" autocomplete="off">
-                <input id="editingCredentialId" type="hidden">
-                <div class="form-grid">
-                  <div class="field">
-                    <label for="credentialTitle">Name</label>
-                    <input id="credentialTitle" maxlength="256" autocomplete="off" spellcheck="false" placeholder="Website or app">
-                  </div>
-                  <div class="field">
-                    <label for="credentialUrl">URL</label>
-                    <input id="credentialUrl" type="url" maxlength="2048" autocomplete="off" spellcheck="false" placeholder="https://www.amazon.com/">
-                  </div>
-                  <div class="field full">
-                    <label for="credentialUsername">Username or email</label>
-                    <input id="credentialUsername" maxlength="512" autocomplete="off" spellcheck="false" placeholder="name@example.com">
-                  </div>
-                  <div class="field full">
-                    <label for="credentialPassword">Password</label>
-                    <div class="credential-secret">
-                      <input id="credentialPassword" type="password" maxlength="2048" autocomplete="new-password" spellcheck="false" placeholder="Password">
-                      <button id="toggleCredentialPassword" class="secondary" type="button">Show</button>
-                    </div>
-                  </div>
-                  <div class="field full">
-                    <label for="credentialNotes">Notes</label>
-                    <textarea id="credentialNotes" maxlength="4096" autocomplete="off" spellcheck="false" placeholder="Optional notes"></textarea>
-                  </div>
-                </div>
-                <div class="editor-footer">
-                  <div id="credentialStatus" class="status-line" role="status" aria-live="polite"></div>
-                  <div class="button-row end">
-                    <button id="cancelEditButton" class="secondary" type="button">Cancel</button>
-                    <button type="submit">Save credential</button>
-                  </div>
-                </div>
-              </form>
-            </div>
+        <section class="app-page" id="vaultPage" data-app-page="vault" aria-label="Saved credentials">
+          <div class="section-introduction"><div><span class="section-overline">YOUR PASSWORDS</span><h2>Credential management</h2><p>View and manage entries in your unlocked vault.</p></div><span class="section-aside">Encrypted on export</span></div>
+          <section class="workspace" id="vaultWorkspace">
+<div class="card list-pane">
+<div class="list-head">
+<div class="list-head-title"><strong>Credentials</strong><span>Encrypted</span></div>
+<div class="search-row">
+<div class="search-wrap"><input autocomplete="off" id="credentialSearch" maxlength="256" placeholder="Search credentials" spellcheck="false" type="search"/></div>
+<button id="addCredentialButton" type="button">Add</button>
+</div>
+</div>
+<div class="credential-list" id="credentialList"></div>
+</div>
+<div class="card editor-pane" id="credentialEditorCard">
+<div class="editor-hero">
+<div aria-hidden="true" class="editor-icon">＋</div>
+<div class="editor-copy"><h2 id="editorTitle">Add Credential</h2><p>Credential editor</p></div>
+</div>
+<div class="editor-content">
+<form autocomplete="off" id="credentialForm">
+<input id="editingCredentialId" type="hidden"/>
+<div class="form-grid">
+<div class="field">
+<label for="credentialTitle">Name</label>
+<input autocomplete="off" id="credentialTitle" maxlength="256" placeholder="Website or app" spellcheck="false"/>
+</div>
+<div class="field">
+<label for="credentialUrl">URL</label>
+<input autocomplete="off" id="credentialUrl" maxlength="2048" placeholder="https://www.amazon.com/" spellcheck="false" type="url"/>
+</div>
+<div class="field full">
+<label for="credentialUsername">Username or email</label>
+<input autocomplete="off" id="credentialUsername" maxlength="512" placeholder="name@example.com" spellcheck="false"/>
+</div>
+<div class="field full">
+<label for="credentialPassword">Password</label>
+<div class="credential-secret">
+<input autocomplete="new-password" id="credentialPassword" maxlength="2048" placeholder="Password" spellcheck="false" type="password"/>
+<button class="secondary" id="toggleCredentialPassword" type="button">Show</button>
+</div>
+</div>
+<div class="field full">
+<label for="credentialNotes">Notes</label>
+<textarea autocomplete="off" id="credentialNotes" maxlength="4096" placeholder="Optional notes" spellcheck="false"></textarea>
+</div>
+</div>
+<div class="editor-footer">
+<div aria-live="polite" class="status-line" id="credentialStatus" role="status"></div>
+<div class="button-row end">
+<button class="secondary" id="cancelEditButton" type="button">Cancel</button>
+<button type="submit">Save credential</button>
+</div>
+</div>
+</form>
+</div>
+</div>
+</section>
+        </section>
+        <section class="app-page hidden" id="generatorPage" data-app-page="generator" aria-label="Password generator">
+          <div class="section-introduction"><div><span class="section-overline">TOOLS</span><h2>Create a strong password</h2><p>Generate a new password using your browser's secure random number generator.</p></div></div>
+          <div class="tools-layout">
+            <div class="card section-card" id="passwordGeneratorPanel">
+<div class="section-head">
+<div><h3>Password generator</h3><p>Generate a strong password.</p></div>
+<span class="section-badge">Local generation</span>
+</div>
+<div class="generator-grid">
+<div class="field"><label for="generatorLength">Length</label><select id="generatorLength"></select></div>
+<div class="check-grid">
+<label class="check"><input checked="" id="genUpper" type="checkbox"/> Uppercase</label>
+<label class="check"><input checked="" id="genLower" type="checkbox"/> Lowercase</label>
+<label class="check"><input checked="" id="genNumbers" type="checkbox"/> Numbers</label>
+<label class="check"><input checked="" id="genSymbols" type="checkbox"/> Symbols</label>
+</div>
+</div>
+<div class="generated-box">
+<label class="form-label" for="generatedPassword">Generated password</label>
+<div class="credential-secret">
+<input autocomplete="off" class="mono" id="generatedPassword" readonly="" spellcheck="false" type="password"/>
+<button class="secondary" id="toggleGeneratedPassword" type="button">Show</button>
+</div>
+<div class="hint" id="generatorEntropy">Approximate entropy: —</div>
+</div>
+<div class="button-row" style="margin-top:10px">
+<button class="grow" id="generatePasswordButton" type="button">Generate Password</button>
+<button class="secondary" disabled="" id="copyGeneratedButton" type="button">Copy</button>
+</div>
+<div aria-live="polite" class="status-line" id="generatorStatus" role="status"></div>
+</div>
+            <div class="card guidance-card"><div class="guidance-symbol"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2.8 1.9 6.7L20.6 12l-6.7 2.5-1.9 6.7-2-6.7L3.4 12l6.6-2.5L12 2.8Z"/><path d="m19 2 .7 2.3L22 5l-2.3.7L19 8l-.7-2.3L16 5l2.3-.7L19 2Z"/></svg></div><h3>Good passwords start here.</h3><p>Use unique passwords for every service. Copy your generated password and save it as a credential in your vault.</p><div class="guidance-separator"></div><div class="guidance-label">QUICK TIP</div><p>Saving an encrypted vault file is required to keep new or updated entries after closing the page.</p><button class="secondary guidance-link" type="button" data-page-target="vault">Go to my vault <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button></div>
           </div>
         </section>
-
-        <section class="secondary-grid">
-          <div class="card section-card" id="passwordGeneratorPanel">
-            <div class="section-head">
-              <div><h3>Password generator</h3><p>Generate a strong password.</p></div>
-              <span class="section-badge">Local generation</span>
-            </div>
-            <div class="generator-grid">
-              <div class="field"><label for="generatorLength">Length</label><select id="generatorLength"></select></div>
-              <div class="check-grid">
-                <label class="check"><input id="genUpper" type="checkbox" checked> Uppercase</label>
-                <label class="check"><input id="genLower" type="checkbox" checked> Lowercase</label>
-                <label class="check"><input id="genNumbers" type="checkbox" checked> Numbers</label>
-                <label class="check"><input id="genSymbols" type="checkbox" checked> Symbols</label>
-              </div>
-            </div>
-            <div class="generated-box">
-              <label class="form-label" for="generatedPassword">Generated password</label>
-              <div class="credential-secret">
-                <input id="generatedPassword" class="mono" type="password" readonly autocomplete="off" spellcheck="false">
-                <button id="toggleGeneratedPassword" class="secondary" type="button">Show</button>
-              </div>
-              <div id="generatorEntropy" class="hint">Approximate entropy: —</div>
-            </div>
-            <div class="button-row" style="margin-top:10px">
-              <button id="generatePasswordButton" class="grow" type="button">Generate Password</button>
-              <button id="copyGeneratedButton" class="secondary" type="button" disabled>Copy</button>
-            </div>
-            <div id="generatorStatus" class="status-line" role="status" aria-live="polite"></div>
-          </div>
-
-          <div class="settings-stack" id="securitySettingsPanel">
-            <div class="card section-card">
-              <div class="section-head"><div><h3>Security settings</h3><p>Session preferences.</p></div></div>
-              <div class="setting-card">
-                <div class="field"><label for="sessionTimeout">Auto-lock after inactivity</label>
-                  <select id="sessionTimeout">
-                    <option value="300000">5 minutes</option><option value="600000" selected>10 minutes</option><option value="900000">15 minutes</option><option value="1800000">30 minutes</option>
-                  </select>
-                  
-                </div>
-              </div>
-              <div class="setting-card">
-                <div class="field"><label for="clipboardTimeout">Clipboard clear after password copy</label>
-                  <select id="clipboardTimeout"><option value="15000">15 seconds</option><option value="30000" selected>30 seconds</option><option value="60000">60 seconds</option></select>
-                  
-                </div>
-              </div>
-            </div>
+        <section class="app-page hidden" id="settingsPage" data-app-page="settings" aria-label="Security settings">
+          <div class="section-introduction"><div><span class="section-overline">PREFERENCES</span><h2>Session & privacy</h2><p>Manage local session behavior and clipboard preferences.</p></div></div>
+          <div class="settings-layout">
+            <div class="settings-stack" id="securitySettingsPanel">
+<div class="card section-card">
+<div class="section-head"><div><h3>Security settings</h3><p>Session preferences.</p></div></div>
+<div class="setting-card">
+<div class="field"><label for="sessionTimeout">Auto-lock after inactivity</label>
+<select id="sessionTimeout">
+<option value="300000">5 minutes</option><option selected="" value="600000">10 minutes</option><option value="900000">15 minutes</option><option value="1800000">30 minutes</option>
+</select>
+</div>
+</div>
+<div class="setting-card">
+<div class="field"><label for="clipboardTimeout">Clipboard clear after password copy</label>
+<select id="clipboardTimeout"><option value="15000">15 seconds</option><option selected="" value="30000">30 seconds</option><option value="60000">60 seconds</option></select>
+</div>
+</div>
+</div>
+</div>
+            <div class="card settings-info-card"><span class="info-eyebrow">ABOUT THIS VAULT</span><h3>Protected, in your control.</h3><p>Vault data stays in browser memory while unlocked. Export an encrypted vault file whenever you want to preserve changes.</p><div class="settings-info-row"><span>Encryption</span><strong>AES-256-GCM</strong></div><div class="settings-info-row"><span>Key derivation</span><strong>Argon2id</strong></div><div class="settings-info-row"><span>Storage</span><strong>Exported files only</strong></div></div>
           </div>
         </section>
-
         <div id="globalStatus" class="status-line" role="status" aria-live="polite"></div>
       </main>
     </div>
@@ -686,9 +960,25 @@ const COMMON_PASSWORDS = new Set([
   "000000", "passw0rd", "changeme", "secret", "google", "amazon", "india", "test", "test123"
 ]);
 
+// UI-only access gate. Change this string to set the entry password.
+// Client-side code is inspectable: this is not a substitute for vault encryption.
+const ACCESS_PASSWORD = "sample password";
+const uiState = { accessGranted: false, accessScreen: "unlock", activePage: "vault" };
+
 const $ = (id) => document.getElementById(id);
 
 const els = {
+  loginView: $("loginView"),
+  accessLoginForm: $("accessLoginForm"),
+  accessPassword: $("accessPassword"),
+  toggleAccessPassword: $("toggleAccessPassword"),
+  accessStatus: $("accessStatus"),
+  unlockVaultScreen: $("unlockVaultScreen"),
+  createVaultScreen: $("createVaultScreen"),
+  vaultPage: $("vaultPage"),
+  generatorPage: $("generatorPage"),
+  settingsPage: $("settingsPage"),
+  topKicker: $("topKicker"),
   compatibilityError: $("compatibilityError"),
   vaultStatus: $("vaultStatus"),
   dirtyStatus: $("dirtyStatus"),
@@ -2193,7 +2483,7 @@ function safeFileName(name) {
 }
 
 function renderVaultHeader() {
-  if (!state.vault || !state.vaultMeta) return;
+  if (!state.vault || !state.vaultMeta || uiState.activePage !== "vault") return;
   els.vaultTitle.textContent = state.vault.name || "Pass Vault";
   const p = state.vaultMeta.parameters;
   els.vaultMetaText.textContent = `${state.vault.credentials.length} credential${state.vault.credentials.length === 1 ? "" : "s"} • Argon2id ${p.memoryKiB / 1024} MiB / t=${p.iterations} / p=${p.parallelism} • ${state.vaultMeta.pepperRequired ? "pepper required" : "no pepper"}`;
@@ -2204,9 +2494,50 @@ function renderVault() {
   renderCredentialList();
 }
 
+// Presentation routing: every screen is a separate view, never an anchor jump.
+function showAccessScreen(screen = "unlock") {
+  uiState.accessScreen = screen === "create" ? "create" : "unlock";
+  els.unlockVaultScreen.classList.toggle("hidden", uiState.accessScreen !== "unlock");
+  els.createVaultScreen.classList.toggle("hidden", uiState.accessScreen !== "create");
+  window.scrollTo(0, 0);
+}
+
+function showAppPage(page = "vault") {
+  if (!state.vault || state.locked) return;
+  const next = ["vault", "generator", "settings"].includes(page) ? page : "vault";
+  uiState.activePage = next;
+  [els.vaultPage, els.generatorPage, els.settingsPage].forEach((element) => {
+    element.classList.toggle("hidden", element.dataset.appPage !== next);
+  });
+  document.querySelectorAll('[data-page-target]').forEach((button) => {
+    const active = button.dataset.pageTarget === next;
+    button.classList.toggle("active", active);
+    if (button.classList.contains("nav-link")) {
+      if (active) button.setAttribute("aria-current", "page");
+      else button.removeAttribute("aria-current");
+    }
+  });
+  const pageInfo = {
+    vault: { kicker: "WORKSPACE / MY VAULT" },
+    generator: { kicker: "WORKSPACE / GENERATOR", title: "Password generator", subtitle: "Create unique, secure passwords." },
+    settings: { kicker: "WORKSPACE / SETTINGS", title: "Security settings", subtitle: "Privacy and session preferences." }
+  }[next];
+  els.topKicker.textContent = pageInfo.kicker;
+  if (next === "vault") renderVaultHeader();
+  else {
+    els.vaultTitle.textContent = pageInfo.title;
+    els.vaultMetaText.textContent = pageInfo.subtitle;
+  }
+  window.scrollTo(0, 0);
+}
+
 function setActiveView() {
-  els.lockedView.classList.toggle("hidden", !state.locked);
-  els.unlockedView.classList.toggle("hidden", state.locked);
+  const showVault = !state.locked && uiState.accessGranted;
+  els.loginView.classList.toggle("hidden", uiState.accessGranted);
+  els.lockedView.classList.toggle("hidden", !uiState.accessGranted || showVault);
+  els.unlockedView.classList.toggle("hidden", !showVault);
+  if (showVault) showAppPage("vault");
+  else if (uiState.accessGranted) showAccessScreen(uiState.accessScreen);
   els.vaultStatus.textContent = state.locked ? "LOCKED" : "UNLOCKED";
   els.vaultStatus.classList.toggle("unlocked", !state.locked);
   if (state.locked) els.dirtyStatus.classList.add("hidden");
@@ -2259,6 +2590,9 @@ function lockVault(reason = "Vault locked.") {
   state.locked = true;
   clearSensitiveFieldsEverywhere();
   clearUnlockedDom();
+  uiState.accessGranted = false; // Require the entry password again after locking.
+  uiState.activePage = "vault";
+  uiState.accessScreen = "unlock";
   setActiveView();
   setGlobalStatus(reason, "success");
 }
@@ -2442,6 +2776,27 @@ function beforeUnload(event) {
 }
 
 function initializeEvents() {
+  els.accessLoginForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    if (els.accessPassword.value === ACCESS_PASSWORD) {
+      uiState.accessGranted = true;
+      uiState.accessScreen = "unlock";
+      els.accessPassword.value = "";
+      clearStatus(els.accessStatus);
+      setActiveView();
+    } else {
+      els.accessPassword.value = "";
+      setStatus(els.accessStatus, "Incorrect access password. Try again.", "error");
+      els.accessPassword.focus();
+    }
+  });
+  els.toggleAccessPassword.addEventListener("click", () => toggleFieldVisibility(els.accessPassword, els.toggleAccessPassword));
+  document.querySelectorAll("[data-access-target]").forEach((button) => {
+    button.addEventListener("click", () => showAccessScreen(button.dataset.accessTarget));
+  });
+  document.querySelectorAll("[data-page-target]").forEach((button) => {
+    button.addEventListener("click", () => showAppPage(button.dataset.pageTarget));
+  });
   els.createVaultForm.addEventListener("submit", handleCreateVault);
   els.newMaster.addEventListener("input", updateMasterStrength);
   els.newPepperEnabled.addEventListener("change", () => {
