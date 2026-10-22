@@ -92,10 +92,10 @@ async function initialize() {
   state.initialized = true;
   if (!await runStartupSelfTest()) return;
   if (!isCloudConfigured()) {
-    return setStatus(els.accessStatus, "Setup required: add the Supabase Project URL and publishable key in this HTML file.", "warning");
+    return setStatus(els.accessStatus, "Setup required: add the Supabase Project URL and publishable key in src/js/config.js.", "warning");
   }
   if (!window.supabase || typeof window.supabase.createClient !== "function") {
-    return setStatus(els.accessStatus, "Supabase SDK did not load. Check CDN access and Content Security Policy.", "error");
+    return setStatus(els.accessStatus, "Locally hosted Supabase SDK did not load. Check the GitHub Actions build and browser console.", "error");
   }
   cloud.client = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
     auth: { autoRefreshToken: true, persistSession: false, detectSessionInUrl: true }

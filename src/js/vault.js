@@ -189,10 +189,7 @@ async function writeClipboard(text) {
   const helper = document.createElement("textarea");
   helper.value = text;
   helper.setAttribute("aria-hidden", "true");
-  helper.style.position = "fixed";
-  helper.style.left = "-9999px";
-  helper.style.top = "0";
-  helper.style.opacity = "0";
+  helper.className = "clipboard-fallback-input";
   document.body.appendChild(helper);
   helper.focus({ preventScroll: true });
   helper.select();

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="referrer" content="no-referrer">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'; connect-src https://*.supabase.co; img-src 'none'; media-src 'none'; frame-src 'none'; style-src 'self' 'unsafe-inline'; script-src 'self' https://cdn.jsdelivr.net 'wasm-unsafe-eval'; worker-src blob:">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'; connect-src https://*.supabase.co wss://*.supabase.co; img-src 'none'; media-src 'none'; frame-src 'none'; style-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src blob:; upgrade-insecure-requests">
   <meta name="theme-color" content="#F5F7FB">
   <title>PassVault Cloud — Password Manager</title>
 <link rel="stylesheet" href="./src/css/main.css">
@@ -35,7 +35,7 @@
           </div>
           <div id="accessStatus" class="status-line entry-status" role="status" aria-live="polite"></div>
           <button id="accessSubmit" class="access-submit" type="submit">Sign in <span class="button-arrow">→</span></button>
-          <button id="registerAccountButton" class="secondary" type="button" style="width:100%;margin-top:12px">Create an account</button>
+          <button id="registerAccountButton" class="secondary account-register-button" type="button">Create an account</button>
         </form>
         <div class="entry-disclaimer">Your account password signs you in. A separate master password encrypts and unlocks your vault locally.</div>
       </div>
@@ -55,7 +55,7 @@
             <p>Choose a vault to unlock, or create another encrypted vault. Vault labels are visible to the cloud service.</p></div>
           <div class="access-card dashboard-panel">
             <div id="vaultDashboardList" class="vault-tiles" aria-live="polite"></div>
-            <div class="button-row" style="margin-top:18px"><button type="button" id="dashboardCreateVault">+ Create new vault</button><button type="button" class="secondary" id="dashboardRefresh">Refresh vault list</button></div>
+            <div class="button-row dashboard-actions"><button type="button" id="dashboardCreateVault">+ Create new vault</button><button type="button" class="secondary" id="dashboardRefresh">Refresh vault list</button></div>
             <div class="status-line" id="dashboardStatus" role="status"></div>
             <div class="dashboard-danger"><button id="dashboardDeleteAccount" type="button" class="danger">Delete account…</button></div>
           </div>
@@ -262,7 +262,7 @@
 </div>
 <div class="hint" id="generatorEntropy">Approximate entropy: —</div>
 </div>
-<div class="button-row" style="margin-top:10px">
+<div class="button-row generator-actions">
 <button class="grow" id="generatePasswordButton" type="button">Generate Password</button>
 <button class="secondary" disabled="" id="copyGeneratedButton" type="button">Copy</button>
 </div>
@@ -331,8 +331,8 @@
 
   <script src="./src/js/theme.js" defer></script>
 
-<!-- Pinned browser SDK. For production, review and host this dependency yourself. -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
+<!-- Locally hosted, version-pinned Supabase SDK (generated at build time). -->
+<script defer src="./src/js/vendor/supabase.js"></script>
 <script defer src="./src/js/config.js"></script>
 <script defer src="./src/js/core.js"></script>
 <script defer src="./src/js/cloud.js"></script>

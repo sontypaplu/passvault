@@ -617,3 +617,9 @@ html[data-theme="dark"] .entry-view { background: radial-gradient(ellipse 55% 55
 .confirm-dialog h2 {color:var(--text-strong);margin:0 0 12px;font-size:20px}
 .confirm-dialog .hint {margin-bottom:22px}
 @media (max-width:800px) {.account-settings-grid{grid-template-columns:1fr}.vault-tile{flex-wrap:wrap}.vault-tile-text{flex-basis:calc(100% - 50px)}.dashboard-panel{padding:20px}}
+
+/* PassVault 2.1: moved all remaining inline styles into this local sheet. */
+.account-register-button { width: 100%; margin-top: 12px; }
+.dashboard-actions { margin-top: 18px; }
+.generator-actions { margin-top: 10px; }
+.clipboard-fallback-input { position: fixed; left: -9999px; top: 0; opacity: 0; }
