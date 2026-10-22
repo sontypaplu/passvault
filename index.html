@@ -4,9 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="referrer" content="no-referrer">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'; connect-src 'none'; img-src 'none'; media-src 'none'; frame-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline' 'wasm-unsafe-eval'; worker-src blob:">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'; connect-src https://*.supabase.co; img-src 'none'; media-src 'none'; frame-src 'none'; style-src 'unsafe-inline'; script-src 'self' https://cdn.jsdelivr.net 'unsafe-inline' 'wasm-unsafe-eval'; worker-src blob:">
   <meta name="theme-color" content="#F5F7FB">
-  <title>PassVault — Password Manager</title>
+  <title>PassVault Cloud — Password Manager</title>
 <style>
 :root {
   color-scheme: light;
@@ -605,6 +605,10 @@ html[data-theme="dark"] .entry-view { background: radial-gradient(ellipse 55% 55
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; } }
 
+/* PassVault Cloud additions */
+.cloud-account-bar { display:flex; justify-content:space-between; align-items:center; gap:12px; margin:0 auto 18px; color:var(--muted); font-size:12px; overflow-wrap:anywhere; }
+.cloud-account-bar button { flex:0 0 auto; min-height:34px; padding:0 12px; }
+@media (max-width:650px) { .top-actions #backupVaultButton, .top-actions #unlockedSignOutButton { flex: 1 1 auto; } .top-actions #cloudSyncStatus, .top-actions #dirtyStatus { display:inline-flex; } }
 </style>
 </head>
 <body>
@@ -617,46 +621,52 @@ html[data-theme="dark"] .entry-view { background: radial-gradient(ellipse 55% 55
       <div class="entry-card">
         <div class="entry-symbol" aria-hidden="true"><div class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="5.7" y="10.4" width="12.6" height="10" rx="2.2"/><path d="M8.6 10.4V7.6a3.4 3.4 0 0 1 6.8 0v2.8"/><circle cx="12" cy="15.4" r="1" fill="currentColor" stroke="none"/></svg></div></div>
         <div class="entry-eyebrow"><span class="entry-dot"></span> PRIVATE ACCESS</div>
-        <h1>Welcome back.</h1>
-        <p class="entry-subtitle">Enter your access password to continue.</p>
-        <form id="accessLoginForm" autocomplete="off">
+        <h1>Welcome to PassVault.</h1>
+        <p class="entry-subtitle">Sign in to access your personal encrypted cloud vault.</p>
+        <form id="accessLoginForm" autocomplete="on">
           <div class="field">
-            <label for="accessPassword">Access password</label>
+            <label for="accessEmail">Email address</label>
+            <input id="accessEmail" type="email" maxlength="254" placeholder="you@example.com" autocomplete="email" required spellcheck="false" />
+          </div>
+          <div class="field">
+            <label for="accessPassword">Account password</label>
             <div class="input-with-action">
-              <input id="accessPassword" type="password" maxlength="256" placeholder="Enter access password" autocomplete="off" spellcheck="false" required autofocus>
-              <button id="toggleAccessPassword" class="field-reveal" type="button" aria-label="Show access password">Show</button>
+              <input id="accessPassword" type="password" maxlength="256" placeholder="Enter account password" autocomplete="current-password" required spellcheck="false" />
+              <button id="toggleAccessPassword" class="field-reveal" type="button" aria-label="Show account password">Show</button>
             </div>
           </div>
           <div id="accessStatus" class="status-line entry-status" role="status" aria-live="polite"></div>
-          <button id="accessSubmit" class="access-submit" type="submit">Continue <span class="button-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></span></button>
+          <button id="accessSubmit" class="access-submit" type="submit">Sign in <span class="button-arrow">→</span></button>
+          <button id="registerAccountButton" class="secondary" type="button" style="width:100%;margin-top:12px">Create an account</button>
         </form>
-        <div class="entry-disclaimer">Your access password is different from your vault master password.</div>
+        <div class="entry-disclaimer">Your account password signs you in. A separate master password encrypts and unlocks your vault locally.</div>
       </div>
     </main>
-    <footer class="entry-footer">PassVault <span aria-hidden="true">·</span> Local-first password manager</footer>
+    <footer class="entry-footer">PassVault <span aria-hidden="true">·</span> Encrypted cloud password manager · Test build</footer>
   </section>
 
   <section id="lockedView" class="locked-view hidden" aria-label="Vault access">
     <header class="lock-topbar"><div class="brand"><div class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="5.7" y="10.4" width="12.6" height="10" rx="2.2"/><path d="M8.6 10.4V7.6a3.4 3.4 0 0 1 6.8 0v2.8"/><circle cx="12" cy="15.4" r="1" fill="currentColor" stroke="none"/></svg></div><div class="brand-copy"><div class="brand-title">PassVault</div><div class="brand-sub">Password manager</div></div></div><button class="theme-toggle" type="button" data-theme-toggle aria-label="Toggle light and dark theme"><span class="theme-symbol" aria-hidden="true">☾</span><span class="theme-label">Dark mode</span></button></header>
     <main class="lock-main">
-      <div class="access-shell">
+              <div class="access-shell">
+          <div class="cloud-account-bar"><span id="signedInIdentity">Loading account…</span><button id="lockedSignOutButton" class="secondary" type="button">Sign out</button></div>
         <section id="unlockVaultScreen" class="access-screen" aria-labelledby="openVaultTitle">
           <div class="access-screen-head">
             <span class="page-kicker"><span class="small-dot"></span> YOUR WORKSPACE</span>
             <h1>Unlock your vault</h1>
-            <p>Access your saved passwords from an encrypted vault file.</p>
+            <p>Enter your master password to open your encrypted cloud vault.</p>
           </div>
           <section aria-labelledby="openVaultTitle" class="access-card access-form primary-access">
 <div class="card-title-row"><span class="screen-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 2.8h7l4 4V21H7a2 2 0 0 1-2-2V4.8a2 2 0 0 1 2-2Z"/><path d="M14 3v5h5M9 13h6m-6 4h6"/></svg></span>
 <div class="card-kicker">Existing vault</div>
 <h2 id="openVaultTitle">Unlock vault</h2>
-<p>Select your encrypted file and enter its master password.</p>
+<p>Your vault is loaded from the cloud. Enter its master password to decrypt it locally.</p>
 </div>
 <div class="field">
-<span class="form-label">Encrypted vault file</span>
+<span class="form-label">Import existing encrypted file (optional)</span>
 <input accept=".json,.pvault,.pvault.json,application/json,text/json" class="file-picker" id="vaultFile" type="file"/>
 <div class="file-selection">
-<div class="file-meta"><strong>Vault file</strong><span id="selectedFileName">No file selected</span></div>
+<div class="file-meta"><strong>Local backup import</strong><span id="selectedFileName">Cloud vault loads automatically</span></div>
 <button class="secondary" id="chooseVaultFile" type="button">Browse</button>
 </div>
 </div>
@@ -678,13 +688,13 @@ html[data-theme="dark"] .entry-view { background: radial-gradient(ellipse 55% 55
           <div class="access-screen-head">
             <span class="page-kicker"><span class="small-dot"></span> GET STARTED</span>
             <h1>Create a new vault</h1>
-            <p>Start with a new encrypted file protected by your master password.</p>
+            <p>Create an encrypted vault connected to your signed-in account.</p>
           </div>
           <form autocomplete="off" class="access-card access-form" id="createVaultForm">
 <div class="card-title-row"><span class="screen-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2.6"/><path d="M3.5 10h17M9 10v10"/></svg></span>
 <div class="card-kicker">New vault</div>
 <h2>Create your vault</h2>
-<p>Choose a name and a strong master password to get started.</p>
+<p>Choose a name and a master password. This password is never uploaded.</p>
 </div>
 <div class="field">
 <label for="newVaultName">Vault name</label>
@@ -729,7 +739,7 @@ html[data-theme="dark"] .entry-view { background: radial-gradient(ellipse 55% 55
         </section>
       </div>
     </main>
-    <footer class="lock-page-footer">Your vault is encrypted locally. Keep a copy of every saved vault file.</footer>
+    <footer class="lock-page-footer">Local encryption · Encrypted cloud sync · Keep a separate backup</footer>
   </section>
 
   <section id="unlockedView" class="hidden">
@@ -743,7 +753,7 @@ html[data-theme="dark"] .entry-view { background: radial-gradient(ellipse 55% 55
           <button class="nav-link" type="button" data-page-target="settings"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="9" cy="6" r="2" fill="var(--surface)"/><circle cx="16" cy="12" r="2" fill="var(--surface)"/><circle cx="10" cy="18" r="2" fill="var(--surface)"/></svg></span><span>Settings</span></button>
         </nav>
         <div class="sidebar-bottom">
-          <div class="sidebar-note"><span class="sidebar-note-symbol">◈</span><div><strong>Local by design</strong><span>Save your encrypted file to keep changes.</span></div></div>
+          <div class="sidebar-note"><span class="sidebar-note-symbol">◈</span><div><strong>Local by design</strong><span>Only encrypted vault data is synchronized.</span></div></div>
           <button class="theme-toggle" type="button" data-theme-toggle aria-label="Toggle light and dark theme"><span class="theme-symbol" aria-hidden="true">☾</span><span class="theme-label">Dark mode</span></button>
         </div>
       </aside>
@@ -752,14 +762,14 @@ html[data-theme="dark"] .entry-view { background: radial-gradient(ellipse 55% 55
           <div class="page-heading"><div class="top-kicker" id="topKicker">WORKSPACE / MY VAULT</div><h1 id="vaultTitle">Vault</h1><p id="vaultMetaText">Unlocked in memory.</p></div>
           <div class="top-actions">
             <span id="vaultStatus" class="pill">LOCKED</span>
-            <span id="dirtyStatus" class="pill unsaved hidden">UNSAVED CHANGES</span>
-            <button id="exportVaultButton" type="button">Save encrypted vault</button>
+            <span id="dirtyStatus" class="pill unsaved hidden">UNSAVED CHANGES</span><span id="cloudSyncStatus" class="pill">CLOUD</span>
+            <button id="exportVaultButton" type="button">Save to cloud</button><button id="backupVaultButton" class="secondary" type="button">Download backup</button>
             <a id="downloadVaultLink" class="button-link hidden" href="#" download>Download encrypted vault</a>
-            <button id="lockVaultButton" class="secondary" type="button">Lock vault</button>
+            <button id="lockVaultButton" class="secondary" type="button">Lock vault</button><button id="unlockedSignOutButton" class="secondary" type="button">Sign out</button>
           </div>
         </header>
         <section class="app-page" id="vaultPage" data-app-page="vault" aria-label="Saved credentials">
-          <div class="section-introduction"><div><span class="section-overline">YOUR PASSWORDS</span><h2>Credential management</h2><p>View and manage entries in your unlocked vault.</p></div><span class="section-aside">Encrypted on export</span></div>
+          <div class="section-introduction"><div><span class="section-overline">YOUR PASSWORDS</span><h2>Credential management</h2><p>View and manage entries in your unlocked vault.</p></div><span class="section-aside">Encrypted before cloud sync</span></div>
           <section class="workspace" id="vaultWorkspace">
 <div class="card list-pane">
 <div class="list-head">
@@ -870,7 +880,7 @@ html[data-theme="dark"] .entry-view { background: radial-gradient(ellipse 55% 55
 </div>
 </div>
 </div>
-            <div class="card settings-info-card"><span class="info-eyebrow">ABOUT THIS VAULT</span><h3>Protected, in your control.</h3><p>Vault data stays in browser memory while unlocked. Export an encrypted vault file whenever you want to preserve changes.</p><div class="settings-info-row"><span>Encryption</span><strong>AES-256-GCM</strong></div><div class="settings-info-row"><span>Key derivation</span><strong>Argon2id</strong></div><div class="settings-info-row"><span>Storage</span><strong>Exported files only</strong></div></div>
+            <div class="card settings-info-card"><span class="info-eyebrow">ABOUT THIS VAULT</span><h3>Protected, in your control.</h3><p>Vault data stays in memory while unlocked. Only encrypted data is sent to Supabase. Download a separate encrypted backup for recovery.</p><div class="settings-info-row"><span>Encryption</span><strong>AES-256-GCM</strong></div><div class="settings-info-row"><span>Key derivation</span><strong>Argon2id</strong></div><div class="settings-info-row"><span>Storage</span><strong>Encrypted Supabase database</strong></div></div>
           </div>
         </section>
         <div id="globalStatus" class="status-line" role="status" aria-live="polite"></div>
@@ -901,6 +911,8 @@ html[data-theme="dark"] .entry-view { background: radial-gradient(ellipse 55% 55
   })();
   </script>
 
+<!-- Pinned browser SDK. For production, review and host this dependency yourself. -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
 <script>
 "use strict";
 
@@ -960,9 +972,25 @@ const COMMON_PASSWORDS = new Set([
   "000000", "passw0rd", "changeme", "secret", "google", "amazon", "india", "test", "test123"
 ]);
 
-// UI-only access gate. Change this string to set the entry password.
-// Client-side code is inspectable: this is not a substitute for vault encryption.
-const ACCESS_PASSWORD = "sample password";
+// CONFIGURATION: fill these in using your Supabase Project URL and PUBLISHABLE key.
+// IMPORTANT: Never put a secret/service-role key or database password in this HTML.
+const SUPABASE_URL = "https://oovxumnvkewufiwzewer.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_uRVy_CdXM-W_DqHAsUORyg_v6O90m6q";
+const cloud = {
+  client: null,
+  userId: null,
+  email: "",
+  loaded: false,
+  revision: 0,
+  saveInProgress: false,
+  savePromise: null,
+  saveTimer: null,
+  mutation: 0,
+  conflict: false,
+  epoch: 0,
+  importSource: "cloud",
+  encryptedEnvelope: null
+};
 const uiState = { accessGranted: false, accessScreen: "unlock", activePage: "vault" };
 
 const $ = (id) => document.getElementById(id);
@@ -971,6 +999,14 @@ const els = {
   loginView: $("loginView"),
   accessLoginForm: $("accessLoginForm"),
   accessPassword: $("accessPassword"),
+  accessEmail: $("accessEmail"),
+  accessSubmit: $("accessSubmit"),
+  registerAccountButton: $("registerAccountButton"),
+  signedInIdentity: $("signedInIdentity"),
+  lockedSignOutButton: $("lockedSignOutButton"),
+  unlockedSignOutButton: $("unlockedSignOutButton"),
+  backupVaultButton: $("backupVaultButton"),
+  cloudSyncStatus: $("cloudSyncStatus"),
   toggleAccessPassword: $("toggleAccessPassword"),
   accessStatus: $("accessStatus"),
   unlockVaultScreen: $("unlockVaultScreen"),
@@ -1946,9 +1982,231 @@ function clearGeneratedPassword() {
   els.generatorEntropy.textContent = "Approximate entropy: —";
 }
 
+
+// ────────────────────────────────────────────────────────────────────────────
+// Supabase account & encrypted cloud vault integration.
+// Authentication sessions use tab-scoped sessionStorage. Vault plaintext, the
+// master password, optional pepper, and CryptoKey are never stored there.
+// ────────────────────────────────────────────────────────────────────────────
+function isCloudConfigured() {
+  return /^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/i.test(SUPABASE_URL) &&
+    SUPABASE_PUBLISHABLE_KEY.startsWith("sb_publishable_") &&
+    !SUPABASE_PUBLISHABLE_KEY.includes("REPLACE");
+}
+
+function cloudStatus(message, kind = "") {
+  if (!els.cloudSyncStatus) return;
+  els.cloudSyncStatus.textContent = message;
+  els.cloudSyncStatus.classList.toggle("unsaved", kind === "warning" || kind === "error");
+}
+
+async function handleAccountLogin(event) {
+  event.preventDefault();
+  if (!cloud.client) return setStatus(els.accessStatus, "Configure the Supabase URL and publishable key first.", "error");
+  const email = els.accessEmail.value.trim();
+  const password = els.accessPassword.value;
+  els.accessSubmit.disabled = true;
+  els.registerAccountButton.disabled = true;
+  try {
+    const { error } = await cloud.client.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+    setStatus(els.accessStatus, "Signed in. Loading encrypted cloud vault…", "success");
+  } catch (error) {
+    setStatus(els.accessStatus, error.message || "Sign-in failed.", "error");
+  } finally {
+    els.accessPassword.value = "";
+    els.accessSubmit.disabled = false;
+    els.registerAccountButton.disabled = false;
+  }
+}
+
+async function handleAccountRegister() {
+  if (!cloud.client) return setStatus(els.accessStatus, "Configure Supabase first.", "error");
+  const email = els.accessEmail.value.trim();
+  const password = els.accessPassword.value;
+  if (!els.accessEmail.checkValidity()) return setStatus(els.accessStatus, "Enter a valid email address first.", "error");
+  if (password.length < 12) return setStatus(els.accessStatus, "Use at least 12 characters for your account password.", "error");
+  els.accessSubmit.disabled = true;
+  els.registerAccountButton.disabled = true;
+  try {
+    const { data, error } = await cloud.client.auth.signUp({
+      email, password, options: { emailRedirectTo: location.origin + location.pathname }
+    });
+    if (error) throw error;
+    if (data.session) setStatus(els.accessStatus, "Account created. Loading your vault…", "success");
+    else setStatus(els.accessStatus, "Check your email to confirm your account, then return here and sign in.", "success");
+  } catch (error) {
+    setStatus(els.accessStatus, error.message || "Registration failed.", "error");
+  } finally {
+    els.accessPassword.value = "";
+    els.accessSubmit.disabled = false;
+    els.registerAccountButton.disabled = false;
+  }
+}
+
+function resetCloudUserState() {
+  ++cloud.epoch; // Invalidate any account-loading request still in flight.
+  clearTimeout(cloud.saveTimer);
+  cloud.saveTimer = null;
+  cloud.userId = null;
+  cloud.email = "";
+  cloud.revision = 0;
+  cloud.loaded = false;
+  cloud.importSource = "cloud";
+  cloud.encryptedEnvelope = null;
+  cloud.conflict = false;
+  if (!state.locked) lockVault("Account signed out; vault locked.");
+  state.pendingImport = null;
+  clearSensitiveFieldsEverywhere();
+  uiState.accessGranted = false;
+  cloudStatus("CLOUD");
+  setActiveView();
+}
+
+async function loadAccountVault(session) {
+  if (!session?.user?.id) { resetCloudUserState(); return; }
+  const userId = session.user.id;
+  if (cloud.userId === userId) return;
+  if (cloud.userId) resetCloudUserState();
+  const requestEpoch = ++cloud.epoch;
+  cloud.userId = userId;
+  cloud.email = session.user.email || "Account";
+  cloud.loaded = false;
+  cloud.revision = 0;
+  cloud.conflict = false;
+  uiState.accessGranted = true;
+  els.signedInIdentity.textContent = cloud.email;
+  cloudStatus("LOADING");
+  setActiveView();
+  setGlobalStatus("Loading your encrypted vault from Supabase…", "warning");
+  try {
+    const { data, error } = await cloud.client.from("vaults")
+      .select("encrypted_vault,revision")
+      .eq("user_id", userId).maybeSingle();
+    if (error) throw error;
+    if (requestEpoch !== cloud.epoch || cloud.userId !== userId) return;
+    cloud.loaded = true;
+    els.createVaultButton.disabled = false;
+    els.unlockVaultButton.disabled = false;
+    if (data) {
+      const parsed = parseVaultFileText(JSON.stringify(data.encrypted_vault));
+      if (parsed.type !== "v2") throw new Error("Unsupported cloud vault format.");
+      state.pendingImport = parsed;
+      cloud.encryptedEnvelope = parsed.record;
+      cloud.importSource = "cloud";
+      cloud.revision = Number(data.revision);
+      els.selectedFileName.textContent = "Encrypted cloud vault loaded";
+      els.unlockPepperHint.textContent = parsed.record.pepperRequired
+        ? "This vault requires its secret pepper." : "Leave empty unless your vault uses a secret pepper.";
+      showAccessScreen("unlock");
+      setGlobalStatus("Encrypted cloud vault loaded. Enter the master password to unlock.", "success");
+    } else {
+      state.pendingImport = null;
+      cloud.encryptedEnvelope = null;
+      cloud.revision = 0;
+      els.selectedFileName.textContent = "No cloud vault yet — you can import a backup";
+      showAccessScreen("create");
+      setGlobalStatus("Account ready. Create your encrypted vault (or import a backup).", "success");
+    }
+    cloudStatus("SYNC READY");
+  } catch (error) {
+    if (requestEpoch !== cloud.epoch) return;
+    cloud.loaded = false;
+    cloudStatus("LOAD FAILED", "error");
+    setGlobalStatus("Couldn't load the vault. Check the SQL table, RLS policies, and network: " + (error.message || "Unknown error"), "error");
+    // Fail closed: no vault creation is permitted until the account lookup succeeds.
+    els.createVaultButton.disabled = true;
+    els.unlockVaultButton.disabled = true;
+  }
+}
+
+async function handleSignOut() {
+  if (!cloud.client) return;
+  if (state.dirty && !window.confirm("Unsynced changes may be lost. Download a backup before signing out. Continue?")) return;
+  try {
+    const { error } = await cloud.client.auth.signOut({ scope: "local" });
+    if (error) throw error;
+    resetCloudUserState();
+  } catch (error) {
+    setGlobalStatus("Could not sign out: " + error.message, "error");
+  }
+}
+
+function scheduleCloudSave() {
+  if (!cloud.client || !cloud.userId || !cloud.loaded || cloud.conflict || !state.vault || !state.vaultKey) return;
+  clearTimeout(cloud.saveTimer);
+  cloud.saveTimer = setTimeout(() => { void saveCloudVault(); }, 1100);
+}
+
+async function saveCloudVault(manual = false) {
+  if (!cloud.client || !cloud.userId || !cloud.loaded || state.locked || !state.vaultKey || !state.vault) {
+    if (manual) setGlobalStatus("Sign in and unlock your vault first.", "error");
+    return false;
+  }
+  if (cloud.conflict) {
+    setGlobalStatus("Save blocked: a newer cloud version exists. Download a backup of this version, then reload and reconcile changes.", "error");
+    return false;
+  }
+  if (cloud.savePromise) return cloud.savePromise;
+  clearTimeout(cloud.saveTimer);
+  cloud.saveTimer = null;
+  cloud.savePromise = (async () => {
+    const saveUser = cloud.userId;
+    const saveEpoch = cloud.epoch;
+    const saveMutation = cloud.mutation;
+    cloud.saveInProgress = true;
+    cloudStatus("SAVING…", "warning");
+    try {
+      state.vault.updatedAt = new Date().toISOString();
+      const envelope = await encryptAndBuildEnvelope();
+      if (saveUser !== cloud.userId || saveEpoch !== cloud.epoch) return false;
+      const { data: nextRevision, error } = await cloud.client.rpc("save_encrypted_vault", {
+        p_encrypted_vault: envelope,
+        p_expected_revision: cloud.revision
+      });
+      if (error) throw error;
+      if (saveEpoch !== cloud.epoch || saveUser !== cloud.userId) return false;
+      cloud.revision = Number(nextRevision);
+      cloud.encryptedEnvelope = envelope;
+      if (!Number.isSafeInteger(cloud.revision) || cloud.revision < 1) throw new Error("Invalid revision returned by cloud.");
+      if (cloud.mutation === saveMutation) setDirty(false);
+      cloudStatus("SAVED");
+      setGlobalStatus(cloud.mutation === saveMutation ? "Encrypted vault saved to cloud." : "Cloud saved an earlier version; saving recent edits next…", "success");
+      return true;
+    } catch (error) {
+      const message = String(error.message || "Cloud save failed.");
+      if (error.code === "40001" || message.includes("vault_conflict") || error.code === "23505") {
+        cloud.conflict = true;
+        cloudStatus("SYNC CONFLICT", "error");
+        setGlobalStatus("Cloud conflict: another device has a newer saved vault. Download an encrypted backup; this tab will not overwrite it.", "error");
+      } else {
+        cloudStatus("NOT SAVED", "error");
+        setGlobalStatus("Cloud save failed; changes are only in memory. Download an encrypted backup before closing. " + message, "error");
+      }
+      return false;
+    } finally {
+      cloud.saveInProgress = false;
+    }
+  })();
+  try { return await cloud.savePromise; }
+  finally {
+    cloud.savePromise = null;
+    if (state.dirty && !cloud.conflict && cloud.mutation > 0 && cloud.loaded && !state.locked && cloud.userId) {
+      // Auto-resave ONLY when edits arrived while a successful save was in flight.
+      // A failed network save must be retried explicitly, not in an infinite loop.
+      if (els.cloudSyncStatus.textContent === "SAVED") scheduleCloudSave();
+    }
+  }
+}
+
 function setDirty(value) {
   state.dirty = Boolean(value);
   els.dirtyStatus.classList.toggle("hidden", !state.dirty);
+  if (state.dirty) {
+    cloudStatus("UNSAVED", "warning");
+    ++cloud.mutation;
+    scheduleCloudSave();
+  }
 }
 
 function markActivity() {
@@ -2212,6 +2470,9 @@ function scheduleClipboardClear() {
 
 async function handleCreateVault(event) {
   event.preventDefault();
+  if (!cloud.userId || !cloud.loaded) return setStatus(els.createStatus, "Sign in and load your account first.", "error");
+  if (cloud.revision > 0) return setStatus(els.createStatus, "A vault already exists for this user. Unlock or import it instead.", "error");
+  const initialUserId = cloud.userId;
   if (!browserCapabilities()) return setStatus(els.createStatus, "This browser does not expose the required cryptographic APIs.", "error");
   if (state.kdfInProgress) return;
   if (Date.now() < state.blockedUntil || Date.now() < state.retryDelayUntil) return;
@@ -2253,8 +2514,8 @@ async function handleCreateVault(event) {
     renderVault();
     resetCredentialEditor();
     clearCreateSensitiveFields();
-    setStatus(els.createStatus, "Vault created and unlocked in memory.", "success");
-    setGlobalStatus("New vault is ready. Export the vault to create an encrypted file on disk.", "success");
+    setStatus(els.createStatus, "Vault created. Uploading encrypted vault to Supabase…", "success");
+    await saveCloudVault(true);
   } catch (error) {
     setStatus(els.createStatus, error instanceof Error ? error.message : "Vault creation failed.", "error");
   } finally {
@@ -2273,8 +2534,9 @@ function getPreferredKdfProfile() {
 }
 
 async function handleUnlockVault() {
+  if (!cloud.userId || !cloud.loaded) return setStatus(els.unlockStatus, "Cloud account is not ready.", "error");
   if (!state.pendingImport || !state.pendingImport.record) {
-    return setStatus(els.unlockStatus, "Choose an encrypted vault file first.", "error");
+    return setStatus(els.unlockStatus, "Cloud vault not loaded. Sign in or import an encrypted backup first.", "error");
   }
   if (Date.now() < state.blockedUntil) return updateAccessLockoutStatus();
   if (Date.now() < state.retryDelayUntil) return updateAccessLockoutStatus();
@@ -2344,12 +2606,14 @@ async function handleUnlockVault() {
       };
       key = null;
       state.pendingImport = null;
-      setDirty(false);
+      const importingLocalBackup = cloud.importSource === "file";
       state.locked = false;
       state.failedAttempts = 0;
+      setDirty(importingLocalBackup);
+      cloud.importSource = "cloud";
       setActiveView();
       renderVault();
-      setStatus(els.unlockStatus, "Vault unlocked successfully.", "success");
+      setStatus(els.unlockStatus, importingLocalBackup ? "Backup unlocked; saving encrypted vault to cloud…" : "Vault unlocked successfully.", "success");
       setGlobalStatus("Vault unlocked in memory.", "success");
     } catch (error) {
       state.failedAttempts += 1;
@@ -2417,14 +2681,19 @@ async function handleFileChoose() {
       return;
     }
 
+    if (!cloud.userId || !cloud.loaded) throw new Error("Sign in and load the account before importing.");
+    if (cloud.revision > 0 && !window.confirm("This backup will REPLACE your current cloud vault after you unlock it. Continue?")) return;
+    cloud.importSource = "file";
     state.pendingImport = parsed;
+    uiState.accessScreen = "unlock";
+    showAccessScreen("unlock");
     els.selectedFileName.textContent = `${file.name} • ${parsed.type === "v2" ? "Pass Vault v2" : "Legacy Pass v1"}`;
     els.unlockPepperHint.textContent = parsed.type === "v2" && parsed.record.pepperRequired
       ? "This vault declares that a secret pepper is required."
       : "Leave empty unless the vault was created with a pepper.";
 
     clearStatus(els.unlockStatus);
-    setGlobalStatus("Encrypted vault file parsed locally. Nothing was uploaded.", "success");
+    setGlobalStatus("Encrypted backup selected. After unlocking it, the encrypted contents will replace your cloud vault.", "warning");
   } catch (error) {
     state.pendingImport = null;
     els.selectedFileName.textContent = "No usable vault selected.";
@@ -2467,8 +2736,7 @@ async function handleExportVault() {
       els.downloadVaultLink.click();
     } catch {}
 
-    setDirty(false);
-    setGlobalStatus("Encrypted vault exported locally. The exported file contains no plaintext credentials.", "success");
+    setGlobalStatus("Encrypted backup downloaded. This does not change the cloud sync status.", "success");
     renderVaultHeader();
   } catch (error) {
     setGlobalStatus(error instanceof Error ? error.message : "Vault export failed.", "error");
@@ -2496,7 +2764,7 @@ function renderVault() {
 
 // Presentation routing: every screen is a separate view, never an anchor jump.
 function showAccessScreen(screen = "unlock") {
-  uiState.accessScreen = screen === "create" ? "create" : "unlock";
+  uiState.accessScreen = screen === "create" && cloud.loaded && cloud.revision === 0 ? "create" : "unlock";
   els.unlockVaultScreen.classList.toggle("hidden", uiState.accessScreen !== "unlock");
   els.createVaultScreen.classList.toggle("hidden", uiState.accessScreen !== "create");
   window.scrollTo(0, 0);
@@ -2590,7 +2858,7 @@ function lockVault(reason = "Vault locked.") {
   state.locked = true;
   clearSensitiveFieldsEverywhere();
   clearUnlockedDom();
-  uiState.accessGranted = false; // Require the entry password again after locking.
+  uiState.accessGranted = Boolean(cloud.userId); // Lock the vault, not the Supabase account.
   uiState.activePage = "vault";
   uiState.accessScreen = "unlock";
   setActiveView();
@@ -2635,7 +2903,7 @@ function deleteCredential(id) {
   setDirty(true);
   if (state.editingId === id) resetCredentialEditor();
   renderVault();
-  setGlobalStatus("Credential deleted from the in-memory vault. Export to persist the change.", "success");
+  setGlobalStatus("Credential deleted locally. Encrypted cloud sync scheduled…", "warning");
 }
 
 function saveCredential() {
@@ -2652,7 +2920,7 @@ function saveCredential() {
     credential.password = draft.password;
     credential.notes = draft.notes;
     credential.updatedAt = now;
-    setGlobalStatus("Credential updated in memory. Export to persist the change.", "success");
+    setGlobalStatus("Credential updated locally. Encrypted cloud sync scheduled…", "warning");
   } else {
     state.vault.credentials.push({
       id: secureId(),
@@ -2664,7 +2932,7 @@ function saveCredential() {
       createdAt: now,
       updatedAt: now
     });
-    setGlobalStatus("Credential added to the in-memory vault. Export to persist the change.", "success");
+    setGlobalStatus("Credential added locally. Encrypted cloud sync scheduled…", "warning");
   }
 
   state.vault.updatedAt = now;
@@ -2776,20 +3044,10 @@ function beforeUnload(event) {
 }
 
 function initializeEvents() {
-  els.accessLoginForm.addEventListener("submit", (event) => {
-    event.preventDefault();
-    if (els.accessPassword.value === ACCESS_PASSWORD) {
-      uiState.accessGranted = true;
-      uiState.accessScreen = "unlock";
-      els.accessPassword.value = "";
-      clearStatus(els.accessStatus);
-      setActiveView();
-    } else {
-      els.accessPassword.value = "";
-      setStatus(els.accessStatus, "Incorrect access password. Try again.", "error");
-      els.accessPassword.focus();
-    }
-  });
+  els.accessLoginForm.addEventListener("submit", handleAccountLogin);
+  els.registerAccountButton.addEventListener("click", handleAccountRegister);
+  els.lockedSignOutButton.addEventListener("click", handleSignOut);
+  els.unlockedSignOutButton.addEventListener("click", handleSignOut);
   els.toggleAccessPassword.addEventListener("click", () => toggleFieldVisibility(els.accessPassword, els.toggleAccessPassword));
   document.querySelectorAll("[data-access-target]").forEach((button) => {
     button.addEventListener("click", () => showAccessScreen(button.dataset.accessTarget));
@@ -2810,7 +3068,8 @@ function initializeEvents() {
   els.chooseVaultFile.addEventListener("click", () => els.vaultFile.click());
   els.vaultFile.addEventListener("change", handleFileChoose);
   els.unlockVaultButton.addEventListener("click", handleUnlockVault);
-  els.exportVaultButton.addEventListener("click", handleExportVault);
+  els.exportVaultButton.addEventListener("click", () => { void saveCloudVault(true); });
+  els.backupVaultButton.addEventListener("click", handleExportVault);
   els.lockVaultButton.addEventListener("click", () => lockVault("Manual lock"));
   els.addCredentialButton.addEventListener("click", handleNewCredential);
   els.credentialSearch.addEventListener("input", renderCredentialList);
@@ -2875,7 +3134,23 @@ async function initialize() {
   updateMasterStrength();
   setActiveView();
   state.initialized = true;
-  await runStartupSelfTest();
+  if (!await runStartupSelfTest()) return;
+  if (!isCloudConfigured()) {
+    return setStatus(els.accessStatus, "Setup required: add the Supabase Project URL and publishable key in this HTML file.", "warning");
+  }
+  if (!window.supabase || typeof window.supabase.createClient !== "function") {
+    return setStatus(els.accessStatus, "Supabase SDK did not load. Check CDN access and Content Security Policy.", "error");
+  }
+  cloud.client = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+    auth: { autoRefreshToken: true, persistSession: true, detectSessionInUrl: true, storage: window.sessionStorage }
+  });
+  cloud.client.auth.onAuthStateChange((event, session) => {
+    // Auth callbacks are synchronous; defer any database calls to avoid deadlocks.
+    queueMicrotask(() => { void loadAccountVault(session); });
+  });
+  const { data, error } = await cloud.client.auth.getSession();
+  if (error) setStatus(els.accessStatus, error.message, "error");
+  else await loadAccountVault(data.session);
 }
 
 initialize().catch((error) => {
