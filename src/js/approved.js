@@ -180,23 +180,119 @@ function createVault(){
 function createVaultModal(){
  if(!cloud.loaded)return tip('Vault list is not ready.');
  if(vaults().length>=2)return tip('Maximum two encrypted vaults per account.');
- $('vaultName').value='';$('vaultDialog').showModal();$('vaultName').focus();
+ // Use the original validated, encrypted vault creation flow inside the new-theme gate.
+ createVault();
 }
 function clearPrivateUI(){
  selected=null;editId=null;quick='';generated='';query='';$('search').value='';
  for(const id of ['editorDialog','detailDialog','infoDialog','vaultDialog'])if($(id).open)$(id).close();
  $('editorForm').reset();$('detailBody').replaceChildren();$('approvedCustomFields').replaceChildren();
+ $('detailTitle').textContent='';$('infoMessage').textContent='';
  $('fullTable').replaceChildren();$('favoritesTable').replaceChildren();$('recentTable').replaceChildren();
  $('overviewVaults').replaceChildren();$('manageVaults').replaceChildren();$('quickPassword').textContent='';$('approvedGeneratedPassword').textContent='';
  closeMenu();$('flowsMenu').classList.add('hidden');
 }
+// The original validated vault-create and unlock controls are physically mounted
+// in this styled modal; their event handlers, crypto and backend requests are untouched.
+const gate=$('approvedVaultGate');
+const gateSlot=$('approvedGateSecureForm');
+const realCreate=els.createVaultForm;
+const realUnlock=$('unlockVaultScreen').querySelector('.access-card');
+let gateMode='',gateUser=null;
+function resetLockedPresentation(){
+ $('metrics').innerHTML=[['key','Total items'],['shield-check','Password warnings'],['star','Favorites'],['folder','Vaults']].map(([ico,title])=>`<div class="card metric"><div class="metric-top"><span class="metric-icon">${icon(ico)}</span><span class="metric-trend">Encrypted</span></div><div class="metric-number">—</div><div class="metric-name">${title}</div></div>`).join('');
+ $('navCount').textContent='—';
+ $('healthNumber').textContent='—';$('healthGood').textContent='—';$('healthReused').textContent='—';$('healthWeak').textContent='—';
+ $('approvedVaultStatus').textContent='Vault locked';
+ $('vaultUsed').textContent='—';$('capLabel').textContent='Vault locked';$('capacityBar').style.width='0';
+ $('securityIssues').replaceChildren();$('overviewVaults').replaceChildren();$('manageVaults').replaceChildren();
+ $('quickPassword').textContent='••••••••••••';$('recentTable').replaceChildren();
+ const identity=document.querySelector('#approvedUI .identity small');if(identity)identity.textContent='Signed in';
+}
+function gateVaultEntries(){
+ const box=$('approvedGateVaultList');box.replaceChildren();
+ if(!cloud.loaded){
+  const p=document.createElement('p');p.className='approved-gate-helper';
+  p.textContent=cloudStatusIsLoading()?'Loading your vaults securely…':'Could not load your vaults. Check your connection and refresh.';
+  box.append(p,$('dashboardStatus'));return;
+ }
+ for(const v of cloud.vaults){
+  const b=document.createElement('button');b.type='button';b.className='approved-gate-vault';
+  const ico=document.createElement('span');ico.className='approved-gate-vault-icon';ico.innerHTML=icon('lock');
+  const copy=document.createElement('span');copy.className='approved-gate-vault-copy';
+  const name=document.createElement('strong');name.textContent=v.label||'Encrypted vault';
+  const hint=document.createElement('small');hint.textContent='Encrypted · Master password required';
+  const arrow=document.createElement('span');arrow.className='approved-gate-vault-chevron';arrow.textContent='→';
+  copy.append(name,hint);b.append(ico,copy,arrow);
+  b.addEventListener('click',()=>{void openVaultById(v.vault_id);});box.append(b);
+ }
+ box.append($('dashboardStatus')); // Reuse the original live cloud-loading/error status.
+}
+function cloudStatusIsLoading(){return !cloud.loaded && cloud.userId && !cloud.conflict && !document.getElementById('globalStatus')?.textContent?.includes('Cannot list vaults');}
+function showVaultGate(){
+ if(!cloud.userId||!uiState.accessGranted||!state.locked)return;
+ // First-time accounts go straight into the original secure creation flow.
+ if(cloud.loaded && cloud.vaults.length===0 && uiState.accessScreen==='dashboard' && !cloud.selectedVaultId){
+  prepareNewVault();return;
+ }
+ let next=uiState.accessScreen;
+ if(next!=='unlock'&&next!=='create')next='dashboard';
+ if(!cloud.loaded)next='dashboard';
+ if(gateUser!==cloud.userId){gateMode='';gateUser=cloud.userId;}
+ const modeChanged=gateMode!==next;
+ if(modeChanged){
+  gateMode=next;
+  gateSlot.replaceChildren();
+  $('approvedGateVaultList').replaceChildren();
+  if(next==='unlock')gateSlot.append(realUnlock);
+  else if(next==='create')gateSlot.append(realCreate);
+ }
+ const count=cloud.vaults.length;
+ $('approvedGateEyebrow').textContent=next==='dashboard'?'YOUR PRIVATE WORKSPACE':next==='create'?'NEW ENCRYPTED VAULT':'SECURE VAULT ACCESS';
+ $('approvedGateTitle').textContent=next==='dashboard'?'Choose a vault to unlock':next==='create'?'Create your '+(count?'new':'first')+' vault':'Unlock '+(cloud.vaultLabel||'your vault');
+ $('approvedGateDescription').textContent=next==='dashboard'?'Select a vault to continue to your workspace.':next==='create'?'Set up a separate master password to protect this vault.':'Enter the master password for this vault. Your password is never uploaded.';
+ $('approvedGateHelper').textContent=next==='dashboard'?'Vault contents remain hidden until unlocked.':next==='create'?'Encryption happens locally before anything is saved to the cloud.':'Your master password is used for local decryption only.';
+ $('approvedGateVaultList').hidden=next!=='dashboard';
+ if(next==='dashboard')gateVaultEntries();
+ $('approvedGateBack').hidden=next==='dashboard'||!count;
+ $('approvedGateRefresh').hidden=next!=='dashboard';
+ $('approvedGateCreate').hidden=next!=='dashboard'||!cloud.loaded||count>=2;
+ $('approvedGateCreate').textContent=count?'Create another vault':'Create first vault';
+ if(!gate.open)gate.showModal();
+ if(modeChanged){const focusTarget=next==='unlock'?$('unlockMaster'):next==='create'?$('newVaultName'):$('approvedGateVaultList').querySelector('button');
+  if(focusTarget)queueMicrotask(()=>{if(gate.open&&document.contains(focusTarget))focusTarget.focus({preventScroll:true});});}
+}
+function hideVaultGate(){if(gate.open)gate.close();gateMode='';}
+gate.addEventListener('cancel',e=>{if(state.locked && uiState.accessGranted)e.preventDefault();});
+$('approvedGateBack').addEventListener('click',()=>{clearSensitiveFieldsEverywhere();showAccessScreen('dashboard');});
+$('approvedGateCreate').addEventListener('click',()=>prepareNewVault());
+$('approvedGateSignOut').addEventListener('click',()=>{void handleSignOut();});
+$('approvedGateRefresh').addEventListener('click',async()=>{
+ if(!cloud.userId)return;
+ const btn=$('approvedGateRefresh');btn.disabled=true;
+ try{await reloadVaultList();cloud.loaded=true;renderVaultDashboard();}
+ catch(e){cloud.loaded=false;setStatus($('dashboardStatus'),e.message||'Unable to load vaults','error');showVaultGate();}
+ finally{btn.disabled=false;}
+});
 function syncVisible(){
  if(ready()){
-  $('approvedUI').hidden=false;
+  hideVaultGate();$('approvedUI').hidden=false;
+  $('approvedUI').classList.remove('approved-vault-locked');
   const saved=new URL(location.href).searchParams.get('view');
   if(!window.__pvApprovedWasUnlocked){window.__pvApprovedWasUnlocked=true;createMain();createQuick();navigate(pageTitles[saved]?saved:'overview',false);}
   render();
- }else{if(window.__pvApprovedWasUnlocked){window.__pvApprovedWasUnlocked=false;clearPrivateUI();}$('approvedUI').hidden=true;}
+ }else{
+  if(window.__pvApprovedWasUnlocked){window.__pvApprovedWasUnlocked=false;clearPrivateUI();}
+  const signed=Boolean(cloud.userId && uiState.accessGranted);
+  $('approvedUI').hidden=!signed;
+  if(signed){
+   // Empty, inert approved dashboard only: no decrypted entries render while locked.
+   els.loginView.classList.add('hidden');els.lockedView.classList.add('hidden');
+   els.unlockedView.classList.remove('hidden');
+   $('approvedUI').classList.add('approved-vault-locked');
+   resetLockedPresentation();showVaultGate();
+  }else{hideVaultGate();$('approvedUI').classList.remove('approved-vault-locked');gateUser=null;}
+ }
 }
 // Install handlers only on elements inside the unchanged approved HTML layout.
 $('editorForm').addEventListener('submit',saveItem);
@@ -260,6 +356,8 @@ window.addEventListener('popstate',()=>{if(ready()){const v=new URL(location.hre
 // The original application owns rendering, session locking and cloud status. Refresh only after its lifecycle has run.
 const originalRenderVault=renderVault;
 renderVault=function(...args){const out=originalRenderVault(...args);syncVisible();return out;};
+const originalShowAccessScreen=showAccessScreen;
+showAccessScreen=function(...args){const out=originalShowAccessScreen(...args);syncVisible();return out;};
 const originalSetActiveView=setActiveView;
 setActiveView=function(...args){const out=originalSetActiveView(...args);syncVisible();return out;};
 const originalSetDirty=setDirty;

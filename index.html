@@ -504,6 +504,26 @@
 <dialog aria-labelledby="detailTitle" class="dialog" id="detailDialog"><div class="dialog-head"><div><div class="eyebrow">ITEM DETAILS</div><h2 id="detailTitle">Item</h2><p>Details from your unlocked encrypted vault.</p></div><button aria-label="Close" class="iconbtn" data-close="detailDialog" data-icon="x"></button></div><div class="dialog-body" id="detailBody"></div><div class="dialog-foot"><button class="btn btn-danger" id="deleteItem"><span data-icon="trash"></span>Delete</button><button class="btn btn-light" id="favoriteDetail"><span data-icon="star"></span>Favorite</button><button class="btn btn-primary" id="editItem"><span data-icon="edit"></span>Edit item</button></div></dialog>
 <dialog aria-labelledby="infoTitle" class="dialog" id="infoDialog"><div class="dialog-head"><div><div class="eyebrow">ABOUT PASSVAULT</div><h2 id="infoTitle">PassVault information</h2></div><button aria-label="Close" class="iconbtn" data-close="infoDialog" data-icon="x"></button></div><div class="dialog-body"><p class="preview-inline-9" id="infoMessage"></p></div><div class="dialog-foot"><button class="btn btn-primary" data-close="infoDialog">Got it</button></div></dialog>
 <dialog aria-labelledby="vaultDialogTitle" class="dialog" id="vaultDialog"><form id="vaultForm"><div class="dialog-head"><div><div class="eyebrow">VAULT CREATION</div><h2 id="vaultDialogTitle">Create vault</h2><p>Vault creation requires a separate master password.</p></div><button aria-label="Close" class="iconbtn" data-close="vaultDialog" data-icon="x" type="button"></button></div><div class="dialog-body"><div class="field"><label for="vaultName">Vault name</label><input id="vaultName" maxlength="70" placeholder="Work vault" required=""/></div><div class="note">In the actual project, vault creation also asks for a master password, confirmation, and optional security settings. Those validated backend flows will be preserved.</div></div><div class="dialog-foot"><button class="btn btn-light" data-close="vaultDialog" type="button">Cancel</button><button class="btn btn-primary" type="submit">Continue to secure setup</button></div></form></dialog>
+<!-- Approved dashboard vault-access flow. Existing secure input nodes are moved here at runtime. -->
+<dialog id="approvedVaultGate" class="dialog approved-vault-gate" aria-labelledby="approvedGateTitle" aria-describedby="approvedGateDescription">
+  <div class="dialog-head">
+    <div><div class="eyebrow" id="approvedGateEyebrow">SECURE VAULT ACCESS</div>
+      <h2 id="approvedGateTitle">Your encrypted vaults</h2>
+      <p id="approvedGateDescription">Choose a vault to unlock.</p></div>
+    <span class="approved-gate-mark" aria-hidden="true"><span data-icon="shield-check"></span></span>
+  </div>
+  <div class="dialog-body">
+    <div id="approvedGateVaultList" class="approved-gate-vaults"></div>
+    <div id="approvedGateSecureForm" class="approved-gate-form"></div>
+    <p class="approved-gate-helper" id="approvedGateHelper">Your master password stays on this device.</p>
+  </div>
+  <div class="dialog-foot approved-gate-foot">
+    <button class="btn btn-light" id="approvedGateBack" type="button" hidden>← My vaults</button>
+    <button class="btn btn-light" id="approvedGateRefresh" type="button" hidden>Refresh vaults</button>
+    <button class="btn btn-light" id="approvedGateSignOut" type="button">Sign out</button>
+    <button class="btn btn-primary" id="approvedGateCreate" type="button" hidden>Create new vault</button>
+  </div>
+</dialog>
 <div aria-live="polite" class="toast" id="toast" role="status"><span data-icon="check"></span><span id="toastText"></span></div>
 </div>
   </section>

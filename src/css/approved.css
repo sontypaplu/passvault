@@ -389,3 +389,55 @@ html[data-theme="dark"] #approvedUI{--bg:#0c1020;--surface:#151b2e;--surface-2:#
  #approvedUI .heading-actions .status{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:0 1 auto}
  #approvedUI .heading-actions>.btn{flex:0 0 auto;white-space:nowrap}
 }
+
+/* Signed-in, encrypted-vault gate: keeps the approved workspace visible but inert. */
+#approvedUI.approved-vault-locked > .app { pointer-events:none; user-select:none; }
+#approvedUI.approved-vault-locked > .app .container,
+#approvedUI.approved-vault-locked > .app .topbar,
+#approvedUI.approved-vault-locked > .app .sidebar { filter:blur(4px); }
+#approvedUI .approved-vault-gate { width:min(535px,calc(100vw - 28px)); max-height:min(92dvh,800px); }
+#approvedUI .approved-vault-gate::backdrop { background:rgba(22,28,56,.44);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px); }
+#approvedUI .approved-gate-mark {flex:0 0 42px;width:42px;height:42px;border-radius:14px;background:var(--primary-wash);color:var(--primary);display:grid;place-items:center;}
+#approvedUI .approved-gate-mark svg {width:23px;height:23px;}
+#approvedUI .approved-vault-gate .dialog-head h2 {font-size:22px;line-height:1.28;letter-spacing:-.7px;}
+#approvedUI .approved-gate-vaults {display:grid;gap:12px;}
+#approvedUI .approved-gate-vault { width:100%;display:flex;align-items:center;gap:14px;text-align:left;border:1px solid var(--border);background:var(--surface);border-radius:13px;padding:16px;cursor:pointer;transition:border-color .15s, background .15s; }
+#approvedUI .approved-gate-vault:hover {border-color:var(--primary);background:var(--primary-wash);}
+#approvedUI .approved-gate-vault-icon {height:42px;width:42px;flex:0 0 42px;border-radius:12px;background:var(--primary-wash);color:var(--primary);display:grid;place-items:center;}
+#approvedUI .approved-gate-vault-icon svg {width:21px;height:21px;}
+#approvedUI .approved-gate-vault-copy {display:grid;gap:5px;flex:1;min-width:0;}
+#approvedUI .approved-gate-vault-copy strong {font-size:14px;color:var(--text);overflow-wrap:anywhere;}
+#approvedUI .approved-gate-vault-copy small {font-size:11px;color:var(--muted);}
+#approvedUI .approved-gate-vault-chevron {color:var(--primary);font-size:21px;font-weight:700;}
+#approvedUI .approved-gate-helper {margin:17px 0 0;font-size:12px;color:var(--muted);line-height:1.6;}
+#approvedUI .approved-gate-foot {justify-content:flex-end;align-items:center;}
+#approvedUI .approved-gate-foot button[hidden]{display:none!important;}
+#approvedUI .approved-gate-foot button {min-width:94px;}
+#approvedUI #approvedGateBack {margin-right:auto;}
+#approvedUI .approved-gate-form:empty {display:none;}
+#approvedUI .approved-gate-form .access-card,
+#approvedUI .approved-gate-form .access-form,
+#approvedUI .approved-gate-form #createVaultForm {padding:0!important;margin:0!important;max-width:none!important;width:100%!important;min-width:0!important;box-shadow:none!important;border:0!important;background:transparent!important;display:block!important;}
+#approvedUI .approved-gate-form .card-title-row {display:none!important;}
+#approvedUI .approved-gate-form .field {margin:0 0 15px;display:grid;gap:7px;}
+#approvedUI .approved-gate-form .field label {color:var(--text);font-weight:720;font-size:12px;}
+#approvedUI .approved-gate-form .field input:not([type=checkbox]),
+#approvedUI .approved-gate-form .field select {width:100%;min-height:43px;padding:11px 13px;color:var(--text);background:var(--surface);border:1px solid var(--border);border-radius:10px;box-shadow:none;font-size:13px;}
+#approvedUI .approved-gate-form .field input:focus-visible,
+#approvedUI .approved-gate-form .field select:focus-visible {outline:2px solid var(--primary);outline-offset:2px;}
+#approvedUI .approved-gate-form .button-row {margin-top:17px;display:flex;}
+#approvedUI .approved-gate-form .button-row button {background:var(--primary);color:#fff;font-weight:760;border:0;border-radius:10px;min-height:44px;width:100%;padding:10px 16px;}
+#approvedUI .approved-gate-form .file-picker {position:absolute!important;width:1px!important;height:1px!important;opacity:0!important;overflow:hidden!important;}
+#approvedUI .approved-gate-form .file-selection {display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;}
+#approvedUI .approved-gate-form .file-meta {display:grid;gap:3px;font-size:12px;min-width:0;}
+#approvedUI .approved-gate-form .file-meta span {font-size:11px;color:var(--muted);overflow-wrap:anywhere;}
+#approvedUI .approved-gate-form #chooseVaultFile {border:1px solid var(--border);border-radius:9px;padding:9px 12px;background:var(--surface);color:var(--text);font-weight:700;}
+#approvedUI .approved-gate-form .status-line:not(:empty) {margin-top:12px;font-size:12px;overflow-wrap:anywhere;}
+#approvedUI .approved-gate-form .hint {font-size:11px;color:var(--muted);line-height:1.5;}
+#approvedUI .approved-gate-form details.advanced-options {border:1px solid var(--border);border-radius:11px;padding:12px 14px;margin-top:12px;}
+#approvedUI .approved-gate-form details.advanced-options summary {cursor:pointer;color:var(--primary);font-weight:750;font-size:12px;}
+#approvedUI .approved-gate-form .advanced-options-body {padding-top:14px;}
+#approvedUI .approved-gate-form .check {display:flex;align-items:center;gap:8px;}
+#approvedUI .approved-gate-form .strength-box {margin:8px 0;font-size:11px;}
+#approvedUI .approved-gate-form .strength-fill {max-width:100%;}
+@media (max-width:520px){#approvedUI .approved-vault-gate .dialog-body {padding:17px;}#approvedUI .approved-gate-foot {gap:7px;}#approvedUI .approved-gate-foot .btn {font-size:11px;padding:9px;}#approvedUI .approved-gate-vault {padding:13px;}}
