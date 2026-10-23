@@ -1,15 +1,18 @@
 {
-  "name": "passvault-cloud-2-1",
+  "name": "passvault-cloud-3",
   "private": true,
-  "version": "2.1.0",
-  "description": "Static PassVault with a self-hosted, version-pinned Supabase browser SDK",
+  "version": "3.0.0",
+  "description": "PassVault 3.0 premium interface with backwards compatible client-side encrypted vaults",
   "scripts": {
     "build": "node tools/build.mjs --production",
     "build:preview": "node tools/build.mjs",
-    "verify": "node tools/verify.mjs"
+    "verify": "node tools/verify.mjs",
+    "verify:source": "node tools/verify-source.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.117.3"
   },
-  "engines": { "node": ">=20" }
+  "engines": {
+    "node": ">=20"
+  }
 }

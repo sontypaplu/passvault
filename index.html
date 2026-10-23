@@ -6,8 +6,9 @@
   <meta name="referrer" content="no-referrer">
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'; connect-src https://*.supabase.co wss://*.supabase.co; img-src 'none'; media-src 'none'; frame-src 'none'; style-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src blob:; upgrade-insecure-requests">
   <meta name="theme-color" content="#F5F7FB">
-  <title>PassVault Cloud — Password Manager</title>
+  <title>PassVault 3.0 — Secure workspace</title>
 <link rel="stylesheet" href="./src/css/main.css">
+<link rel="stylesheet" href="./src/css/premium.css">
 </head>
 <body>
   <div id="compatibilityError" class="compatibility-banner hidden" role="alert"></div>
@@ -154,6 +155,96 @@
   </section>
 
   <section id="unlockedView" class="hidden">
+<div id="premiumApp" aria-label="PassVault premium workspace">
+<!-- Symbols adopted from the approved preview -->
+<svg aria-hidden="true" class="pv3-icon-defs" xmlns="http://www.w3.org/2000/svg">
+<symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></symbol>
+<symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></symbol>
+<symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="11" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
+<symbol id="i-key" viewBox="0 0 24 24"><circle cx="7.5" cy="15.5" r="5.5"/><path d="M12 12 21 3l-1 5-4 1-1 4"/></symbol>
+<symbol id="i-star" viewBox="0 0 24 24"><path d="m12 2 3 6.4 7 .9-5 4.8 1.3 7-6.3-3.4-6.3 3.4 1.3-7-5-4.8 7-.9Z"/></symbol>
+<symbol id="i-settings" viewBox="0 0 24 24"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M19.3 13.5a8.5 8.5 0 0 0 0-3l2-1.5-2-3.4-2.4.9a8 8 0 0 0-2.5-1.5L14 2h-4l-.4 3A8 8 0 0 0 7.1 6.5l-2.4-.9-2 3.4 2 1.5a8.5 8.5 0 0 0 0 3l-2 1.5 2 3.4 2.4-.9A8 8 0 0 0 9.6 19l.4 3h4l.4-3a8 8 0 0 0 2.5-1.5l2.4.9 2-3.4Z"/></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="7.3"/><path d="m16 16 5 5"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+<symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4.5 4.5L19 7"/></symbol>
+<symbol id="i-alert" viewBox="0 0 24 24"><path d="m12 3 10 18H2L12 3Z"/><path d="M12 9v5M12 18h.01"/></symbol>
+<symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></symbol>
+<symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M5.5 9A7 7 0 0 1 18 7l2 5M4 12l2 5a7 7 0 0 0 12.5-2"/></symbol>
+<symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></symbol>
+<symbol id="i-more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></symbol>
+<symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2v9H3Z"/></symbol>
+<symbol id="i-spark" viewBox="0 0 24 24"><path d="m12 2 2.5 7.5L22 12l-7.5 2.5L12 22l-2.5-7.5L2 12l7.5-2.5Z"/></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 6v6l4 2"/></symbol>
+<symbol id="i-moon" viewBox="0 0 24 24"><path d="M20.9 13.2A9 9 0 0 1 10.8 3.1 9 9 0 1 0 20.9 13.2Z"/></symbol>
+<symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M19 5l-1.5 1.5m-11 11L5 19"/></symbol>
+<symbol id="i-chevron" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+<symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="3" fill="currentColor" stroke="none"/><circle cx="15" cy="17" r="3" fill="currentColor" stroke="none"/></symbol>
+<symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></symbol>
+</svg>
+<div class="app">
+  <aside class="sidebar" id="pv3Sidebar" aria-label="PassVault navigation">
+    <div class="brand"><div class="brandmark"><svg class="ico"><use href="#i-shield"></use></svg></div><div><div class="brandname">Pass<span class="pv3-violet">Vault</span><span class="pv3-version">3.0</span></div><div class="brandsub">PRIVATE BY DESIGN</div></div></div>
+    <div class="navcap">Workspace</div>
+    <button type="button" class="navitem active" data-pv-view="overview"><svg class="ico"><use href="#i-grid"></use></svg> Overview</button>
+    <button type="button" class="navitem" data-pv-view="items"><svg class="ico"><use href="#i-key"></use></svg> All items <span class="count" id="pv3SideItems">0</span></button>
+    <button type="button" class="navitem" data-pv-view="favorites"><svg class="ico"><use href="#i-star"></use></svg> Favorites <span class="count" id="pv3SideFavorites">0</span></button>
+    <button type="button" class="navitem" data-pv-view="security"><svg class="ico"><use href="#i-shield"></use></svg> Security center</button>
+    <button type="button" class="navitem" data-pv-view="generator"><svg class="ico"><use href="#i-spark"></use></svg> Password generator</button>
+    <div class="navcap">My vaults <span class="pv3-sidecap-count" id="pv3SideCapacity">0 / 2</span></div>
+    <div id="pv3SideVaults"></div>
+    <button type="button" class="navitem" id="pv3CreateVaultSide"><svg class="ico xs"><use href="#i-plus"></use></svg> Create vault <span class="count" id="pv3SideLimitNote"></span></button>
+    <div class="vault-limit"><div class="limitlabels"><span>Vault capacity</span><strong id="pv3LimitSide">0 / 2</strong></div><div class="track"><i id="pv3LimitTrack"></i></div></div>
+    <div class="navcap">Preferences</div>
+    <button type="button" class="navitem" data-pv-view="settings"><svg class="ico"><use href="#i-settings"></use></svg> Settings</button>
+    <div class="sidefooter"><div class="avatar">PV</div><div class="pv3-userbox"><div class="userline">My PassVault account</div><div class="useremail" id="pv3Email"></div></div><button type="button" class="userdots" id="pv3SignOut" aria-label="Sign out" title="Sign out"><svg class="ico"><use href="#i-more"></use></svg></button></div>
+  </aside>
+  <main class="main">
+    <header class="topbar"><button type="button" class="mobile-toggle" id="pv3MobileToggle" aria-label="Toggle navigation"><svg class="ico"><use href="#i-grid"></use></svg></button>
+      <div class="breadcrumb"><span>Workspace</span><svg class="ico xs"><use href="#i-chevron"></use></svg><strong id="pv3Crumb">Overview</strong></div>
+      <label class="searchbox"><svg class="ico xs"><use href="#i-search"></use></svg><input id="pv3Search" type="search" autocomplete="off" spellcheck="false" placeholder="Search your unlocked vault..." aria-label="Search current unlocked vault"><span class="kbd">Ctrl K</span></label>
+      <button type="button" class="topicon" id="pv3Theme" aria-label="Toggle theme"><svg class="ico"><use href="#i-moon"></use></svg></button>
+      <button type="button" class="topicon" id="pv3Lock" aria-label="Lock vault" title="Lock current vault"><svg class="ico"><use href="#i-lock"></use></svg></button>
+      <button type="button" class="newbtn" id="pv3NewItem"><svg class="ico xs"><use href="#i-plus"></use></svg><span>New item</span></button>
+    </header>
+    <div class="content">
+      <section class="screen active" id="pv3View-overview">
+        <div class="hero"><div><div class="eyebrow">YOUR SECURE WORKSPACE</div><h1>Everything secure. <span class="pv3-violet">All in one place.</span></h1><p>Your digital essentials, beautifully organized and always in your control.</p></div><div class="heroright"><div class="pill" id="pv3Sync">Encrypted cloud sync</div></div></div>
+        <div class="grid-metrics">
+          <div class="card metric"><div class="iconbox"><svg class="ico"><use href="#i-key"></use></svg></div><div class="metric-value" id="pv3MetricItems">0</div><div class="metriclabel">Items in unlocked vault</div><div class="metrictrend neutral">Encrypted locally</div></div>
+          <div class="card metric"><div class="iconbox"><svg class="ico"><use href="#i-shield"></use></svg></div><div class="metric-value" id="pv3MetricScore">—</div><div class="metriclabel">Password health estimate</div><div class="metrictrend neutral">Current vault only</div></div>
+          <div class="card metric"><div class="iconbox"><svg class="ico"><use href="#i-folder"></use></svg></div><div class="metric-value" id="pv3MetricVaults">0</div><div class="metriclabel">Encrypted vaults</div><div class="metrictrend neutral">Maximum two</div></div>
+          <div class="card metric"><div class="iconbox"><svg class="ico"><use href="#i-alert"></use></svg></div><div class="metric-value" id="pv3MetricAlerts">0</div><div class="metriclabel">Local password warnings</div><div class="metrictrend neutral">No breach lookup</div></div>
+        </div>
+        <div class="dashgrid"><div>
+          <div class="card security-card"><h2>Your security, at a glance</h2><p>Password checks run in your browser for the unlocked vault only.</p><div class="secinner"><div class="secitems"><div class="secrow"><span class="smallmark"></span><strong id="pv3Strong">0</strong> strong passwords</div><div class="secrow"><span class="smallmark warn"></span><strong id="pv3Reused">0</strong> reused entries</div><div class="secrow"><span class="smallmark purple"></span><strong id="pv3Weak">0</strong> weak passwords</div><button type="button" class="textbtn" data-pv-view="security">Open security center →</button></div><div class="gauge"><div class="center"><strong id="pv3Gauge">—</strong><span>LOCAL EST.</span></div></div></div></div>
+          <div class="sectiontitle pv3-section-spaced"><h2>Your vaults</h2><button type="button" class="textbtn" id="pv3ManageVaults">Manage vaults →</button></div><div class="vaultcards" id="pv3VaultCards"></div>
+          <div class="card recent"><div class="recenthead"><h2>Recently updated</h2><button type="button" class="textbtn" data-pv-view="items">View all →</button></div><div id="pv3Recent"></div></div>
+        </div><div class="sidecol">
+          <div class="card capacity"><div class="captop"><h2>Vault capacity</h2><span class="tag" id="pv3CapacityTag">AVAILABLE</span></div><p>Each account can have up to two separately encrypted vaults.</p><div class="capbig" id="pv3CapBig">0 <span>/ 2 vaults</span></div><div class="captrack" id="pv3CapTrack"></div><button type="button" class="disabled-create" id="pv3CreateVault">+ Create a vault</button></div>
+          <div class="card quick"><h2>Quick password generator</h2><p>Generate a strong password in one click.</p><div class="pwbox"><code id="pv3QuickPassword" class="pv3-password-display">••••••••••••••••</code><button type="button" id="pv3QuickCopy" aria-label="Copy generated password"><svg class="ico xs"><use href="#i-copy"></use></svg></button></div><div class="quickfoot"><span>✓ Cryptographically random</span><button type="button" class="secondary" id="pv3QuickGenerate">↻ Generate</button></div></div>
+          <div class="card pv3-actions"><h2>Backup & sync</h2><p id="pv3SaveText">Only encrypted contents are synchronized.</p><button type="button" class="secondary" id="pv3Save">Save to cloud</button><button type="button" class="secondary" id="pv3Backup">Download encrypted backup</button><button type="button" class="secondary" id="pv3AllVaults">Switch or manage vaults</button></div>
+        </div></div>
+      </section>
+      <section class="screen" id="pv3View-items"><div class="viewhead"><div><div class="eyebrow">YOUR ENCRYPTED LIBRARY</div><h1>All items</h1><p>Logins, secure notes and payment cards in the currently unlocked vault.</p></div><button type="button" class="primary" data-pv-new>+ New item</button></div><div class="pv3-filterbar"><button type="button" class="active" data-pv-filter="all">All</button><button type="button" data-pv-filter="login">Logins</button><button type="button" data-pv-filter="note">Secure notes</button><button type="button" data-pv-filter="card">Cards</button><select id="pv3Sort" aria-label="Sort items"><option value="updated">Recently updated</option><option value="name">Name A–Z</option><option value="created">Recently created</option></select></div><div class="itemlist" id="pv3AllItems"></div></section>
+      <section class="screen" id="pv3View-favorites"><div class="viewhead"><div><div class="eyebrow">QUICK ACCESS</div><h1>Favorites</h1><p>Your starred items, available when this vault is unlocked.</p></div></div><div class="itemlist pv3-topspace" id="pv3Favorites"></div></section>
+      <section class="screen" id="pv3View-vault"><div class="viewhead"><div><div class="eyebrow">CURRENT ENCRYPTED COLLECTION</div><h1 id="pv3VaultTitle">Your vault</h1><p>Only the currently unlocked vault's contents can be displayed.</p></div><button type="button" class="primary" data-pv-new>+ New item</button></div><div class="itemlist pv3-topspace" id="pv3VaultItems"></div></section>
+      <section class="screen" id="pv3View-security"><div class="viewhead"><div><div class="eyebrow">LOCAL SECURITY INTELLIGENCE</div><h1>Security center</h1><p>Check weak and reused passwords without sending them to a third-party service.</p></div><span class="pill">Current vault only</span></div><div class="security-grid"><div class="card"><h2>Password health</h2><div id="pv3SecurityDetails"></div></div><div class="card large-gauge"><div class="gauge"><div class="center"><strong id="pv3SecurityGauge">—</strong><span>ESTIMATE</span></div></div><h2>Security overview</h2><p>Local heuristics only. This is not a breach report or independently validated security score.</p><button type="button" class="secondary" data-pv-view="generator">Generate a strong password →</button></div></div><div class="bottomhint">Checks run after unlocking. PassVault does not send your plaintext credentials to a password-analysis server.</div></section>
+      <section class="screen" id="pv3View-generator"><div class="viewhead"><div><div class="eyebrow">STRONGER BY DEFAULT</div><h1>Password generator</h1><p>Unpredictable passwords, generated using the Web Crypto API.</p></div></div><div class="genhero"><span class="eyebrow">GENERATED PASSWORD</span><div class="generated" id="pv3Generated">Click Generate</div><div class="genopts"><label>Password length <strong id="pv3LengthText">20</strong><input id="pv3Length" type="range" min="12" max="64" value="20"></label><label><input id="pv3Upper" type="checkbox" checked> Uppercase</label><label><input id="pv3Numbers" type="checkbox" checked> Numbers</label><label><input id="pv3Symbols" type="checkbox" checked> Symbols</label></div><div class="genbtns"><button type="button" class="primary" id="pv3Generate">↻ Generate new</button><button type="button" class="secondary" id="pv3CopyGenerated">Copy password</button><button type="button" class="secondary" id="pv3UseGenerated">Use in new login</button></div></div><div class="bottomhint">Generated passwords are not stored until you explicitly save them in an encrypted vault item.</div></section>
+      <section class="screen" id="pv3View-settings"><div class="viewhead"><div><div class="eyebrow">MAKE IT YOURS</div><h1>Settings</h1><p>Personalization, vault sessions, encrypted backups and account management.</p></div></div><div class="settingsgrid"><div class="card settingcard"><h3>Appearance</h3><p>Switch between midnight and daylight.</p><div class="toggleline"><span>Light theme</span><button type="button" class="toggle" id="pv3LightToggle" aria-pressed="false" aria-label="Toggle light theme"></button></div></div><div class="card settingcard"><h3>Vault controls</h3><p>Maximum two vaults per account, enforced in the database once the new SQL is applied.</p><div class="faux-inset" id="pv3SettingsVaults">0 of 2 used</div><button type="button" class="secondary" id="pv3SettingsManage">Manage vaults</button></div><div class="card settingcard"><h3>Session security</h3><p>Lock automatically after a period of inactivity.</p><label for="pv3AutoLock">Auto-lock after</label><select id="pv3AutoLock"><option value="300000">5 minutes</option><option value="600000">10 minutes</option><option value="900000">15 minutes</option><option value="1800000">30 minutes</option></select><label for="pv3Clipboard">Clear clipboard after</label><select id="pv3Clipboard"><option value="15000">15 seconds</option><option value="30000">30 seconds</option><option value="60000">60 seconds</option></select></div><div class="card settingcard"><h3>Backup & portability</h3><p>Download an AES-encrypted .pvault.json backup; keep it in a safe place.</p><button type="button" class="secondary" id="pv3SettingsBackup">Download encrypted backup</button><button type="button" class="secondary" id="pv3SettingsSave">Sync encrypted changes</button></div></div><div class="pv3-account-actions" id="pv3AccountActions"><h2>Account security and deletion</h2><p>Account password and deletion controls continue to require your current account password.</p></div></section>
+    </div>
+  </main>
+</div>
+<div class="pv3-toast" id="pv3Toast" role="status" aria-live="polite"></div>
+<dialog id="pv3ItemDialog" class="pv3-modal" aria-labelledby="pv3ItemDialogTitle"><form id="pv3ItemForm" autocomplete="off"><div class="pv3-modalhead"><div><div class="eyebrow">ENCRYPTED ITEM</div><h2 id="pv3ItemDialogTitle">New item</h2></div><button type="button" class="pv3-x" data-pv-close="pv3ItemDialog" aria-label="Close dialog">×</button></div>
+<div class="pv3-modal-body"><input id="pv3EditId" type="hidden"><label for="pv3ItemType">Item type</label><select id="pv3ItemType"><option value="login">Login</option><option value="note">Secure note</option><option value="card">Payment card</option></select><label for="pv3ItemTitle">Title</label><input id="pv3ItemTitle" maxlength="256" required placeholder="Name this item"><div id="pv3LoginFields"><label for="pv3ItemURL">Website URL</label><input id="pv3ItemURL" maxlength="2048" type="url" placeholder="https://example.com"><label for="pv3ItemUsername">Username or email</label><input id="pv3ItemUsername" maxlength="512" placeholder="you@example.com"><label for="pv3ItemPassword">Password</label><div class="pv3-fieldrow"><input id="pv3ItemPassword" type="password" maxlength="2048"><button type="button" class="secondary" id="pv3RevealLogin">Show</button><button type="button" class="secondary" id="pv3GenerateLogin">Generate</button></div></div>
+<div id="pv3NoteFields" class="hidden"><label for="pv3NoteContent">Private note</label><textarea id="pv3NoteContent" maxlength="2048" rows="5" placeholder="Stored only in the encrypted vault"></textarea></div>
+<div id="pv3CardFields" class="hidden"><label for="pv3Cardholder">Name on card</label><input id="pv3Cardholder" maxlength="512"><label for="pv3CardNumber">Card number</label><input id="pv3CardNumber" type="password" maxlength="128" inputmode="numeric"><label for="pv3CardExpiry">Expiration (MM/YY)</label><input id="pv3CardExpiry" maxlength="32"><label for="pv3CardCvv">Security code (optional)</label><input id="pv3CardCvv" type="password" maxlength="20"></div>
+<label for="pv3ItemNotes">Additional notes</label><textarea id="pv3ItemNotes" maxlength="4096" rows="3"></textarea><label for="pv3ItemTags">Tags (comma separated, up to 10)</label><input id="pv3ItemTags" maxlength="400" placeholder="personal, bills, important"><label><input id="pv3ItemFavorite" type="checkbox"> Mark as favorite</label><div class="pv3-custom-head"><strong>Custom fields</strong><button type="button" class="secondary" id="pv3AddCustom">+ Add field</button></div><div id="pv3CustomFields"></div><div id="pv3ItemError" class="pv3-dialog-error" role="alert"></div></div><div class="pv3-modalfooter"><button type="button" class="secondary" data-pv-close="pv3ItemDialog">Cancel</button><button type="submit" class="primary" id="pv3SaveItem">Save encrypted item</button></div></form></dialog>
+<dialog id="pv3DetailDialog" class="pv3-modal" aria-labelledby="pv3DetailTitle"><div class="pv3-modalhead"><div><div class="eyebrow">ITEM DETAILS</div><h2 id="pv3DetailTitle"></h2></div><button type="button" class="pv3-x" data-pv-close="pv3DetailDialog" aria-label="Close details">×</button></div><div class="pv3-modal-body" id="pv3DetailBody"></div><div class="pv3-modalfooter"><button type="button" class="secondary" id="pv3DetailCopy">Copy secret</button><button type="button" class="secondary" id="pv3DetailFavorite">Favorite ☆</button><button type="button" class="secondary" id="pv3DetailEdit">Edit</button><button type="button" class="pv3-danger" id="pv3DetailDelete">Delete</button></div></dialog>
+</div>
+
+<div id="legacyWorkspace" class="pv3-legacy-hidden">
     <div class="app-layout">
       <aside class="sidebar" aria-label="Application sidebar">
         <div class="sidebar-brand"><div class="brand"><div class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="5.7" y="10.4" width="12.6" height="10" rx="2.2"/><path d="M8.6 10.4V7.6a3.4 3.4 0 0 1 6.8 0v2.8"/><circle cx="12" cy="15.4" r="1" fill="currentColor" stroke="none"/></svg></div><div class="brand-copy"><div class="brand-title">PassVault</div><div class="brand-sub">Password manager</div></div></div></div>
@@ -315,6 +406,7 @@
         <div id="globalStatus" class="status-line" role="status" aria-live="polite"></div>
       </main>
     </div>
+    </div><!-- end legacyWorkspace -->
   </section>
 
 
@@ -339,5 +431,6 @@
 <script defer src="./src/js/vault.js"></script>
 <script defer src="./src/js/multi-vault.js"></script>
 <script defer src="./src/js/app.js"></script>
+<script defer src="./src/js/premium.js"></script>
 </body>
 </html>

@@ -268,6 +268,7 @@ async function handleCreateVault(event) {
   event.preventDefault();
   if (!cloud.userId || !cloud.loaded || !cloud.selectedVaultId) return setStatus(els.createStatus, "Select Create new vault from My vaults first.", "error");
   if (cloud.revision > 0) return setStatus(els.createStatus, "Selected vault already exists. Open it or create another from My vaults.", "error");
+  if (cloud.vaults.length >= 2) return setStatus(els.createStatus, 'Vault limit reached: only two vaults are permitted.','error');
   const initialUserId = cloud.userId;
   const initialVaultId = cloud.selectedVaultId;
   const initialEpoch = cloud.epoch;
@@ -650,6 +651,13 @@ function lockVault(reason = "Vault locked.") {
       credential.notes = "";
       credential.url = "";
       credential.title = "";
+      if (credential.cvv) credential.cvv = "";
+      if (credential.expiry) credential.expiry = "";
+      if (Array.isArray(credential.tags)) credential.tags.length = 0;
+      if (Array.isArray(credential.customFields)) {
+        for (const field of credential.customFields) field.value = "";
+        credential.customFields.length = 0;
+      }
     }
     state.vault.credentials.length = 0;
   }

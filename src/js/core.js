@@ -458,6 +458,20 @@ function validateVaultPlaintext(vault) {
     if (typeof credential.createdAt !== "string" || typeof credential.updatedAt !== "string") {
       throw new Error("Credential timestamps are invalid.");
     }
+    // Backwards compatible extensions for encrypted PassVault 3.0 items.
+    if (credential.kind !== undefined && !["login", "note", "card"].includes(credential.kind)) throw new Error("Unknown item type.");
+    if (credential.favorite !== undefined && typeof credential.favorite !== 'boolean') throw new Error('Invalid favorite flag.');
+    for (const [key, limit] of [['expiry',32],['cvv',20]]) {
+      if (credential[key] !== undefined && (typeof credential[key] !== 'string' || credential[key].length > limit)) throw new Error('Invalid secure card field.');
+    }
+    if (credential.tags !== undefined) {
+      if (!Array.isArray(credential.tags) || credential.tags.length > 10 || credential.tags.some(tag => typeof tag !== 'string' || tag.length > 40)) throw new Error('Invalid item tags.');
+    }
+    if (credential.customFields !== undefined) {
+      if (!Array.isArray(credential.customFields) || credential.customFields.length > 10 || credential.customFields.some(f =>
+        !f || typeof f.label !== 'string' || f.label.length > 60 || typeof f.value !== 'string' || f.value.length > 1024
+      )) throw new Error('Invalid encrypted custom fields.');
+    }
   }
 
   return true;

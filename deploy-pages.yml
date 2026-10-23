@@ -1,0 +1,42 @@
+name: Build and deploy PassVault 3.0
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: passvault-pages
+  cancel-in-progress: true
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install pinned direct dependency
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Verify source consistency
+        run: npm run verify:source
+      - name: Build local SDK and project-scoped CSP
+        run: npm run build
+      - name: Verify static build
+        run: npm run verify
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+      - name: Upload deployment artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: ./dist
+      - name: Deploy GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

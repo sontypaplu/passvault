@@ -15,6 +15,9 @@ async function reloadVaultList() {
 
 function renderVaultDashboard() {
   const list = $('vaultDashboardList');
+  const atLimit = cloud.vaults.length >= 2;
+  $('dashboardCreateVault').disabled = atLimit;
+  $('dashboardCreateVault').textContent = atLimit ? 'Vault limit reached (2/2)' : '+ Create new vault';
   if (!list) return;
   list.replaceChildren();
   if (!cloud.loaded) {
@@ -90,6 +93,7 @@ async function openVaultById(vaultId) {
 function prepareNewVault() {
   if (!cloud.loaded || !cloud.userId || !state.locked) return;
   if (!crypto.randomUUID) return setStatus($('dashboardStatus'),'Your browser does not support secure UUID generation','error');
+  if (cloud.vaults.length >= 2) return setStatus($('dashboardStatus'),'Vault limit reached: maximum 2 vaults per account. Delete a vault (after backup) to create another.','error');
   cloud.selectedVaultId=crypto.randomUUID(); cloud.revision=0;
   cloud.encryptedEnvelope=null; cloud.conflict=false; cloud.importSource='cloud';
   cloud.vaultLabel='Vault'; state.pendingImport=null;

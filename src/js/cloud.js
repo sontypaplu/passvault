@@ -152,7 +152,11 @@ async function saveCloudVault(manual = false) {
       return true;
     } catch (error) {
       const message = String(error.message || "Cloud save failed.");
-      if (error.code === "40001" || message.includes("vault_conflict") || error.code === "23505") {
+      if (error.code === '23514' || message.includes('vault_limit_reached')) {
+        cloud.conflict = true;
+        cloudStatus('VAULT LIMIT', 'error');
+        setGlobalStatus('Two-vault account limit reached. This new vault was NOT saved. Export its encrypted backup before leaving, or lock it and use an existing vault.', 'error');
+      } else if (error.code === "40001" || message.includes("vault_conflict") || error.code === "23505") {
         cloud.conflict = true;
         cloudStatus("SYNC CONFLICT", "error");
         setGlobalStatus("Cloud conflict: another device has a newer saved vault. Download an encrypted backup; this tab will not overwrite it.", "error");
