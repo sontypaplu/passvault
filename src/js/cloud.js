@@ -30,29 +30,6 @@ async function handleAccountLogin(event) {
   }
 }
 
-async function handleAccountRegister() {
-  if (!cloud.client) return setStatus(els.accessStatus, "Configure Supabase first.", "error");
-  const email = els.accessEmail.value.trim();
-  const password = els.accessPassword.value;
-  if (!els.accessEmail.checkValidity()) return setStatus(els.accessStatus, "Enter a valid email address first.", "error");
-  if (password.length < 12) return setStatus(els.accessStatus, "Use at least 12 characters for your account password.", "error");
-  els.accessSubmit.disabled = true;
-  els.registerAccountButton.disabled = true;
-  try {
-    const { data, error } = await cloud.client.auth.signUp({
-      email, password, options: { emailRedirectTo: location.origin + location.pathname }
-    });
-    if (error) throw error;
-    if (data.session) setStatus(els.accessStatus, "Account created. Loading your vault…", "success");
-    else setStatus(els.accessStatus, "Check your email to confirm your account, then return here and sign in.", "success");
-  } catch (error) {
-    setStatus(els.accessStatus, error.message || "Registration failed.", "error");
-  } finally {
-    els.accessPassword.value = "";
-    els.accessSubmit.disabled = false;
-    els.registerAccountButton.disabled = false;
-  }
-}
 
 function resetCloudUserState() {
   ++cloud.epoch;
@@ -68,6 +45,7 @@ function resetCloudUserState() {
 }
 
 async function loadAccountVault(session) {
+  if (window.PassVaultAuth?.recoveryPending) return;
   if (!session?.user?.id) { resetCloudUserState(); return; }
   const userId = session.user.id;
   if (cloud.userId === userId) return;

@@ -368,3 +368,171 @@ body:has(#loginView:not(.hidden)),body:has(#lockedView:not(.hidden)){background:
 #premiumApp .searchbox.search-open input{display:block;min-width:0;width:100%}
 #premiumApp .topbar:has(.searchbox.search-open) .breadcrumb{display:none}}
 #premiumApp .pv3-health-subtitle{font-size:14px;margin:24px 0 8px;color:#d7d0ff}
+
+/* 3.1 shared appearance, keyboard and mobile navigation fixes.
+   The theme is controlled by html[data-theme], not competing per-screen toggles. */
+html[data-theme="light"] body:has(#loginView:not(.hidden)),
+html[data-theme="light"] body:has(#lockedView:not(.hidden)),
+html[data-theme="light"] #loginView:not(.hidden),
+html[data-theme="light"] #lockedView:not(.hidden) {
+  background:radial-gradient(ellipse at 50% 36%,#eeeaff 0%,#f5f7fb 70%);
+  color:#263147;
+}
+html[data-theme="dark"] #loginView:not(.hidden),
+html[data-theme="dark"] #lockedView:not(.hidden) {
+  background:radial-gradient(ellipse at 50% 33%,#151c35 0%,#090e1b 72%);
+  color:#edf0fb;
+}
+.entry-card .auth-link {display:block;margin:14px auto 0;border:0;background:transparent;color:var(--accent);padding:9px 12px;min-height:42px;text-align:center;font-weight:650;font-size:13px}
+.entry-card .auth-link:hover {text-decoration:underline;background:transparent}
+.entry-card .auth-hint{margin:-7px 0 19px;color:var(--muted);font-size:12px;line-height:1.6}
+.entry-main{gap:0}
+#loginView .entry-card{max-width:450px}
+html[data-theme="light"] .entry-card {box-shadow:0 18px 68px #39476712;background:#fff;border-color:#dce3ef}
+html[data-theme="dark"] .entry-card {box-shadow:0 20px 80px #0005;background:#141b2b;border-color:#323e54}
+html[data-theme="light"] .entry-card .entry-disclaimer {color:#56647a}
+html[data-theme="light"] .entry-footer {color:#5d6d85}
+html[data-theme="dark"] #loginView .entry-card input {background:#0d1424;color:#f1f4ff;border-color:#39445c}
+html[data-theme="dark"] #loginView .entry-card input::placeholder{color:#9ca9be}
+html[data-theme="dark"] #loginView .entry-card label{color:#d1d9ec}
+html[data-theme="dark"] #loginView .entry-card .entry-disclaimer{color:#a8b6cd}
+
+/* Dashboard semantic light palette. Dark appearance is unchanged unless fixing contrast. */
+html[data-theme="light"] #premiumApp{
+  --bg:#f5f7fb;--panel:#fff;--panel2:#f9faff;--panel3:#eef1fb;
+  --text:#1b2942;--muted:#516078;--faint:#64728a;--stroke:#dae1ee;
+  --purple:#6755ba;--cyan:#116f60;--amber:#935b13;--red:#b3304f;--shadow:0 12px 40px #15244a12;
+  background:#f5f7fb;color:#1b2942;
+}
+html[data-theme="light"] #premiumApp .main {background:radial-gradient(ellipse 470px 300px at 80% 4%,#eceaff 0%,transparent 78%),#f5f7fb}
+html[data-theme="light"] #premiumApp .sidebar{background:#fff;border-color:#dde4ef}
+html[data-theme="light"] #premiumApp .navcap{color:#5b6883}
+html[data-theme="light"] #premiumApp .navitem{color:#42516b}
+html[data-theme="light"] #premiumApp .navitem:hover{background:#eef0fb;color:#192744}
+html[data-theme="light"] #premiumApp .navitem.active{background:#ece9ff;border-color:#d5ccff;color:#5141a8}
+html[data-theme="light"] #premiumApp .navitem .count,
+html[data-theme="light"] #premiumApp .useremail,
+html[data-theme="light"] #premiumApp .brandsub{color:#5c6981}
+html[data-theme="light"] #premiumApp .sidefooter{border-color:#e0e5ef}
+html[data-theme="light"] #premiumApp .topbar{border-color:#dfe5ef}
+html[data-theme="light"] #premiumApp .breadcrumb{color:#596983}
+html[data-theme="light"] #premiumApp .breadcrumb strong{color:#233452}
+html[data-theme="light"] #premiumApp .topicon{color:#415273}
+html[data-theme="light"] #premiumApp .searchbox{color:#4d5f7a;background:#fff;border-color:#cfd9e9}
+html[data-theme="light"] #premiumApp .searchbox input::placeholder{color:#5d6d84}
+html[data-theme="light"] #premiumApp .kbd{border-color:#d2dae7;color:#5b6981}
+html[data-theme="light"] #premiumApp .hero p,
+html[data-theme="light"] #premiumApp .viewhead p,
+html[data-theme="light"] #premiumApp .security-card p,
+html[data-theme="light"] #premiumApp .settingcard p,
+html[data-theme="light"] #premiumApp .metriclabel,
+html[data-theme="light"] #premiumApp .recentrow .itemsub,
+html[data-theme="light"] #premiumApp .vaultcard .vaultcount{color:#54647e}
+html[data-theme="light"] #premiumApp .card,
+html[data-theme="light"] #premiumApp .itemlist,
+html[data-theme="light"] #premiumApp .security-card{background:#fff;border-color:#dce3ee;box-shadow:0 9px 32px #10234b0c}
+html[data-theme="light"] #premiumApp .card h2,
+html[data-theme="light"] #premiumApp .card h3,
+html[data-theme="light"] #premiumApp .metric-value,
+html[data-theme="light"] #premiumApp .itemname{color:#1b2942}
+html[data-theme="light"] #premiumApp .metrictrend.neutral{background:#eef0fb;color:#4b5c7a;border-color:#d6def0}
+html[data-theme="light"] #premiumApp .secrow{color:#42516c}
+html[data-theme="light"] #premiumApp .secrow strong{color:#22304b}
+html[data-theme="light"] #premiumApp .pill{background:#fff;color:#445471;border-color:#d5deed}
+html[data-theme="light"] #premiumApp .gauge{background:conic-gradient(#6f5cc0 0 32%,#e9e5ff 32% 100%);box-shadow:none}
+html[data-theme="light"] #premiumApp .gauge .center{background:#fff}
+html[data-theme="light"] #premiumApp .gauge span{color:#5b6880}
+html[data-theme="light"] #premiumApp .vaultcard{background:#f1eeff;color:#253453;border-color:#d8d2f2}
+html[data-theme="light"] #premiumApp .vaultcard:nth-child(2){background:#e7f5f3;border-color:#c8e3dd}
+html[data-theme="light"] #premiumApp .vaultcard .vaultname{color:#202e4b}
+html[data-theme="light"] #premiumApp .track{background:#e2e7f1}
+html[data-theme="light"] #premiumApp .limitlabels{color:#55647f}
+html[data-theme="light"] #premiumApp .limitlabels strong{color:#4f42a3}
+html[data-theme="light"] #premiumApp .generated,
+html[data-theme="light"] #premiumApp .faux-inset{background:#f7f8ff;border-color:#d7e0ee;color:#23334e}
+html[data-theme="light"] #premiumApp .genhero{background:#fff;border:1px solid #dce4f0}
+html[data-theme="light"] #premiumApp .settingsgrid label{color:#374968}
+html[data-theme="light"] #premiumApp .pv3-account-actions input{border-color:#cbd5e5}
+html[data-theme="light"] #premiumApp .pv3-modal-body input:not([type="checkbox"]):focus-visible,
+html[data-theme="light"] #premiumApp .pv3-modal-body textarea:focus-visible{outline:2px solid #7461db}
+html[data-theme="light"] #premiumApp .toast{border:1px solid #d5ddec}
+html[data-theme="light"] #premiumApp .mobile-toggle{color:#30415d;border-color:#cad5e6}
+#premiumApp .gauge{background:conic-gradient(#8473e8 0 32%,#323b57 32% 100%)}
+#premiumApp .gauge span{letter-spacing:.08em}
+#premiumApp .vault-limit{display:none}/* Capacity is already displayed in the sidebar caption and Settings. */
+#premiumApp .pv3-backup-fallback{display:inline-flex;margin:10px 0 0;max-width:100%;align-items:center;justify-content:center;min-height:44px;padding:12px 15px;border:1px solid var(--stroke);border-radius:10px;text-align:center;overflow-wrap:anywhere}
+#premiumApp .pv3-backup-fallback.hidden{display:none}
+#premiumApp .pv3-backup-fallback:hover{background:var(--panel3)}
+#premiumApp .pv3-nav-backdrop[hidden]{display:none!important}
+#premiumApp .pv3-nav-backdrop{position:fixed;inset:0;z-index:6;background:#030716a8;border:none;padding:0}
+#premiumApp .sidebar{overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}
+#premiumApp .sidebar .sidefooter{flex-shrink:0}
+#premiumApp button:focus-visible,#premiumApp select:focus-visible,#premiumApp textarea:focus-visible,
+#loginView button:focus-visible,#loginView input:focus-visible{outline:3px solid #8274eb;outline-offset:3px}
+@media(max-width:760px){
+  #premiumApp .topbar .topicon#pv3Lock{display:grid;place-items:center;flex:0 0 38px;min-width:38px;min-height:40px;border:1px solid var(--stroke);border-radius:10px}
+  #premiumApp .topbar{gap:9px;padding:0 12px}
+  #premiumApp .breadcrumb{min-width:0;overflow:hidden;text-overflow:ellipsis}
+  #premiumApp .breadcrumb strong{overflow:hidden;text-overflow:ellipsis}
+  #premiumApp .searchbox{width:36px;min-width:36px}
+  #premiumApp .sidebar{width:min(290px,85vw);height:100dvh;z-index:8}
+  #premiumApp .sidefooter{position:relative;background:inherit}
+  #premiumApp .quickfoot{flex-wrap:wrap;gap:12px}
+  #premiumApp .quickfoot span{flex-basis:100%;min-width:0}
+}
+@media(max-width:375px){#premiumApp .topbar .topicon#pv3Lock{min-width:34px;flex-basis:34px}#premiumApp .topbar{gap:6px}#premiumApp .content{padding-inline:12px}}
+@media(prefers-reduced-motion:reduce){#premiumApp .sidebar{transition:none}#premiumApp *,#premiumApp *::before,#premiumApp *::after{scroll-behavior:auto!important}}
+
+/* Override the legacy dark-only ID rules on public pages. */
+html[data-theme="light"] #loginView .entry-card,
+html[data-theme="light"] #lockedView .access-card {background:#fff;border-color:#dce3ef;color:#1b2942;box-shadow:0 18px 66px #283b621a}
+html[data-theme="light"] #loginView h1,
+html[data-theme="light"] #loginView h2,
+html[data-theme="light"] #lockedView h1,
+html[data-theme="light"] #lockedView h2 {color:#15233d}
+html[data-theme="light"] #loginView p,
+html[data-theme="light"] #lockedView p,
+html[data-theme="light"] #loginView label,
+html[data-theme="light"] #lockedView label {color:#4b5c74}
+html[data-theme="light"] #loginView input,
+html[data-theme="light"] #lockedView input,
+html[data-theme="light"] #lockedView select {background:#fff;color:#192943;border-color:#cbd6e6}
+html[data-theme="light"] #loginView .brand-title,
+html[data-theme="light"] #lockedView .brand-title {color:#15233d}
+html[data-theme="light"] #loginView .entry-disclaimer,
+html[data-theme="light"] #loginView .entry-footer,
+html[data-theme="light"] #lockedView .lock-page-footer {color:#52627a}
+html[data-theme="light"] #loginView input::placeholder,
+html[data-theme="light"] #lockedView input::placeholder{color:#7b879a}
+html[data-theme="light"] #loginView .theme-toggle,
+html[data-theme="light"] #lockedView .theme-toggle{background:#fff;color:#233452;border-color:#cdd8e9}
+#premiumApp .gauge,
+html[data-theme="light"] #premiumApp .gauge{background:transparent;border:9px solid var(--stroke);box-shadow:none}
+#premiumApp .gauge .center{width:100%;height:100%}
+#premiumApp .pv3-account-actions button[type="submit"]{color:#fff}
+html[data-theme="light"] #premiumApp .pv3-account-actions button[type="submit"]{color:#fff}
+/* Keep native autofill readable after toggling color mode. */
+html[data-theme="light"] #loginView input:-webkit-autofill,
+html[data-theme="light"] #lockedView input:-webkit-autofill{
+  -webkit-box-shadow:0 0 0 1000px #fff inset;
+  -webkit-text-fill-color:#192943;
+  caret-color:#192943;
+}
+html[data-theme="dark"] #loginView input:-webkit-autofill,
+html[data-theme="dark"] #lockedView input:-webkit-autofill{
+  -webkit-box-shadow:0 0 0 1000px #101729 inset;
+  -webkit-text-fill-color:#f9f9ff;
+  caret-color:#f9f9ff;
+}
+html[data-theme="light"] #loginView button.secondary,
+html[data-theme="light"] #lockedView button.secondary,
+html[data-theme="light"] #loginView button.theme-toggle,
+html[data-theme="light"] #lockedView button.theme-toggle {
+  color:#334561;background:#fff;border-color:#cbd6e7;
+}
+html[data-theme="light"] #loginView .auth-link{
+  background:transparent;border:0;color:#5948be;
+}
+
+#premiumApp .sidefooter .userdots{font-size:11px;font-weight:700;white-space:nowrap;min-height:38px;color:var(--muted);border:1px solid var(--stroke);border-radius:9px;padding:6px 8px}
+#premiumApp .sidefooter .userdots:hover{background:var(--panel3);color:var(--text)}

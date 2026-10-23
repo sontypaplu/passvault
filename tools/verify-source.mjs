@@ -19,4 +19,4 @@ if(!premium.includes('saveCloudVault(true)') || !premium.includes('state.vault.c
 if(/<script\b(?![^>]*\bsrc=)/i.test(html)) throw new Error('Inline script is forbidden');
 if(html.includes('cdn.jsdelivr.net') || html.includes('style=')) throw new Error('External CDN or inline styles found');
 if(!/script-src 'self' 'wasm-unsafe-eval'/.test(html) || !/worker-src blob:/.test(html)) throw new Error('Encryption worker CSP not preserved');
-console.log(`PassVault 3.0 source checks passed (${ids.length} unique ids).`);
+console.log(`PassVault 3.1 source checks passed (${ids.length} unique ids).`);

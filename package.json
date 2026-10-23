@@ -1,13 +1,14 @@
 {
   "name": "passvault-cloud-3",
   "private": true,
-  "version": "3.0.0",
-  "description": "PassVault 3.0 premium interface with backwards compatible client-side encrypted vaults",
+  "version": "3.1.0",
+  "description": "PassVault 3.1 account UX and routing upgrade retaining the encrypted vault format",
   "scripts": {
     "build": "node tools/build.mjs --production",
     "build:preview": "node tools/build.mjs",
     "verify": "node tools/verify.mjs",
-    "verify:source": "node tools/verify-source.mjs"
+    "verify:source": "node tools/verify-source.mjs",
+    "verify:upgrade": "node tools/verify-upgrade.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.117.3"

@@ -398,6 +398,10 @@ async function handleUnlockVault() {
       const vault = await decryptVaultPayload(record, key);
       if (cloud.userId !== openingUser || cloud.selectedVaultId !== openingVaultId || cloud.epoch !== openingEpoch) throw new Error("Account changed while unlocking.");
 
+      if (cloud.importSource === 'file' && cloud.revision > 0) {
+        const phrase = window.prompt(`You are about to replace the encrypted cloud vault with ${vault.credentials.length} imported item(s). Existing cloud items may be lost. Keep a separate backup first. Type REPLACE to confirm:`);
+        if (phrase !== 'REPLACE') throw new Error('Import cancelled. The existing cloud vault was not replaced.');
+      }
       state.vault = vault;
       state.vaultKey = key;
       state.vaultMeta = {
@@ -684,6 +688,7 @@ function clearSensitiveFieldsEverywhere() {
   clearUnlockSensitiveFields();
   clearCredentialFormSensitive();
   clearGeneratedPassword();
+  window.pvClearPremiumSecrets?.();
 }
 
 function updateInactivityLock() {

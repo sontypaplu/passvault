@@ -1,6 +1,6 @@
 function initializeEvents() {
   els.accessLoginForm.addEventListener("submit", handleAccountLogin);
-  els.registerAccountButton.addEventListener("click", handleAccountRegister);
+  window.PassVaultAuth.initialize();
   els.lockedSignOutButton.addEventListener("click", handleSignOut);
   initializeMultiVaultEvents();
   els.unlockedSignOutButton.addEventListener("click", handleSignOut);
@@ -52,7 +52,7 @@ function initializeEvents() {
   document.addEventListener("visibilitychange", handlePageVisibility);
   window.addEventListener("blur", handleBlur);
   window.addEventListener("focus", handleFocus);
-  document.addEventListener("keydown", (event) => { if (event.key === "Escape") handleEscape(); });
+  document.addEventListener("keydown", (event) => { if (event.key === "Escape") { if (window.pvCloseMobileNav?.()) return; handleEscape(); } });
   window.addEventListener("pagehide", handlePageExit);
   window.addEventListener("beforeunload", beforeUnload);
   setInterval(updateInactivityLock, 1000);
@@ -98,15 +98,17 @@ async function initialize() {
     return setStatus(els.accessStatus, "Locally hosted Supabase SDK did not load. Check the GitHub Actions build and browser console.", "error");
   }
   cloud.client = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
-    auth: { autoRefreshToken: true, persistSession: false, detectSessionInUrl: true }
+    auth: { autoRefreshToken: true, persistSession: true, detectSessionInUrl: true }
   });
   cloud.client.auth.onAuthStateChange((event, session) => {
-    // Auth callbacks are synchronous; defer any database calls to avoid deadlocks.
+    // Recovery session must not open the vault workspace before its password is updated.
+    if(event === 'PASSWORD_RECOVERY') { window.PassVaultAuth.startRecovery(); return; }
+    if(window.PassVaultAuth.recoveryPending) return;
     queueMicrotask(() => { void loadAccountVault(session); });
   });
   const { data, error } = await cloud.client.auth.getSession();
   if (error) setStatus(els.accessStatus, error.message, "error");
-  else await loadAccountVault(data.session);
+  else if (!window.PassVaultAuth.recoveryPending) await loadAccountVault(data.session);
 }
 
 initialize().catch((error) => {

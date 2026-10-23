@@ -33,10 +33,10 @@
     return {logins:logins.length,weak,reused,strong,score};
   }
   function renderHealth() {
-    const h=health(); txt('pv3MetricScore',h.score===null?'—':`${h.score} / 100`);
+    const h=health(); txt('pv3MetricScore', h.logins===0 ? '—' : String(h.weak+h.reused));
     txt('pv3MetricAlerts',h.weak+h.reused); txt('pv3Strong',h.strong);
     txt('pv3Reused',h.reused); txt('pv3Weak',h.weak);
-    txt('pv3Gauge',h.score===null?'—':h.score); txt('pv3SecurityGauge',h.score===null?'—':h.score);
+    txt('pv3Gauge',h.logins===0?'—':String(h.weak+h.reused)); txt('pv3SecurityGauge',h.logins===0?'—':String(h.weak+h.reused));
     const box=pv('pv3SecurityDetails'); box.replaceChildren();
     for(const [title,note,n] of [
       ['Strong passwords','At least 12 characters and not flagged by the basic local checks',h.strong],
@@ -145,16 +145,39 @@
     txt('pv3Generated',''); txt('pv3QuickPassword','');ui.generated='';ui.quick='';ui.detailId=null;ui.search='';pv('pv3Search').value='';
     txt('pv3MetricItems','0');txt('pv3SideItems','0');txt('pv3MetricScore','—');
   }
-  function navigate(view) {
+  const allowedViews = ['overview','items','favorites','vault','security','generator','settings'];
+  const currentRoute = () => new URL(location.href).searchParams.get('view') || 'overview';
+  function closeMobileNav() {
+    const sidebar=pv('pv3Sidebar');
+    if(!sidebar.classList.contains('open')) return false;
+    sidebar.classList.remove('open'); sidebar.setAttribute('aria-hidden','true');
+    pv('pv3NavBackdrop').hidden=true;
+    pv('pv3MobileToggle').setAttribute('aria-expanded','false');
+    pv('pv3MobileToggle').setAttribute('aria-label','Open navigation');
+    pv('pv3MobileToggle').focus({preventScroll:true});
+    return true;
+  }
+  window.pvCloseMobileNav = closeMobileNav;
+  window.pvClearPremiumSecrets = () => { ui.generated='';ui.quick='';txt('pv3Generated','');txt('pv3QuickPassword',''); };
+  function openMobileNav() {
+    const sidebar=pv('pv3Sidebar'); sidebar.classList.add('open'); sidebar.setAttribute('aria-hidden','false');
+    pv('pv3NavBackdrop').hidden=false;
+    pv('pv3MobileToggle').setAttribute('aria-expanded','true');pv('pv3MobileToggle').setAttribute('aria-label','Close navigation');
+    sidebar.querySelector('.navitem')?.focus({preventScroll:true});
+  }
+  function navigate(view, push = true, moveFocus = true) {
     if(!canRead()) return;
-    if(!['overview','items','favorites','vault','security','generator','settings'].includes(view))view='overview';
+    if(!allowedViews.includes(view))view='overview';
     ui.view=view;
     for(const screen of pv('premiumApp').querySelectorAll('.screen')) screen.classList.toggle('active',screen.id===`pv3View-${view}`);
-    for(const b of pv('premiumApp').querySelectorAll('[data-pv-view]')) b.classList.toggle('active',b.dataset.pvView===view);
+    for(const b of pv('premiumApp').querySelectorAll('[data-pv-view]')) {const active=b.dataset.pvView===view;b.classList.toggle('active',active);if(active)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');}
     txt('pv3Crumb',({overview:'Overview',items:'All items',favorites:'Favorites',vault:cloud.vaultLabel,security:'Security center',generator:'Password generator',settings:'Settings'})[view]);
-    pv('pv3Sidebar').classList.remove('open');
-    renderItems();
-    pv('premiumApp').querySelector('.main').scrollTo(0,0);
+    if(push){ const url = new URL(location.href);url.searchParams.set('view',view);url.searchParams.delete('auth');if(url.href!==location.href)history.pushState({pvView:view},'',url); }
+    document.title = `${({overview:'Overview',items:'All items',favorites:'Favorites',vault:'My vault',security:'Security center',generator:'Password generator',settings:'Settings'})[view]} | PassVault`;
+    closeMobileNav();renderItems();
+    const main=pv('pv3Main'); if(main)main.scrollTop=0;
+    window.scrollTo({top:0,behavior:'instant'});
+    if(moveFocus){const heading=pv(`pv3View-${view}`)?.querySelector('h1');if(heading){heading.tabIndex=-1;heading.focus({preventScroll:true});}}
   }
   function selectVault(id) {
     if (!cloud.userId || !cloud.loaded) return;
@@ -277,17 +300,16 @@
   function passwordOptions(length=20) { return {length,lower:true,upper:pv('pv3Upper').checked,numbers:pv('pv3Numbers').checked,symbols:pv('pv3Symbols').checked}; }
   function generateFull(){try{ui.generated=generatePassword(passwordOptions(Number(pv('pv3Length').value)));txt('pv3Generated',ui.generated);}catch(e){notify(e.message);}}
   function generateQuick(){ui.quick=generatePassword({length:20,upper:true,lower:true,numbers:true,symbols:true});txt('pv3QuickPassword',ui.quick);}
-  function light(on) {
-    pv('premiumApp').classList.toggle('light',on);
-    pv('pv3LightToggle').classList.toggle('on',on);pv('pv3LightToggle').setAttribute('aria-pressed',String(on));
-    pv('pv3Theme').setAttribute('aria-label',on?'Enable dark mode':'Enable light mode');
-    // No localStorage: avoid persisting workspace preferences on shared browsers.
-  }
+  function light(on) { window.PassVaultTheme.set(on ? 'light' : 'dark'); }
   function initialize() {
     if(ui.init)return;ui.init=true;
     pv('pv3AccountActions').append(document.querySelector('.account-settings-grid'));
+    // Move the original working download fallback into the visible Settings screen.
+    const fallback = document.getElementById('downloadVaultLink');
+    fallback.classList.add('pv3-backup-fallback');
+    document.getElementById('pv3SettingsBackup').after(fallback);
     pv('pv3AutoLock').value=String(state.sessionTimeoutMs);pv('pv3Clipboard').value=String(state.clipboardTimeoutMs);
-    light(false); // Approved dark design as default.
+    light(document.documentElement.dataset.theme === 'light');
     for(const button of pv('premiumApp').querySelectorAll('[data-pv-view]'))button.addEventListener('click',()=>navigate(button.dataset.pvView));
     for(const b of pv('premiumApp').querySelectorAll('[data-pv-new]')) b.addEventListener('click',()=>openEditor());
     for(const b of pv('premiumApp').querySelectorAll('[data-pv-close]'))b.addEventListener('click',()=>pv(b.dataset.pvClose)?.close());
@@ -295,7 +317,7 @@
     const searchBox = pv('pv3Search').closest('.searchbox');
     searchBox.addEventListener('click',()=>{searchBox.classList.add('search-open'); pv('pv3Search').focus();});
     searchBox.addEventListener('focusout',()=>{setTimeout(()=>searchBox.classList.remove('search-open'),150);});
-    pv('pv3Search').addEventListener('input',()=>{ui.search=pv('pv3Search').value;navigate('items');renderItems();});
+    pv('pv3Search').addEventListener('input',()=>{ui.search=pv('pv3Search').value;navigate('items',true,false);renderItems();});
     pv('pv3Search').addEventListener('keydown',e=>{if(e.key==='Escape'){pv('pv3Search').value='';ui.search='';renderItems();}});
     for(const b of pv('premiumApp').querySelectorAll('[data-pv-filter]')) b.addEventListener('click',()=>{
       ui.filter=b.dataset.pvFilter;for(const item of pv('premiumApp').querySelectorAll('[data-pv-filter]'))item.classList.toggle('active',item===b);renderItems();
@@ -307,7 +329,17 @@
     for(const id of ['pv3Backup','pv3SettingsBackup'])pv(id).addEventListener('click',()=>void handleExportVault());
     pv('pv3Lock').addEventListener('click',()=>lockVault('Manual lock'));
     pv('pv3SignOut').addEventListener('click',()=>void handleSignOut());
-    pv('pv3MobileToggle').addEventListener('click',()=>pv('pv3Sidebar').classList.toggle('open'));
+    pv('pv3MobileToggle').addEventListener('click',()=>pv('pv3Sidebar').classList.contains('open')?closeMobileNav():openMobileNav());
+    pv('pv3NavBackdrop').addEventListener('click',closeMobileNav);
+    const syncMobileNav = () => { if(window.innerWidth > 760){closeMobileNav();pv('pv3Sidebar').setAttribute('aria-hidden','false');}else if(!pv('pv3Sidebar').classList.contains('open'))pv('pv3Sidebar').setAttribute('aria-hidden','true'); };
+    window.addEventListener('resize',syncMobileNav);syncMobileNav();
+    document.addEventListener('keydown', e=>{
+      if(e.key !== 'Tab' || !pv('pv3Sidebar').classList.contains('open'))return;
+      const targets=[...pv('pv3Sidebar').querySelectorAll('button:not(:disabled),a[href]')].filter(x=>x.getClientRects().length);
+      if(!targets.length)return;const first=targets[0],last=targets[targets.length-1];
+      if(e.shiftKey && document.activeElement===first){e.preventDefault();last.focus();}
+      else if(!e.shiftKey && document.activeElement===last){e.preventDefault();first.focus();}
+    });
     pv('pv3Theme').addEventListener('click',()=>light(!pv('premiumApp').classList.contains('light')));
     pv('pv3LightToggle').addEventListener('click',()=>light(!pv('premiumApp').classList.contains('light')));
     pv('pv3AutoLock').addEventListener('change',()=>{els.sessionTimeout.value=pv('pv3AutoLock').value;handleSessionSettings();});
@@ -330,6 +362,7 @@
       if(id==='pv3ItemDialog'){pv('pv3ItemForm').reset();pv('pv3CustomFields').replaceChildren();}
       else pv('pv3DetailBody').replaceChildren();
     });
+    window.addEventListener('popstate',()=>{ if(canRead()) navigate(currentRoute(),false); });
     generateFull(); generateQuick(); render();
   }
   // Extend—not replace—the existing vault lifecycle. No changes to ciphertext format.
@@ -338,7 +371,15 @@
   const previousSetDirty=setDirty;
   setDirty=function(...args){const result=previousSetDirty(...args);render();return result;};
   const previousActiveView=setActiveView;
-  setActiveView=function(...args){const result=previousActiveView(...args);if(ui.init){if(canRead())render();else clean();}return result;};
+  let wasUnlocked = false;
+  setActiveView=function(...args){
+    const result=previousActiveView(...args);
+    if(ui.init){
+      if(canRead()){if(!wasUnlocked){wasUnlocked=true;navigate(currentRoute(),false);}render();}
+      else {wasUnlocked=false;closeMobileNav();clean();}
+    }
+    return result;
+  };
   const previousSaveCloudVault=saveCloudVault;
   saveCloudVault=async function(...args){
     const result=await previousSaveCloudVault(...args);
