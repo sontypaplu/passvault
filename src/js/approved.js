@@ -9,6 +9,7 @@ document.querySelectorAll('#approvedUI [data-icon]').forEach(x=>x.innerHTML=icon
 const pageTitles={overview:'Overview',items:'All items',favorites:'Favorites',vaults:'My vaults',security:'Security center',generator:'Password generator',settings:'Settings'};
 const kindLabel={login:'Login',note:'Secure note',card:'Payment card'};
 let page='overview',kind='login',filter='all',sort='recent',query='',selected=null,editId=null,generated='',quick='',toastTimer;
+let basketCreateTarget='everyday',basketRenameTarget=null,basketMoveTarget=null,basketDragging=null;
 const ready=()=>!state.locked && !!state.vault && uiState.accessGranted;
 const getItems=()=>ready()?state.vault.credentials:[];
 const itemKind=(item)=>['login','note','card'].includes(item.kind)?item.kind:'login';
@@ -59,11 +60,78 @@ function buildTable(items,empty='No items found.',headers=true){
  }).join('')}</tbody></table></div>`;
 }
 function vaultTile(v){const active=v.id===activeVault();return `<button class="vault-tile ${!active?'teal':''}" data-selectvault="${safe(v.id)}"><span class="tile-icon">${icon(active?'shield-check':'lock')}</span><strong>${safe(v.name)}</strong><small>${active?'Currently unlocked · '+getItems().length+' items':'Locked · Needs master password'}</small><span class="tile-go">${icon('arrow')}</span></button>`;}
+// Overview-only basket metadata lives INSIDE the already encrypted vault payload.
+// No separate browser storage, cloud tables, crypto changes, or credential migrations.
+const basketDefs=[
+ {id:'everyday',name:'Everyday',color:'#6759e8',pale:'#efedff'},
+ {id:'money',name:'Money',color:'#eda33e',pale:'#fff3e5'},
+ {id:'work',name:'Work',color:'#24b397',pale:'#e6f7f0'},
+ {id:'private',name:'Private',color:'#e87da3',pale:'#ffedf3'}
+];
+const basketIds=new Set(basketDefs.map(b=>b.id));
+function basketState(){
+ const obj=state.vault?.overviewBaskets;
+ const names=obj?.names && typeof obj.names==='object'?obj.names:{};
+ const assignments=obj?.assignments && typeof obj.assignments==='object'?obj.assignments:{};
+ return {names,assignments};
+}
+function basketName(id){
+ const name=basketState().names[id];
+ return typeof name==='string'&&name.trim()&&name.length<=20?name:basketDefs.find(b=>b.id===id)?.name||'Everyday';
+}
+function itemBasket(id){const b=basketState().assignments[id];return basketIds.has(b)?b:'everyday';}
+function mutateBaskets(callback){
+ if(!ready())return;
+ const current=basketState();
+ // Copy only valid metadata, bound to this decrypted vault and current item IDs.
+ const names=Object.create(null),assignments=Object.create(null);
+ for(const b of basketDefs)names[b.id]=basketName(b.id);
+ for(const item of getItems())if(basketIds.has(current.assignments[item.id]))assignments[item.id]=current.assignments[item.id];
+ callback({names,assignments});
+ state.vault.overviewBaskets={names,assignments};
+ state.vault.updatedAt=new Date().toISOString();
+ setDirty(true); // Existing authenticated encryption/cloud-sync implementation owns persistence.
+ render();
+}
+function basketCapacityReached(){return getItems().length>=10;}
+function basketMove(id,to){
+ if(!ready()||!findItem(id)||!basketIds.has(to))return;
+ if(itemBasket(id)===to)return;
+ mutateBaskets(b=>{b.assignments[id]=to;});
+ tip('Item moved to '+basketName(to));
+}
+function renderBaskets(){
+ const grid=$('pvbGrid');if(!grid||!ready())return;
+ const items=getItems(),used=items.length,vs=vaults();
+ $('pvbVaultName').textContent=cloud.vaultLabel||state.vault.name||'Personal vault';
+ $('pvbUsed').textContent=used+' of 10 items used';
+ $('pvbFree').textContent=used>=10?(used>10?'Existing items kept · limit exceeded':'Vault item limit reached'):(10-used)+' space'+(10-used===1?'':'s')+' available';
+ $('pvbFill').style.width=(Math.min(used,10)*10)+'%';
+ $('pvbProgress').setAttribute('aria-valuenow',String(Math.min(used,10)));
+ $('pvbVaultCount').textContent=vs.length+' / 2';
+ grid.innerHTML=basketDefs.map(b=>{
+  const these=items.filter(x=>itemBasket(x.id)===b.id);
+  const tiles=these.map(x=>{
+   const letter=safe((x.title||'•').slice(0,1).toUpperCase());
+   return `<div class="pvb-tile" draggable="true" data-basket-drag="${safe(x.id)}"><button type="button" class="pvb-tile-open" data-open="${safe(x.id)}" aria-label="Open ${safe(x.title)}"><span class="pvb-appicon pvb-${itemKind(x)}">${letter}</span><span class="pvb-appname">${safe(x.title)}</span></button><button class="pvb-tile-move" type="button" data-basket-move="${safe(x.id)}" aria-label="Move ${safe(x.title)} to another basket" title="Move item">Move</button></div>`;
+  }).join('');
+  return `<article class="pvb-basket pvb-color-${b.id}" data-basket-drop="${b.id}"><div class="pvb-basket-top"><span class="pvb-folder" aria-hidden="true">${icon('folder')}</span><button type="button" class="pvb-rename" data-basket-rename="${b.id}" aria-label="Rename ${safe(basketName(b.id))} basket" title="Rename basket">${icon('more')}</button></div><h3>${safe(basketName(b.id))}</h3><p class="pvb-num">${these.length} ${these.length===1?'item':'items'}</p><div class="pvb-apps">${tiles}${!basketCapacityReached()?`<button type="button" class="pvb-add-tile" data-basket-add="${b.id}" aria-label="Add item to ${safe(basketName(b.id))}"><span>+</span><small>Add item</small></button>`:''}</div><div class="pvb-basket-foot"><span>Drag to organize</span><button type="button" data-basket-add="${b.id}" ${basketCapacityReached()?'disabled title="10-item limit reached"':''}>Add item →</button></div></article>`;
+ }).join('');
+}
+function clearBaskets(){
+ $('pvbGrid')?.replaceChildren();
+ $('pvbVaultName').textContent='Locked vault';
+ $('pvbUsed').textContent='0 of 10 items used';
+ $('pvbFree').textContent='';
+ $('pvbFill').style.width='0%';
+ for(const id of ['pvbRenameDialog','pvbMoveDialog'])if($(id).open)$(id).close();
+ basketRenameTarget=null;basketMoveTarget=null;basketDragging=null;basketCreateTarget='everyday';
+}
 function render(){
  if(!ready())return;
  const items=getItems(),h=computeHealth(),vs=vaults();
  $('navCount').textContent=items.length;
- $('metrics').innerHTML=[['key','Total items',items.length,'Current vault'],['shield-check','Password warnings',h.issues.length,'Local checks','amber'],['star','Favorites',items.filter(x=>x.favorite).length,'Pinned items','green'],['folder','Vaults',vs.length+' / 2','Account limit','blue']].map(([ico,title,num,note,color])=>`<div class="card metric"><div class="metric-top"><span class="metric-icon ${color||''}">${icon(ico)}</span><span class="metric-trend">${safe(note)}</span></div><div class="metric-number">${safe(num)}</div><div class="metric-name">${title}</div></div>`).join('');
+ renderBaskets();
  $('healthNumber').textContent=h.issues.length;
  // Update only CSS custom property; the approved dashboard's SVG/CSS ring is unchanged.
  document.querySelector('#approvedUI .ring').style.setProperty('--healthy-percent',String(Math.round(100*h.good/Math.max(1,h.loginCount)))+'%');
@@ -90,8 +158,10 @@ function addCustom(label='',value=''){
  const btn=document.createElement('button');btn.type='button';btn.className='btn btn-light';btn.textContent='×';btn.setAttribute('aria-label','Remove custom field');btn.addEventListener('click',()=>div.remove());
  div.append(key,val,btn);holder.append(div);
 }
-function openEditor(id=null,prepass=''){
+function openEditor(id=null,prepass='',targetBasket='everyday'){
  if(!ready())return;
+ if(!id&&basketCapacityReached()){tip('This vault is full: maximum 10 items.');return;}
+ basketCreateTarget=basketIds.has(targetBasket)?targetBasket:'everyday';
  editId=id;const x=id?findItem(id):null;
  $('editorForm').reset();$('approvedCustomFields').replaceChildren();kind=x?itemKind(x):'login';
  $('itemTitle').value=x?.title||'';$('itemUsername').value=x?.username||'';
@@ -122,10 +192,17 @@ function saveItem(event){
   if(tags.length>10||tags.some(x=>x.length>40))throw new Error('Maximum 10 tags, up to 40 characters each.');
   const customFields=[];for(const row of $('approvedCustomFields').children){const [name,value]=row.querySelectorAll('input');if(name.value.trim())customFields.push({label:name.value.trim(),value:value.value});}
   const existing=editId?findItem(editId):null,now=new Date().toISOString();
+  if(!existing&&basketCapacityReached())throw new Error('Maximum 10 items per vault. Existing items are unchanged.');
   const data={id:existing?.id||secureId(),kind,title,url,username,password,notes:$('itemNotes').value,favorite:$('itemFavorite').checked,tags,customFields,expiry:kind==='card'?$('approvedExpiry').value.trim():'',cvv:kind==='card'?$('approvedCvv').value:'',createdAt:existing?.createdAt||now,updatedAt:now};
   const candidate=existing?getItems().map(x=>x.id===existing.id?data:x):[...getItems(),data];
   validateVaultPlaintext({...state.vault,credentials:candidate});
-  if(existing)Object.assign(existing,data);else state.vault.credentials.push(data);
+  if(existing)Object.assign(existing,data);else {
+   state.vault.credentials.push(data);
+   if(basketCreateTarget!=='everyday'){
+    const current=basketState();
+    state.vault.overviewBaskets={names:Object.fromEntries(basketDefs.map(b=>[b.id,basketName(b.id)])),assignments:{...current.assignments,[data.id]:basketCreateTarget}};
+   }
+  }
   state.vault.updatedAt=now;setDirty(true);
   $('editorDialog').close();renderVault();tip('Item saved · encrypted cloud sync scheduled');
  }catch(err){$('approvedEditorError').textContent=err.message||'Unable to save item';}
@@ -188,6 +265,7 @@ function clearPrivateUI(){
  $('editorForm').reset();$('detailBody').replaceChildren();$('approvedCustomFields').replaceChildren();
  $('fullTable').replaceChildren();$('favoritesTable').replaceChildren();$('recentTable').replaceChildren();
  $('overviewVaults').replaceChildren();$('manageVaults').replaceChildren();$('quickPassword').textContent='';$('approvedGeneratedPassword').textContent='';
+ clearBaskets();
  closeMenu();$('flowsMenu').classList.add('hidden');
 }
 // The approved vault chooser originally had markup but no event handlers.
@@ -328,6 +406,9 @@ $('editorDialog').addEventListener('close',()=>{$('editorForm').reset();$('appro
 $('detailDialog').addEventListener('close',()=>$('detailBody').replaceChildren());
 $('approvedUI').addEventListener('click',e=>{
  const target=e.target.closest('button');if(!target||!$('approvedUI').contains(target))return;
+ const addBasket=target.closest('[data-basket-add]');if(addBasket){openEditor(null,'',addBasket.dataset.basketAdd);return;}
+ const renameBasket=target.closest('[data-basket-rename]');if(renameBasket){basketRenameTarget=renameBasket.dataset.basketRename;$('pvbRenameInput').value=basketName(basketRenameTarget);$('pvbRenameDialog').showModal();$('pvbRenameInput').focus();return;}
+ const moveBasket=target.closest('[data-basket-move]');if(moveBasket){basketMoveTarget=moveBasket.dataset.basketMove;const x=findItem(basketMoveTarget);if(!x)return;$('pvbMoveDescription').textContent=x.title;const sel=$('pvbMoveSelect');sel.replaceChildren();for(const b of basketDefs){const opt=document.createElement('option');opt.value=b.id;opt.textContent=basketName(b.id);opt.selected=b.id===itemBasket(basketMoveTarget);sel.append(opt);}$('pvbMoveDialog').showModal();return;}
  const close=target.closest('[data-close]');if(close){$(close.dataset.close).close();return;}
  const to=target.closest('[data-page]');if(to){navigate(to.dataset.page);return;}
  const newb=target.closest('[data-new]');if(newb){openEditor();return;}
@@ -349,6 +430,34 @@ $('approvedUI').addEventListener('click',e=>{
  const rev=target.closest('[data-reveal]');if(rev){const x=findItem(selected);if(!x)return;const label=rev.dataset.reveal;const field=$('approved-detail-'+label.replace(/\W/g,''));if(!field)return;const masked=field.textContent==='••••••••••••';field.textContent=masked?currentValue(label,x):'••••••••••••';rev.title=masked?'Hide secret':'Reveal secret';return;}
  const cp=target.closest('[data-copy]');if(cp){const x=findItem(selected);if(x)void copyValue(currentValue(cp.dataset.copy,x));return;}
 });
+$('pvbRenameForm').addEventListener('submit',e=>{
+ e.preventDefault();if(!ready()||!basketIds.has(basketRenameTarget))return;
+ const name=$('pvbRenameInput').value.trim();if(!name||name.length>20)return;
+ const id=basketRenameTarget;$('pvbRenameDialog').close();mutateBaskets(b=>{b.names[id]=name;});tip('Basket renamed');
+});
+$('pvbMoveForm').addEventListener('submit',e=>{
+ e.preventDefault();if(!ready())return;
+ const id=basketMoveTarget,to=$('pvbMoveSelect').value;$('pvbMoveDialog').close();basketMove(id,to);
+});
+// Desktop drag/drop; mobile and keyboard users have an explicit Move action.
+$('pvbGrid').addEventListener('dragstart',e=>{
+ const tile=e.target.closest('[data-basket-drag]');if(!tile||!ready())return;
+ basketDragging=tile.dataset.basketDrag;
+ if(e.dataTransfer){e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',basketDragging);}
+ tile.classList.add('pvb-dragging');
+});
+$('pvbGrid').addEventListener('dragover',e=>{
+ const box=e.target.closest('[data-basket-drop]');if(!box||!basketDragging)return;
+ e.preventDefault();if(e.dataTransfer)e.dataTransfer.dropEffect='move';
+ document.querySelectorAll('#pvbGrid .pvb-basket').forEach(b=>b.classList.toggle('pvb-drop-target',b===box));
+});
+$('pvbGrid').addEventListener('drop',e=>{
+ const box=e.target.closest('[data-basket-drop]');if(!box||!basketDragging)return;
+ e.preventDefault();const id=basketDragging;basketDragging=null;
+ document.querySelectorAll('#pvbGrid .pvb-basket').forEach(b=>b.classList.remove('pvb-drop-target'));
+ basketMove(id,box.dataset.basketDrop);
+});
+$('pvbGrid').addEventListener('dragend',()=>{basketDragging=null;document.querySelectorAll('#pvbGrid .pvb-basket').forEach(b=>b.classList.remove('pvb-drop-target'));});
 document.addEventListener('keydown',e=>{
  if(!ready())return;
  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();$('search').focus();}
