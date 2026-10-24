@@ -389,3 +389,25 @@ html[data-theme="dark"] #approvedUI{--bg:#0c1020;--surface:#151b2e;--surface-2:#
  #approvedUI .heading-actions .status{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:0 1 auto}
  #approvedUI .heading-actions>.btn{flex:0 0 auto;white-space:nowrap}
 }
+
+/* Vault-access gate: only active while signed in and the selected vault is locked. */
+body.approved-gate-active #lockedView{display:none!important}
+#approvedUI .approved-gate-vaults{display:grid;gap:10px}
+#approvedUI .approved-gate-vault{display:flex;align-items:center;gap:12px;width:100%;padding:15px 16px;border:1px solid var(--border);border-radius:12px;background:var(--surface-2);color:var(--text);text-align:left}
+#approvedUI .approved-gate-vault:hover{border-color:var(--primary);background:var(--primary-wash)}
+#approvedUI .approved-gate-vault-label{display:grid;gap:5px;flex:1;min-width:0}
+#approvedUI .approved-gate-vault-label strong{overflow-wrap:anywhere;font-size:13px}
+#approvedUI .approved-gate-vault-label small{font-size:11px;color:var(--muted)}
+#approvedUI .approved-gate-lock{font-size:17px}
+#approvedUI .approved-gate-arrow{font-size:19px;color:var(--primary)}
+#approvedUI .approved-gate-form[hidden],#approvedUI .approved-gate-vaults[hidden]{display:none}
+#approvedUI .approved-gate-form .access-card{border:0;box-shadow:none;padding:0;background:transparent}
+#approvedUI .approved-gate-form .access-card .card-title-row{display:none}
+#approvedUI .approved-gate-form .access-card button.grow{background:#6052d9;color:white;border-radius:10px;width:100%;padding:13px 16px;font-weight:750}
+#approvedUI .approved-gate-helper{font-size:12px;color:var(--muted);margin:12px 0 0}
+#approvedUI .approved-gate-foot{display:flex;justify-content:flex-end;gap:8px}
+#approvedUI .approved-gate-foot .btn{font-size:12px}
+
+#approvedUI .approved-gate-foot button[hidden]{display:none!important}
+/* The gate belongs to #unlockedView; make its modal host visible while locked. */
+body.approved-gate-active #unlockedView{display:block!important}
