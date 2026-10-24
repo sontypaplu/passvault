@@ -373,7 +373,7 @@ html[data-theme="dark"] #approvedUI{--bg:#0c1020;--surface:#151b2e;--surface-2:#
 #loginView .approved-auth-intro h1,#lockedView .approved-lock-intro h1{font-size:38px;line-height:1.15;letter-spacing:-1.2px}
 #loginView .approved-auth-intro p,#lockedView .approved-lock-intro p{color:var(--muted);line-height:1.75}
 #loginView .approved-auth-benefit,#lockedView .approved-auth-benefit{padding:10px 0;color:var(--text);font-weight:600}
-#loginView .approved-auth-benefit::before,#lockedView .approved-auth-benefit::before{content:'✓';color:#6052d9;margin-right:12px}
+#loginView .approved-auth-benefit::before,#lockedView .approved-auth-benefit::before{content:'âœ“';color:#6052d9;margin-right:12px}
 #lockedView .lock-main .access-shell{width:100%;max-width:640px}
 #lockedView .lock-main .access-screen:not(.hidden){max-width:100%}
 @media(max-width:850px){#loginView .entry-main,#lockedView .lock-main{flex-direction:column;gap:20px}#loginView .approved-auth-intro,#lockedView .approved-lock-intro{display:none}#loginView .entry-main>.entry-card:not(.hidden){width:100%;flex:auto}}
@@ -411,3 +411,66 @@ body.approved-gate-active #lockedView{display:none!important}
 #approvedUI .approved-gate-foot button[hidden]{display:none!important}
 /* The gate belongs to #unlockedView; make its modal host visible while locked. */
 body.approved-gate-active #unlockedView{display:block!important}
+
+/* Vault item capacity and four Overview baskets ONLY â€” approved addition. */
+#approvedUI .pvb-capacity{display:flex;align-items:center;gap:24px;padding:19px 23px;margin-bottom:30px;min-width:0}
+#approvedUI .pvb-vault-symbol{width:49px;height:49px;flex:0 0 49px;border-radius:15px;background:var(--primary-wash);color:var(--primary);display:grid;place-items:center}
+#approvedUI .pvb-vault-symbol svg{width:23px;height:23px}
+#approvedUI .pvb-vault-info{min-width:200px;display:flex;flex-direction:column;gap:8px}
+#approvedUI .pvb-vault-info strong{font-size:15px;font-weight:800;line-height:1.2;overflow-wrap:anywhere}
+#approvedUI .pvb-vault-info>span{color:var(--muted);font-size:11px}
+#approvedUI .pvb-usage{flex:1;min-width:115px}
+#approvedUI .pvb-usage-label{display:flex;justify-content:space-between;align-items:center;gap:9px;margin-bottom:11px}
+#approvedUI .pvb-usage-label strong{font-size:13px;font-weight:750;white-space:nowrap}
+#approvedUI .pvb-usage-label>span{font-size:11px;color:var(--muted);text-align:right}
+#approvedUI .pvb-track{height:7px;background:var(--border);overflow:hidden;border-radius:50px}
+#approvedUI .pvb-track>span{display:block;height:100%;width:0%;background:linear-gradient(90deg,#6253e5,#8c7cf5);border-radius:50px;transition:width .17s}
+#approvedUI .pvb-vault-count{flex:0 0 93px;border-left:1px solid var(--border);padding-left:21px;text-align:center;white-space:nowrap}
+#approvedUI .pvb-vault-count strong{font-size:19px;font-weight:810;display:block}
+#approvedUI .pvb-vault-count span{color:var(--muted);font-size:11px;display:block;margin-top:8px}
+#approvedUI .pvb-section{margin-bottom:25px}
+#approvedUI .pvb-heading{display:flex;justify-content:space-between;align-items:end;gap:15px;margin-bottom:17px}
+#approvedUI .pvb-heading h2{font-size:19px;font-weight:800;line-height:1.2;margin:0 0 6px}
+#approvedUI .pvb-heading p{font-size:12px;margin:0}
+#approvedUI .pvb-hint{border:1px solid var(--border);border-radius:9px;background:var(--surface);padding:9px 12px;font-size:11px;color:var(--muted)}
+#approvedUI .pvb-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:17px}
+#approvedUI .pvb-basket{--pvb-accent:#6759e8;--pvb-pale:#efedff;position:relative;min-width:0;min-height:310px;background:var(--surface);border:1px solid var(--border);border-radius:19px;padding:18px 15px 15px;box-shadow:var(--shadow);display:flex;flex-direction:column;overflow:hidden}
+#approvedUI .pvb-basket::before{content:"";position:absolute;top:0;left:23px;width:55px;height:5px;background:var(--pvb-accent);border-radius:0 0 6px 6px}
+#approvedUI .pvb-color-money{--pvb-accent:#eaa13e;--pvb-pale:#fff4e6}
+#approvedUI .pvb-color-work{--pvb-accent:#26b295;--pvb-pale:#e7f7f1}
+#approvedUI .pvb-color-private{--pvb-accent:#e779a0;--pvb-pale:#fff0f6}
+#approvedUI .pvb-basket.pvb-drop-target{border-color:var(--primary);background:var(--primary-wash);outline:2px dashed var(--primary);outline-offset:-5px}
+#approvedUI .pvb-basket-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+#approvedUI .pvb-folder{width:37px;height:37px;border-radius:11px;display:grid;place-items:center;background:var(--pvb-pale);color:var(--pvb-accent)}
+#approvedUI .pvb-folder svg{width:19px;height:19px}
+#approvedUI .pvb-rename{display:grid;place-items:center;width:35px;height:35px;color:var(--subtle);border-radius:9px}
+#approvedUI .pvb-rename:hover{color:var(--primary);background:var(--primary-wash)}
+#approvedUI .pvb-rename svg{width:19px;height:19px}
+#approvedUI .pvb-basket h3{font-weight:820;font-size:15px;line-height:1.3;overflow-wrap:anywhere}
+#approvedUI .pvb-num{font-size:11px;color:var(--muted);margin:5px 0 0}
+#approvedUI .pvb-apps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 4px;align-content:start;padding:18px 0 16px;flex:1}
+#approvedUI .pvb-tile{min-width:0;position:relative;display:flex;flex-direction:column;align-items:center;user-select:none}
+#approvedUI .pvb-tile.pvb-dragging{opacity:.4}
+#approvedUI .pvb-tile-open{min-width:0;width:100%;display:flex;flex-direction:column;align-items:center;gap:7px;border-radius:8px;padding:0 1px 3px;color:var(--text)}
+#approvedUI .pvb-tile-open:hover .pvb-appicon{box-shadow:0 0 0 2px var(--primary)}
+#approvedUI .pvb-appicon{width:49px;height:49px;display:grid;place-items:center;border-radius:13px;background:#e7f0ff;color:#416ee1;font-weight:800;font-size:21px;flex:none}
+#approvedUI .pvb-note .pvb-appicon,#approvedUI .pvb-appicon.pvb-note{background:#fceaf2;color:#c35f93}
+#approvedUI .pvb-appicon.pvb-card{background:#e5f7ef;color:#16886c}
+#approvedUI .pvb-appname{display:block;max-width:100%;font-size:11px;color:var(--muted);text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#approvedUI .pvb-tile-move{font-size:10px;font-weight:700;color:var(--primary);padding:4px 5px;margin-top:1px;border-radius:6px}
+#approvedUI .pvb-tile-move:hover{background:var(--primary-wash)}
+#approvedUI .pvb-add-tile{display:flex;flex-direction:column;align-items:center;gap:8px;padding:0;border-radius:9px;color:var(--muted)}
+#approvedUI .pvb-add-tile>span{width:49px;height:49px;border:1px dashed var(--border);background:var(--surface-2);color:var(--subtle);font-size:25px;font-weight:550;border-radius:13px;display:grid;place-items:center}
+#approvedUI .pvb-add-tile:hover>span{border-color:var(--primary);color:var(--primary)}
+#approvedUI .pvb-add-tile small{font-size:11px}
+#approvedUI .pvb-basket-foot{border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:5px;padding-top:13px;margin-top:auto}
+#approvedUI .pvb-basket-foot span{font-size:10px;color:var(--subtle)}
+#approvedUI .pvb-basket-foot button{color:var(--primary);font-weight:770;font-size:11px;padding:3px}
+#approvedUI .pvb-dialog{max-width:420px}
+#approvedUI .pvb-dialog .field{margin-bottom:0}
+@media(max-width:1250px){#approvedUI .pvb-grid{gap:10px}#approvedUI .pvb-basket{padding:15px 10px 12px}#approvedUI .pvb-appicon,#approvedUI .pvb-add-tile>span{width:44px;height:44px}}
+@media(max-width:1050px){#approvedUI .pvb-grid{grid-template-columns:repeat(2,minmax(0,1fr))}#approvedUI .pvb-basket{min-height:240px}#approvedUI .pvb-capacity{gap:16px}#approvedUI .pvb-vault-info{min-width:150px}}
+@media(max-width:760px){#approvedUI .pvb-capacity{display:grid;grid-template-columns:49px minmax(0,1fr) 75px;gap:11px;padding:15px;margin-bottom:23px}#approvedUI .pvb-vault-info{min-width:0}#approvedUI .pvb-vault-count{flex:auto;grid-column:3;grid-row:1 / 3;align-self:center;padding-left:10px}#approvedUI .pvb-vault-count strong{font-size:17px}#approvedUI .pvb-vault-count span{font-size:9px;white-space:normal}#approvedUI .pvb-usage{grid-column:1 / 3;min-width:0}#approvedUI .pvb-heading{flex-wrap:wrap;gap:8px}#approvedUI .pvb-hint{font-size:10px;padding:7px 9px}#approvedUI .pvb-grid{gap:10px}#approvedUI .pvb-basket{min-height:225px}#approvedUI .pvb-apps{gap:10px 0}#approvedUI .pvb-tile-move{min-height:22px}}
+@media(max-width:390px){#approvedUI .pvb-basket{padding:15px 8px 12px}#approvedUI .pvb-appicon,#approvedUI .pvb-add-tile>span{width:42px;height:42px}#approvedUI .pvb-appname{font-size:10px}#approvedUI .pvb-basket-foot span{display:none}#approvedUI .pvb-vault-count{width:75px}}
+@media(max-width:325px){#approvedUI .pvb-grid{grid-template-columns:1fr}#approvedUI .pvb-basket{min-height:190px}}
+html[data-theme="dark"] #approvedUI .pvb-folder{background:var(--primary-wash);color:var(--pvb-accent)}
