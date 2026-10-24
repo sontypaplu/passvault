@@ -190,13 +190,111 @@ function clearPrivateUI(){
  $('overviewVaults').replaceChildren();$('manageVaults').replaceChildren();$('quickPassword').textContent='';$('approvedGeneratedPassword').textContent='';
  closeMenu();$('flowsMenu').classList.add('hidden');
 }
+// The approved vault chooser originally had markup but no event handlers.
+// Reuse the existing cloud fetch and *original* master-password input/button.
+// This adapter never handles or stores a master password itself.
+const gate=$('approvedVaultGate');
+const gateVaultList=$('approvedGateVaultList');
+const gateSecureForm=$('approvedGateSecureForm');
+const nativeUnlockCard=$('unlockVaultScreen').querySelector('.access-card');
+const nativeUnlockParent=nativeUnlockCard.parentNode;
+const nativeUnlockNext=nativeUnlockCard.nextSibling;
+let gateFetchingVault=false;
+function restoreNativeUnlockCard(){
+ if(nativeUnlockCard.parentNode!==nativeUnlockParent)
+  nativeUnlockParent.insertBefore(nativeUnlockCard,nativeUnlockNext);
+}
+function closeVaultGate(){
+ if(gate.open)gate.close();
+ restoreNativeUnlockCard();
+ $('app').inert=false;
+ document.body.classList.remove('approved-gate-active');
+}
+function showVaultGate(){
+ $('app').inert=true; // The dashboard behind the password gate cannot be operated.
+ document.body.classList.add('approved-gate-active');
+ const unlocking=uiState.accessScreen==='unlock' && !!cloud.selectedVaultId && !!state.pendingImport;
+ $('approvedGateBack').hidden=!unlocking;
+ $('approvedGateRefresh').hidden=unlocking;
+ $('approvedGateCreate').hidden=unlocking;
+ gateVaultList.hidden=unlocking;
+ gateSecureForm.hidden=!unlocking;
+ if(unlocking){
+  $('approvedGateEyebrow').textContent='UNLOCK ENCRYPTED VAULT';
+  $('approvedGateTitle').textContent=cloud.vaultLabel||'Unlock vault';
+  $('approvedGateDescription').textContent="Enter this vault's master password to decrypt it on your device.";
+  $('approvedGateHelper').textContent='Your master password is never sent to the cloud.';
+  if(nativeUnlockCard.parentNode!==gateSecureForm)gateSecureForm.append(nativeUnlockCard);
+ }else{
+  restoreNativeUnlockCard();
+  $('approvedGateEyebrow').textContent='YOUR PRIVATE WORKSPACE';
+  $('approvedGateTitle').textContent='Choose a vault to unlock';
+  $('approvedGateDescription').textContent='Select a vault to continue to your workspace.';
+  $('approvedGateCreate').disabled=!cloud.loaded || cloud.vaults.length>=2;
+  $('approvedGateRefresh').disabled=gateFetchingVault;
+  gateVaultList.replaceChildren();
+  if(!cloud.loaded){
+   const message=document.createElement('p');
+   message.textContent='Vault list is unavailable. Try Refresh vaults.';
+   gateVaultList.append(message);
+  }else if(!cloud.vaults.length){
+   const message=document.createElement('p');
+   message.textContent='No cloud vaults yet. Create your first vault.';
+   gateVaultList.append(message);
+  }else{
+   for(const vault of cloud.vaults){
+    const button=document.createElement('button');
+    button.type='button'; button.className='approved-gate-vault';
+    button.disabled=gateFetchingVault;
+    const lock=document.createElement('span');lock.className='approved-gate-lock';lock.textContent='🔒';lock.setAttribute('aria-hidden','true');
+    const body=document.createElement('span');body.className='approved-gate-vault-label';
+    const name=document.createElement('strong');name.textContent=vault.label||'Encrypted vault';
+    const description=document.createElement('small');description.textContent='Encrypted · Master password required';
+    body.append(name,description);
+    const arrow=document.createElement('span');arrow.className='approved-gate-arrow';arrow.textContent='→';arrow.setAttribute('aria-hidden','true');
+    button.append(lock,body,arrow);
+    button.addEventListener('click',async()=>{
+     if(gateFetchingVault)return;
+     gateFetchingVault=true;showVaultGate();
+     $('approvedGateHelper').textContent='Loading encrypted vault…';
+     try{await openVaultById(vault.vault_id);}
+     finally{gateFetchingVault=false;syncVisible();}
+    });
+    gateVaultList.append(button);
+   }
+  }
+  const error=$('dashboardStatus').textContent.trim();
+  $('approvedGateHelper').textContent=error||'Vault contents remain hidden until unlocked.';
+ }
+ if(!gate.open)gate.showModal();
+}
+$('approvedGateBack').addEventListener('click',displayVaultDashboard);
+$('approvedGateSignOut').addEventListener('click',()=>void handleSignOut());
+$('approvedGateCreate').addEventListener('click',()=>{
+ prepareNewVault();
+ syncVisible(); // Keep the existing, already-working new-vault creation screen.
+});
+$('approvedGateRefresh').addEventListener('click',async()=>{
+ try{
+  await reloadVaultList();cloud.loaded=true;
+  clearStatus($('dashboardStatus'));renderVaultDashboard();
+ }catch(e){setStatus($('dashboardStatus'),e.message||'Refresh failed','error');}
+ syncVisible();
+});
+gate.addEventListener('cancel',e=>{e.preventDefault();if(uiState.accessScreen==='unlock')displayVaultDashboard();});
 function syncVisible(){
  if(ready()){
+  closeVaultGate();
   $('approvedUI').hidden=false;
   const saved=new URL(location.href).searchParams.get('view');
   if(!window.__pvApprovedWasUnlocked){window.__pvApprovedWasUnlocked=true;createMain();createQuick();navigate(pageTitles[saved]?saved:'overview',false);}
   render();
- }else{if(window.__pvApprovedWasUnlocked){window.__pvApprovedWasUnlocked=false;clearPrivateUI();}$('approvedUI').hidden=true;}
+ }else{
+  if(window.__pvApprovedWasUnlocked){window.__pvApprovedWasUnlocked=false;clearPrivateUI();}
+  const choosing=!!cloud.userId && uiState.accessGranted && uiState.accessScreen!=='create';
+  $('approvedUI').hidden=!choosing;
+  if(choosing)showVaultGate();else closeVaultGate();
+ }
 }
 // Install handlers only on elements inside the unchanged approved HTML layout.
 $('editorForm').addEventListener('submit',saveItem);
@@ -257,6 +355,19 @@ document.addEventListener('keydown',e=>{
  if(e.key==='Escape'){$('flowsMenu').classList.add('hidden');closeMenu();}
 });
 window.addEventListener('popstate',()=>{if(ready()){const v=new URL(location.href).searchParams.get('view');navigate(pageTitles[v]?v:'overview',false);}});
+// Keep the chooser synchronized when vaults are opened/switched or created from
+// any existing entry point (including the unlocked dashboard tiles).
+const originalOpenVaultById=openVaultById;
+openVaultById=async function(...args){
+ try{return await originalOpenVaultById(...args);}
+ finally{syncVisible();}
+};
+const originalPrepareNewVault=prepareNewVault;
+prepareNewVault=function(...args){
+ const result=originalPrepareNewVault(...args);
+ syncVisible();
+ return result;
+};
 // The original application owns rendering, session locking and cloud status. Refresh only after its lifecycle has run.
 const originalRenderVault=renderVault;
 renderVault=function(...args){const out=originalRenderVault(...args);syncVisible();return out;};
