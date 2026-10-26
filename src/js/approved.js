@@ -6,10 +6,11 @@ const icon=(id)=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" str
 const $=(id)=>document.getElementById(id);const safe=(x)=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 document.querySelectorAll('#approvedUI [data-icon]').forEach(x=>x.innerHTML=icon(x.dataset.icon));
 // This is a presentation adapter. No crypto, cloud schema, auth flow, or storage implementation changes.
-const pageTitles={overview:'Overview',items:'All items',favorites:'Favorites',vaults:'My vaults',security:'Security center',generator:'Password generator',settings:'Settings'};
+const pageTitles={overview:'Overview',items:'All items',favorites:'Favorites',vaults:'My vaults',security:'Security center',generator:'Password generator',profile:'My profile',settings:'Settings'};
 const kindLabel={login:'Login',note:'Secure note',card:'Payment card'};
 let page='overview',kind='login',filter='all',sort='recent',query='',selected=null,editId=null,generated='',quick='',toastTimer;
-let basketCreateTarget='everyday',basketRenameTarget=null,basketMoveTarget=null,basketDragging=null,basketDeleteTarget=null;
+let accountProfile=null,profileLoadedUserId=null,profileLoading=null,profileAvatarUrl=null,profilePreviewUrl=null,profilePendingPhoto=null,profileRemovePhoto=false,profileSaving=false;
+let basketCreateTarget='everyday',basketRenameTarget=null,basketMoveTarget=null,basketDragging=null,basketDeleteTarget=null,basketReordering=null,basketPointerHold=null;
 const ready=()=>!state.locked && !!state.vault && uiState.accessGranted;
 const getItems=()=>ready()?state.vault.credentials:[];
 const itemKind=(item)=>['login','note','card'].includes(item.kind)?item.kind:'login';
@@ -42,7 +43,7 @@ function closeMenu(){
 }
 function navigate(target,push=true){
  if(!ready()||!pageTitles[target])return;
- page=target;closeMenu();$('flowsMenu').classList.add('hidden');$('flowsToggle').setAttribute('aria-expanded','false');
+ page=target;closeMenu();if(target==='profile')void loadAccountProfile();$('flowsMenu').classList.add('hidden');$('flowsToggle').setAttribute('aria-expanded','false');
  $('crumb').textContent=pageTitles[target];document.title=pageTitles[target]+' | PassVault';
  document.querySelectorAll('#approvedUI [data-page].navitem').forEach(x=>{
   x.classList.toggle('active',x.dataset.page===target);
@@ -80,36 +81,59 @@ const baseBasketDefs=[
  {id:'private',name:'Private',color:'#e87da3',pale:'#ffedf3'}
 ];
 const BASKET_MAX=8;
+// Backward-compatible metadata: older encrypted vaults have no order/removedBase.
 function basketState(){
  const obj=state.vault?.overviewBaskets;
  const names=obj?.names && typeof obj.names==='object' && !Array.isArray(obj.names)?obj.names:{};
  const assignments=obj?.assignments && typeof obj.assignments==='object' && !Array.isArray(obj.assignments)?obj.assignments:{};
+ const removedBase=[...new Set((Array.isArray(obj?.removedBase)?obj.removedBase:[]).filter(id=>baseBasketDefs.some(b=>b.id===id)))];
+ // Fail safe against corrupted metadata: always leave one basket.
+ if(removedBase.length===baseBasketDefs.length && !(Array.isArray(obj?.custom)&&obj.custom.length))removedBase.pop();
+ const activeBases=baseBasketDefs.filter(b=>!removedBase.includes(b.id));
  const raw=Array.isArray(obj?.custom)?obj.custom:[];
- const custom=[...new Set(raw.filter(id=>typeof id==='string' && /^custom-[a-zA-Z0-9_-]{20,80}$/.test(id)))].slice(0,4);
- return {names,assignments,custom};
+ const custom=[...new Set(raw.filter(id=>typeof id==='string' && /^custom-[a-zA-Z0-9_-]{20,80}$/.test(id)))].slice(0,BASKET_MAX-activeBases.length);
+ const activeIds=[...activeBases.map(b=>b.id),...custom];
+ const order=[...new Set((Array.isArray(obj?.order)?obj.order:[]).filter(id=>activeIds.includes(id)))];
+ for(const id of activeIds)if(!order.includes(id))order.push(id);
+ return {names,assignments,custom,removedBase,order};
 }
 function basketDefs(){
- const custom=basketState().custom;
- return [...baseBasketDefs,...custom.map((id,i)=>({id,name:'New basket',theme:['money','work','private','everyday'][i]}))];
+ const data=basketState();
+ const defs=[...baseBasketDefs.filter(b=>!data.removedBase.includes(b.id)),...data.custom.map((id,i)=>({id,name:'New basket',theme:['money','work','private','everyday'][i%4]}))];
+ return data.order.map(id=>defs.find(b=>b.id===id)).filter(Boolean);
 }
 function isBasketId(id){return basketDefs().some(b=>b.id===id);}
+function firstBasketId(){return basketDefs()[0]?.id||'everyday';}
 function basketName(id){
  const name=basketState().names[id];
- return typeof name==='string'&&name.trim()&&name.length<=20?name:basketDefs().find(b=>b.id===id)?.name||'Everyday';
+ return typeof name==='string'&&name.trim()&&name.length<=20?name:basketDefs().find(b=>b.id===id)?.name||'Basket';
 }
-function itemBasket(id){const b=basketState().assignments[id];return isBasketId(b)?b:'everyday';}
+function itemBasket(id){const b=basketState().assignments[id];return isBasketId(b)?b:firstBasketId();}
 function mutateBaskets(callback){
  if(!ready())return;
  const current=basketState();
  const names=Object.create(null),assignments=Object.create(null);
  for(const b of basketDefs())names[b.id]=basketName(b.id);
  for(const item of getItems())if(isBasketId(current.assignments[item.id]))assignments[item.id]=current.assignments[item.id];
- const draft={names,assignments,custom:[...current.custom]};
+ const draft={names,assignments,custom:[...current.custom],removedBase:[...current.removedBase],order:[...current.order]};
  callback(draft);
  state.vault.overviewBaskets=draft;
  state.vault.updatedAt=new Date().toISOString();
  setDirty(true);
  render();
+}
+function reorderBasket(from,to){
+ if(!ready()||from===to||!isBasketId(from)||!isBasketId(to))return;
+ mutateBaskets(d=>{const fromIndex=d.order.indexOf(from),toIndex=d.order.indexOf(to);const order=d.order.filter(id=>id!==from);order.splice(order.indexOf(to)+(fromIndex<toIndex?1:0),0,from);d.order=order;});
+ tip('Basket order saved');
+}
+function clearReorderMarkers(){document.querySelectorAll('#pvbGrid .pvb-basket').forEach(b=>b.classList.remove('pvb-reorder-target','pvb-reordering'));}
+function deleteBasketAndMoveItems(id){
+ if(!ready()||!isBasketId(id)||basketDefs().length<=1)return false;
+ const destination=basketDefs().find(b=>b.id!==id).id,destinationName=basketName(destination);
+ mutateBaskets(b=>{b.custom=b.custom.filter(x=>x!==id);if(baseBasketDefs.some(def=>def.id===id))b.removedBase.push(id);b.order=b.order.filter(x=>x!==id);delete b.names[id];for(const item of getItems())if(itemBasket(item.id)===id)b.assignments[item.id]=destination;});
+ tip('Basket removed · items moved to '+destinationName);
+ return true;
 }
 function basketCapacityReached(){return getItems().length>=10;}
 function basketMove(id,to){
@@ -136,7 +160,7 @@ function renderBaskets(){
    const letter=safe((x.title||'•').slice(0,1).toUpperCase());
    return `<div class="pvb-tile" draggable="true" data-basket-drag="${safe(x.id)}"><button type="button" class="pvb-tile-open" data-open="${safe(x.id)}" aria-label="Open ${safe(x.title)}"><span class="pvb-appicon pvb-${itemKind(x)}">${letter}</span><span class="pvb-appname">${safe(x.title)}</span></button><button class="pvb-tile-move" type="button" data-basket-move="${safe(x.id)}" aria-label="Move ${safe(x.title)} to another basket" title="Move item">Move</button></div>`;
   }).join('');
-  return `<article class="pvb-basket pvb-color-${b.theme||b.id}" data-basket-drop="${b.id}"><div class="pvb-basket-top"><span class="pvb-folder" aria-hidden="true">${icon('folder')}</span><button type="button" class="pvb-rename" data-basket-rename="${b.id}" aria-label="Rename ${safe(basketName(b.id))} basket" title="Rename basket">${icon('more')}</button></div><h3>${safe(basketName(b.id))}</h3><p class="pvb-num">${these.length} ${these.length===1?'item':'items'}</p><div class="pvb-apps">${tiles}${!basketCapacityReached()?`<button type="button" class="pvb-add-tile" data-basket-add="${b.id}" aria-label="Add item to ${safe(basketName(b.id))}"><span>+</span><small>Add item</small></button>`:''}</div><div class="pvb-basket-foot"><span>Drag to organize</span>${b.id.startsWith('custom-')?`<button type="button" data-basket-delete="${b.id}" aria-label="Delete ${safe(basketName(b.id))} basket">Delete basket</button>`:''}</div></article>`;
+  return `<article class="pvb-basket pvb-color-${b.theme||b.id}" data-basket-drop="${b.id}"><div class="pvb-basket-top" data-basket-reorder="${b.id}" draggable="true" title="Drag the colored header to reorder"><span class="pvb-folder" aria-hidden="true">${icon('folder')}</span><span class="pvb-grip" tabindex="0" role="button" data-basket-keyboard="${b.id}" aria-label="Move ${safe(basketName(b.id))} basket. Press arrow keys to reorder." title="Arrow keys to reorder">⋮⋮</span><button type="button" class="pvb-rename" data-basket-rename="${b.id}" aria-label="Rename ${safe(basketName(b.id))} basket" title="Rename basket">${icon('more')}</button></div><h3>${safe(basketName(b.id))}</h3><p class="pvb-num">${these.length} ${these.length===1?'item':'items'}</p><div class="pvb-apps">${tiles}${!basketCapacityReached()?`<button type="button" class="pvb-add-tile" data-basket-add="${b.id}" aria-label="Add item to ${safe(basketName(b.id))}"><span>+</span><small>Add item</small></button>`:''}</div><div class="pvb-basket-foot"><span>Drag to organize</span>${basketDefs().length>1?`<button type="button" data-basket-delete="${b.id}" aria-label="Delete ${safe(basketName(b.id))} basket">Delete basket</button>`:'<span class="pvb-last-basket">Required basket</span>'}</div></article>`;
  }).join('');
 }
 function clearBaskets(){
@@ -146,7 +170,124 @@ function clearBaskets(){
  $('pvbFree').textContent='';
  $('pvbFill').style.width='0%';
  for(const id of ['pvbRenameDialog','pvbMoveDialog','pvbCreateDialog','pvbDeleteDialog'])if($(id).open)$(id).close();
- basketRenameTarget=null;basketMoveTarget=null;basketDeleteTarget=null;basketDragging=null;basketCreateTarget='everyday';
+ basketRenameTarget=null;basketMoveTarget=null;basketDeleteTarget=null;basketDragging=null;basketReordering=null;basketPointerHold=null;basketCreateTarget='everyday';
+}
+// Profile is account-scoped (across vaults). It contains no credential data.
+// Avatar files live in a separate private Supabase Storage bucket; text uses Auth user metadata.
+const PROFILE_BUCKET='passvault-avatars';
+function profileInitials(){
+ const label=accountProfile?.nickname||accountProfile?.name||cloud.email?.split('@')[0]||'PV';
+ return label.split(/\s+/).filter(Boolean).slice(0,2).map(x=>x[0].toUpperCase()).join('')||'PV';
+}
+function profileAvatarInto(node,src){
+ if(!node)return;
+ node.replaceChildren();
+ if(src){const img=document.createElement('img');img.alt='';img.src=src;img.draggable=false;node.append(img);}
+ else node.textContent=profileInitials();
+}
+function renderAccountIdentity(){
+ const label=accountProfile?.nickname||accountProfile?.name||'Your account';
+ $('approvedIdentityName').textContent=label;
+ const email=document.querySelector('#approvedUI .identity small');if(email)email.textContent=cloud.email||'Signed in';
+ profileAvatarInto($('approvedSidebarAvatar'),profileAvatarUrl);
+}
+function profileStatus(message='',error=false){const el=$('pvProfileStatus');el.textContent=message;el.classList.toggle('error',!!error);el.classList.toggle('success',!!message&&!error);}
+function profileDate(value){const d=value?new Date(value):null;return d&&!Number.isNaN(d.getTime())?d.toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'}):'—';}
+function profileDraw(){
+ if(!accountProfile)return;
+ $('pvProfileName').value=accountProfile.name;
+ $('pvProfileNickname').value=accountProfile.nickname;
+ $('pvProfileBio').value=accountProfile.bio;
+ $('pvProfileEmail').value=cloud.email||'';
+ $('pvProfileAccountEmail').textContent=cloud.email||'—';
+ $('pvProfileJoined').textContent=profileDate(accountProfile.createdAt);
+ $('pvProfileLastSignin').textContent=profileDate(accountProfile.lastSignIn);
+ $('pvProfileHeading').textContent=accountProfile.nickname||accountProfile.name||'Your profile';
+ $('pvProfileSubheading').textContent=cloud.email||'Personalize your account';
+ profileAvatarInto($('pvProfileAvatar'),profilePreviewUrl||(!profileRemovePhoto&&profileAvatarUrl)||null);
+}
+function clearProfilePreview(){if(profilePreviewUrl)URL.revokeObjectURL(profilePreviewUrl);profilePreviewUrl=null;profilePendingPhoto=null;profileRemovePhoto=false;$('pvProfilePhoto').value='';}
+function resetAccountProfile(){
+ clearProfilePreview();if(profileAvatarUrl)URL.revokeObjectURL(profileAvatarUrl);
+ profileAvatarUrl=null;accountProfile=null;profileLoadedUserId=null;
+ renderAccountIdentity();
+}
+async function loadAccountProfile(force=false){
+ if(!cloud.client||!cloud.userId)return;
+ const requested=cloud.userId;
+ if(!force&&profileLoadedUserId===requested){if(page==='profile'&&!profileSaving)profileDraw();return;}
+ if(profileLoading)return profileLoading;
+ profileLoading=(async()=>{
+  try{
+   const {data,error}=await cloud.client.auth.getUser();if(error)throw error;
+   if(cloud.userId!==requested||data.user?.id!==requested)return;
+   const user=data.user,meta=user.user_metadata||{};
+   const photoPath=meta.pv_avatar_path===requested+'/avatar.webp'?meta.pv_avatar_path:null;
+   accountProfile={name:typeof meta.pv_display_name==='string'?meta.pv_display_name.slice(0,60):'',nickname:typeof meta.pv_nickname==='string'?meta.pv_nickname.slice(0,30):'',bio:typeof meta.pv_bio==='string'?meta.pv_bio.slice(0,160):'',avatarPath:photoPath,createdAt:user.created_at,lastSignIn:user.last_sign_in_at};
+   profileLoadedUserId=requested;
+   if(profileAvatarUrl)URL.revokeObjectURL(profileAvatarUrl);profileAvatarUrl=null;
+   if(photoPath){
+    const {data:blob,error:photoError}=await cloud.client.storage.from(PROFILE_BUCKET).download(photoPath);
+    if(cloud.userId!==requested)return;
+    if(!photoError&&blob)profileAvatarUrl=URL.createObjectURL(blob);
+    else if(page==='profile')profileStatus('Profile photo unavailable. Apply the private avatar bucket migration if not already installed.',true);
+   }
+   renderAccountIdentity();if(page==='profile'&&!profileSaving)profileDraw();
+  }catch(err){if(page==='profile'&&cloud.userId===requested)profileStatus('Could not load profile: '+(err.message||'Network error'),true);}
+ })();
+ try{await profileLoading;}finally{profileLoading=null;}
+}
+async function resizeProfilePhoto(file){
+ if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>5*1024*1024||file.size===0)throw new Error('Choose a JPG, PNG, or WebP image up to 5 MB.');
+ const bitmap=await createImageBitmap(file);
+ try{
+  if(bitmap.width>6000||bitmap.height>6000||bitmap.width*bitmap.height>25000000)throw new Error('Image dimensions are too large.');
+  const canvas=document.createElement('canvas');canvas.width=256;canvas.height=256;
+  const ctx=canvas.getContext('2d');if(!ctx)throw new Error('Image processing is unavailable.');
+  const side=Math.min(bitmap.width,bitmap.height);ctx.drawImage(bitmap,(bitmap.width-side)/2,(bitmap.height-side)/2,side,side,0,0,256,256);
+  const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/webp',.78));
+  if(!blob||blob.type!=='image/webp'||blob.size>256*1024)throw new Error('Could not prepare a small WebP profile photo.');
+  return blob;
+ }finally{bitmap.close();}
+}
+async function saveAccountProfile(e){
+ e.preventDefault();if(profileSaving||!ready()||!cloud.userId)return;
+ if(profileLoadedUserId!==cloud.userId){profileStatus('Profile is loading. Please try again.',true);return;}
+ const name=$('pvProfileName').value.trim(),nickname=$('pvProfileNickname').value.trim(),bio=$('pvProfileBio').value.trim();
+ if(name.length>60||nickname.length>30||bio.length>160){profileStatus('A profile field exceeds its character limit.',true);return;}
+ const userId=cloud.userId,previous=accountProfile?.avatarPath;
+ profileSaving=true;$('pvProfileSave').disabled=true;$('pvProfileDiscard').disabled=true;profileStatus('Saving profile…');
+ try{
+  let photoPath=previous,uploadedBlob=null;
+  if(profilePendingPhoto){
+   uploadedBlob=await resizeProfilePhoto(profilePendingPhoto);
+   const path=userId+'/avatar.webp';
+   const {error}=await cloud.client.storage.from(PROFILE_BUCKET).upload(path,uploadedBlob,{upsert:true,contentType:'image/webp',cacheControl:'3600'});
+   if(error)throw new Error('Profile photo upload failed. Check the private Storage bucket setup: '+error.message);
+   photoPath=path;
+  }else if(profileRemovePhoto)photoPath=null;
+  if(cloud.userId!==userId)throw new Error('Your account changed. Sign in again.');
+  const {data,error}=await cloud.client.auth.updateUser({data:{pv_display_name:name,pv_nickname:nickname,pv_bio:bio,pv_avatar_path:photoPath}});
+  if(error)throw error;
+  if(cloud.userId!==userId)return;
+  if(profileRemovePhoto&&previous){
+   // The metadata is already saved; an unsuccessful removal is non-fatal and
+   // leaves a private, unreferenced blob rather than a broken profile.
+   const {error:removeError}=await cloud.client.storage.from(PROFILE_BUCKET).remove([previous]);
+   if(removeError)profileStatus('Profile saved; old photo cleanup was not completed.',true);
+  }
+  accountProfile={name,nickname,bio,avatarPath:photoPath,createdAt:data.user?.created_at||accountProfile?.createdAt,lastSignIn:data.user?.last_sign_in_at||accountProfile?.lastSignIn};
+  if(profileAvatarUrl)URL.revokeObjectURL(profileAvatarUrl);profileAvatarUrl=null;
+  if(uploadedBlob)profileAvatarUrl=URL.createObjectURL(uploadedBlob);
+  else if(photoPath&&!profileRemovePhoto){
+   const {data:existing}=await cloud.client.storage.from(PROFILE_BUCKET).download(photoPath);
+   if(existing&&cloud.userId===userId)profileAvatarUrl=URL.createObjectURL(existing);
+  }
+  clearProfilePreview();renderAccountIdentity();profileDraw();
+  if(!$('pvProfileStatus').classList.contains('error'))profileStatus('Profile saved successfully.');
+  tip('Account profile saved');
+ }catch(error){profileStatus(error.message||'Profile could not be saved.',true);}
+ finally{profileSaving=false;$('pvProfileSave').disabled=false;$('pvProfileDiscard').disabled=false;}
 }
 function render(){
  if(!ready())return;
@@ -175,7 +316,7 @@ function render(){
  $('approvedSyncRetry').disabled=!!cloud.conflict || cloud.saveInProgress;
  $('approvedVaultStatus').title=failure||syncLabel;
  $('approvedVaultStatus').innerHTML=`<span class="dot"></span> ${safe(cloud.vaultLabel||state.vault.name||'Your vault')} · ${syncLabel}`;
- const account=document.querySelector('#approvedUI .identity small');if(account)account.textContent=cloud.email||'Signed in';
+ renderAccountIdentity();
 }
 window.pvRenderApprovedStatus=()=>{if(ready())render();};
 function addCustom(label='',value=''){
@@ -189,7 +330,7 @@ function addCustom(label='',value=''){
 function openEditor(id=null,prepass='',targetBasket='everyday'){
  if(!ready())return;
  if(!id&&basketCapacityReached()){tip('This vault is full: maximum 10 items.');return;}
- basketCreateTarget=isBasketId(targetBasket)?targetBasket:'everyday';
+ basketCreateTarget=isBasketId(targetBasket)?targetBasket:firstBasketId();
  editId=id;const x=id?findItem(id):null;
  $('editorForm').reset();$('approvedCustomFields').replaceChildren();kind=x?itemKind(x):'login';
  $('itemTitle').value=x?.title||'';$('itemUsername').value=x?.username||'';
@@ -239,9 +380,9 @@ function saveItem(event){
   validateVaultPlaintext({...state.vault,credentials:candidate});
   if(existing)Object.assign(existing,data);else {
    state.vault.credentials.push(data);
-   if(basketCreateTarget!=='everyday'){
+   if(isBasketId(basketCreateTarget)){
     const current=basketState();
-    state.vault.overviewBaskets={names:Object.fromEntries(basketDefs().map(b=>[b.id,basketName(b.id)])),assignments:{...current.assignments,[data.id]:basketCreateTarget},custom:[...current.custom]};
+    state.vault.overviewBaskets={names:Object.fromEntries(basketDefs().map(b=>[b.id,basketName(b.id)])),assignments:{...current.assignments,[data.id]:basketCreateTarget},custom:[...current.custom],removedBase:[...current.removedBase],order:[...current.order]};
    }
   }
   state.vault.updatedAt=now;setDirty(true);
@@ -412,17 +553,30 @@ function syncVisible(){
  if(ready()){
   closeVaultGate();
   $('approvedUI').hidden=false;
+  if(profileLoadedUserId && profileLoadedUserId!==cloud.userId)resetAccountProfile();
+  if(profileLoadedUserId!==cloud.userId && !profileLoading)void loadAccountProfile();
   const saved=new URL(location.href).searchParams.get('view');
   if(!window.__pvApprovedWasUnlocked){window.__pvApprovedWasUnlocked=true;createMain();createQuick();navigate(pageTitles[saved]?saved:'overview',false);}
   render();
  }else{
   if(window.__pvApprovedWasUnlocked){window.__pvApprovedWasUnlocked=false;clearPrivateUI();}
+  if(profileLoadedUserId && profileLoadedUserId!==cloud.userId)resetAccountProfile();
   const choosing=!!cloud.userId && uiState.accessGranted && uiState.accessScreen!=='create';
   $('approvedUI').hidden=!choosing;
   if(choosing)showVaultGate();else closeVaultGate();
  }
 }
 // Install handlers only on elements inside the unchanged approved HTML layout.
+$('pvProfileForm').addEventListener('submit',e=>void saveAccountProfile(e));
+$('pvProfilePhotoButton').addEventListener('click',()=>$('pvProfilePhoto').click());
+$('pvProfilePhoto').addEventListener('change',e=>{
+ const file=e.target.files?.[0];if(!file)return;
+ if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>5*1024*1024||!file.size){profileStatus('Choose a JPG, PNG, or WebP image up to 5 MB.',true);e.target.value='';return;}
+ clearProfilePreview();profilePendingPhoto=file;profilePreviewUrl=URL.createObjectURL(file);profileRemovePhoto=false;
+ profileAvatarInto($('pvProfileAvatar'),profilePreviewUrl);profileStatus('Photo selected. Save profile to upload.');
+});
+$('pvProfileRemovePhoto').addEventListener('click',()=>{clearProfilePreview();profileRemovePhoto=true;profileAvatarInto($('pvProfileAvatar'),null);profileStatus('Photo will be removed when you save.');});
+$('pvProfileDiscard').addEventListener('click',()=>{clearProfilePreview();profileDraw();profileStatus('Changes discarded.');});
 $('editorForm').addEventListener('submit',saveItem);
 $('deleteItem').addEventListener('click',deleteItem);
 $('editItem').addEventListener('click',()=>{const id=selected;$('detailDialog').close();openEditor(id);});
@@ -478,10 +632,11 @@ document.addEventListener('click',e=>{
 window.addEventListener('resize',()=>{if(window.matchMedia('(max-width:760px)').matches){$('approvedSidebar').classList.remove('pinned');}else{closeMenu();}updateMobileSidebarFocus();});
 $('approvedUI').addEventListener('click',e=>{
  const target=e.target.closest('button');if(!target||!$('approvedUI').contains(target))return;
- const deleteBasket=target.closest('[data-basket-delete]');if(deleteBasket){basketDeleteTarget=deleteBasket.dataset.basketDelete;if(!basketState().custom.includes(basketDeleteTarget))return;$('pvbDeleteDescription').textContent='Delete '+basketName(basketDeleteTarget)+'? Its items will be moved to Everyday.';$('pvbDeleteDialog').showModal();return;}
+ const deleteBasket=target.closest('[data-basket-delete]');if(deleteBasket){basketDeleteTarget=deleteBasket.dataset.basketDelete;if(!isBasketId(basketDeleteTarget)||basketDefs().length<=1)return;const destination=basketDefs().find(b=>b.id!==basketDeleteTarget);$('pvbDeleteDescription').textContent='Delete '+basketName(basketDeleteTarget)+'? Its items will be moved to '+basketName(destination.id)+'. This cannot be undone.';$('pvbDeleteDialog').showModal();return;}
  const addBasket=target.closest('[data-basket-add]');if(addBasket){openEditor(null,'',addBasket.dataset.basketAdd);return;}
  const renameBasket=target.closest('[data-basket-rename]');if(renameBasket){basketRenameTarget=renameBasket.dataset.basketRename;$('pvbRenameInput').value=basketName(basketRenameTarget);$('pvbRenameDialog').showModal();$('pvbRenameInput').focus();return;}
  const moveBasket=target.closest('[data-basket-move]');if(moveBasket){basketMoveTarget=moveBasket.dataset.basketMove;const x=findItem(basketMoveTarget);if(!x)return;$('pvbMoveDescription').textContent=x.title;const sel=$('pvbMoveSelect');sel.replaceChildren();for(const b of basketDefs()){const opt=document.createElement('option');opt.value=b.id;opt.textContent=basketName(b.id);opt.selected=b.id===itemBasket(basketMoveTarget);sel.append(opt);}$('pvbMoveDialog').showModal();return;}
+ const profileAction=target.closest('[data-profile-action]');if(profileAction){if(profileAction.dataset.profileAction==='password'){navigate('settings');$('changeAccountPasswordForm').scrollIntoView({behavior:'smooth',block:'center'});$('currentAccountPassword').focus();}return;}
  const close=target.closest('[data-close]');if(close){$(close.dataset.close).close();return;}
  const to=target.closest('[data-page]');if(to){closeAccountMenu();navigate(to.dataset.page);return;}
  const newb=target.closest('[data-new]');if(newb){openEditor();return;}
@@ -511,14 +666,13 @@ $('pvbCreateForm').addEventListener('submit',e=>{
  e.preventDefault();if(!ready()||basketDefs().length>=BASKET_MAX)return;
  const name=$('pvbCreateInput').value.trim();if(!name||name.length>20)return;
  const id='custom-'+secureId();
- $('pvbCreateDialog').close();mutateBaskets(b=>{b.custom.push(id);b.names[id]=name;});tip('Basket created');
+ $('pvbCreateDialog').close();mutateBaskets(b=>{b.custom.push(id);b.order.push(id);b.names[id]=name;});tip('Basket created');
 });
 $('pvbDeleteForm').addEventListener('submit',e=>{
  e.preventDefault();const id=basketDeleteTarget;
- if(!ready()||!basketState().custom.includes(id))return;
+ if(!ready()||!isBasketId(id)||basketDefs().length<=1)return;
  $('pvbDeleteDialog').close();basketDeleteTarget=null;
- mutateBaskets(b=>{b.custom=b.custom.filter(x=>x!==id);delete b.names[id];for(const itemId of Object.keys(b.assignments))if(b.assignments[itemId]===id)b.assignments[itemId]='everyday';});
- tip('Basket removed · items moved to Everyday');
+ deleteBasketAndMoveItems(id);
 });
 $('pvbRenameForm').addEventListener('submit',e=>{
  e.preventDefault();if(!ready()||!isBasketId(basketRenameTarget))return;
@@ -531,23 +685,56 @@ $('pvbMoveForm').addEventListener('submit',e=>{
 });
 // Desktop drag/drop; mobile and keyboard users have an explicit Move action.
 $('pvbGrid').addEventListener('dragstart',e=>{
+ const handle=e.target.closest('[data-basket-reorder]');
+ if(handle && !e.target.closest('button') && ready()){basketReordering=handle.dataset.basketReorder;basketDragging=null;handle.closest('.pvb-basket').classList.add('pvb-reordering');if(e.dataTransfer){e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain','basket:'+basketReordering);}return;}
  const tile=e.target.closest('[data-basket-drag]');if(!tile||!ready())return;
  basketDragging=tile.dataset.basketDrag;
  if(e.dataTransfer){e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',basketDragging);}
  tile.classList.add('pvb-dragging');
 });
 $('pvbGrid').addEventListener('dragover',e=>{
- const box=e.target.closest('[data-basket-drop]');if(!box||!basketDragging)return;
+ const box=e.target.closest('[data-basket-drop]');if(!box)return;
+ if(basketReordering){e.preventDefault();if(e.dataTransfer)e.dataTransfer.dropEffect='move';clearReorderMarkers();box.classList.add('pvb-reorder-target');return;}
+ if(!basketDragging)return;
  e.preventDefault();if(e.dataTransfer)e.dataTransfer.dropEffect='move';
  document.querySelectorAll('#pvbGrid .pvb-basket').forEach(b=>b.classList.toggle('pvb-drop-target',b===box));
 });
 $('pvbGrid').addEventListener('drop',e=>{
- const box=e.target.closest('[data-basket-drop]');if(!box||!basketDragging)return;
+ const box=e.target.closest('[data-basket-drop]');if(!box)return;
+ if(basketReordering){e.preventDefault();const from=basketReordering;basketReordering=null;clearReorderMarkers();reorderBasket(from,box.dataset.basketDrop);return;}
+ if(!basketDragging)return;
  e.preventDefault();const id=basketDragging;basketDragging=null;
  document.querySelectorAll('#pvbGrid .pvb-basket').forEach(b=>b.classList.remove('pvb-drop-target'));
  basketMove(id,box.dataset.basketDrop);
 });
-$('pvbGrid').addEventListener('dragend',()=>{basketDragging=null;document.querySelectorAll('#pvbGrid .pvb-basket').forEach(b=>b.classList.remove('pvb-drop-target'));});
+$('pvbGrid').addEventListener('dragend',()=>{basketDragging=null;basketReordering=null;clearReorderMarkers();document.querySelectorAll('#pvbGrid .pvb-basket').forEach(b=>b.classList.remove('pvb-drop-target'));});
+// Keyboard-accessible rearranging, including for touch devices without native drag events.
+$('pvbGrid').addEventListener('keydown',e=>{
+ const handle=e.target.closest('[data-basket-keyboard]');if(!handle||!ready()||e.target!==handle)return;
+ if(e.key!=='ArrowLeft'&&e.key!=='ArrowRight'&&e.key!=='ArrowUp'&&e.key!=='ArrowDown')return;
+ e.preventDefault();const order=basketDefs().map(b=>b.id),from=order.indexOf(handle.dataset.basketKeyboard),next=from+(e.key==='ArrowLeft'||e.key==='ArrowUp'?-1:1);
+ if(next<0||next>=order.length)return;
+ const id=order[from];reorderBasket(id,order[next]);const moved=$('pvbGrid').querySelector(`[data-basket-keyboard="${id}"]`);moved?.focus();
+});
+// Touch/pen long press on the colored header reorders baskets without changing item dragging.
+$('pvbGrid').addEventListener('pointerdown',e=>{
+ if(e.pointerType==='mouse'||!ready()||e.target.closest('button'))return;
+ const handle=e.target.closest('[data-basket-reorder]');if(!handle)return;
+ const hold={id:handle.dataset.basketReorder,pointerId:e.pointerId,x:e.clientX,y:e.clientY,active:false,target:null,timer:null};
+ hold.timer=setTimeout(()=>{hold.active=true;handle.closest('.pvb-basket')?.classList.add('pvb-reordering');},240);
+ basketPointerHold=hold;
+});
+$('pvbGrid').addEventListener('pointermove',e=>{
+ const hold=basketPointerHold;if(!hold||e.pointerId!==hold.pointerId)return;
+ if(!hold.active && Math.hypot(e.clientX-hold.x,e.clientY-hold.y)>9){clearTimeout(hold.timer);basketPointerHold=null;return;}
+ if(!hold.active)return;
+ e.preventDefault();const target=document.elementFromPoint(e.clientX,e.clientY)?.closest('[data-basket-drop]');
+ clearReorderMarkers();$('pvbGrid').querySelector(`[data-basket-drop="${hold.id}"]`)?.classList.add('pvb-reordering');
+ if(target && target.dataset.basketDrop!==hold.id){hold.target=target.dataset.basketDrop;target.classList.add('pvb-reorder-target');}else hold.target=null;
+});
+function endBasketPointer(e){const hold=basketPointerHold;if(!hold||e.pointerId!==hold.pointerId)return;clearTimeout(hold.timer);basketPointerHold=null;clearReorderMarkers();if(hold.active&&hold.target&&e.type==='pointerup')reorderBasket(hold.id,hold.target);}
+$('pvbGrid').addEventListener('pointerup',endBasketPointer);
+$('pvbGrid').addEventListener('pointercancel',endBasketPointer);
 document.addEventListener('keydown',e=>{
  if(!ready())return;
  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();$('search').focus();}
