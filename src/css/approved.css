@@ -665,3 +665,40 @@ html[data-theme="dark"] #approvedUI .pvb-folder{background:var(--primary-wash);c
  #approvedUI .pv-mobile-dock{left:8px;right:8px}
 }
 @media(prefers-reduced-motion:reduce){#approvedUI .pvb-basket,#approvedUI .pvb-carousel-dot{transition:none!important}#approvedUI .pvb-basket{transform:none!important;opacity:1!important}}
+
+/* V5.1 — Prevent inherited global .topbar wrapping on narrow phones.
+   main.css uses flex-wrap:wrap on mobile. The approved toolbar must stay
+   single-row so its page label remains inside the floating pill. */
+@media (max-width:760px) {
+  #approvedUI .topbar {
+    display:flex;
+    flex-flow:row nowrap;
+    align-items:center;
+    justify-content:flex-start;
+  }
+  #approvedUI .topbar .crumb {
+    display:flex;
+    flex:1 1 auto;
+    min-width:0;
+    height:auto;
+    line-height:1.2;
+    align-items:center;
+    overflow:hidden;
+  }
+  #approvedUI .topbar .crumb > span:first-child {display:none}
+  #approvedUI .topbar .crumb #crumb {
+    display:block;
+    flex:1 1 auto;
+    min-width:0;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    color:var(--text);
+    font-size:clamp(11px,3.5vw,14px);
+    font-weight:750;
+  }
+  #approvedUI .topbar #openMenu,
+  #approvedUI .topbar #searchWrap,
+  #approvedUI .topbar #topNew,
+  #approvedUI .topbar .preview-flows {flex-shrink:0}
+}
