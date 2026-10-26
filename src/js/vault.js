@@ -180,6 +180,7 @@ async function writeClipboard(text) {
   if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
     try {
       await navigator.clipboard.writeText(text);
+      state.clipboardLastValue = text;
       return true;
     } catch {
       // Fallback below.
@@ -203,54 +204,40 @@ async function writeClipboard(text) {
   }
 
   if (!copied) throw new Error("Clipboard access was denied by the browser.");
+  state.clipboardLastValue = text;
   return true;
 }
 
 async function clearClipboardBestEffort({ announce = true } = {}) {
   if (!state.clipboardPending) return true;
-
-  let cleared = false;
-
-  /*
-   * Clipboard APIs are controlled by the browser/OS and may reject writes after
-   * focus is lost or while a page is unloading. Try the modern API first.
-   */
-  if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
+  let cleared = false, changed = false;
+  // Reading back the value is necessary: never delete something copied later
+  // from another site or app. Browsers that forbid reading must leave it alone.
+  if (state.clipboardLastValue && navigator.clipboard &&
+      typeof navigator.clipboard.readText === 'function' &&
+      typeof navigator.clipboard.writeText === 'function') {
     try {
-      await navigator.clipboard.writeText("");
-      cleared = true;
+      const current = await navigator.clipboard.readText();
+      if (current !== state.clipboardLastValue) changed = true;
+      else {
+        await navigator.clipboard.writeText('');
+        cleared = true;
+      }
     } catch {
-      // A visible-document fallback is attempted below.
+      // Browser did not permit safe conditional clearing.
     }
   }
-
-  /*
-   * For file:// or restricted contexts where navigator.clipboard is unavailable,
-   * replace the secret with a harmless space while the document can still own a
-   * selection. This is intentionally not attempted once the page is hidden.
-   */
-  if (!cleared && document.visibilityState === "visible") {
-    try {
-      await writeClipboard(" ");
-      cleared = true;
-    } catch {
-      // Best-effort only. Keep the scheduled retry alive if the page still exists.
-    }
-  }
-
-  if (cleared) {
-    if (state.clipboardTimer) clearTimeout(state.clipboardTimer);
-    state.clipboardTimer = null;
-    state.clipboardClearDeadline = 0;
-    state.clipboardPending = false;
-    if (announce) setGlobalStatus("Password clipboard was cleared.", "success");
-    return true;
-  }
-
+  if (state.clipboardTimer) clearTimeout(state.clipboardTimer);
+  state.clipboardTimer = null;
+  state.clipboardPending = false;
+  state.clipboardClearDeadline = 0;
+  state.clipboardLastValue = '';
   if (announce) {
-    setGlobalStatus("The browser did not permit automatic clipboard clearing. Clear the system clipboard manually.", "warning");
+    if (cleared) setGlobalStatus('PassVault clipboard content was cleared.', 'success');
+    else if (changed) setGlobalStatus('Clipboard changed after copying; newer content was left untouched.', 'success');
+    else setGlobalStatus('Automatic clipboard clearing was blocked by the browser. Clear the clipboard manually.', 'warning');
   }
-  return false;
+  return cleared || changed;
 }
 
 function scheduleClipboardClear() {
@@ -545,7 +532,7 @@ async function handleExportVault() {
       els.downloadVaultLink.click();
     } catch {}
 
-    setGlobalStatus("Encrypted backup downloaded. This does not change the cloud sync status.", "success");
+    setGlobalStatus("Encrypted backup prepared. If the download did not start, select the Download Encrypted Vault link in Settings. Cloud sync status is unchanged.", "warning");
     renderVaultHeader();
   } catch (error) {
     setGlobalStatus(error instanceof Error ? error.message : "Vault export failed.", "error");
@@ -640,6 +627,10 @@ function lockVault(reason = "Vault locked.") {
    * deadline is independent from the vault session and remains scheduled.
    */
 
+  clearTimeout(cloud.retryTimer);
+  cloud.retryTimer = null;
+  cloud.lastSaveError = '';
+  cloud.autoLockDeferred = false;
   if (els.downloadVaultLink.dataset.objectUrl) {
     URL.revokeObjectURL(els.downloadVaultLink.dataset.objectUrl);
     delete els.downloadVaultLink.dataset.objectUrl;
@@ -689,12 +680,25 @@ function clearSensitiveFieldsEverywhere() {
   clearCredentialFormSensitive();
   clearGeneratedPassword();
   window.pvClearPremiumSecrets?.();
+  window.pvClearApprovedSecrets?.();
 }
 
 function updateInactivityLock() {
   if (state.locked || state.kdfInProgress) return;
   const idle = Date.now() - state.lastActivity;
   if (idle >= state.sessionTimeoutMs) {
+    if (state.dirty) {
+      // Clearing the only in-memory copy after a failed save loses user data.
+      // Keep it available for an explicit encrypted backup or a successful retry.
+      // The visible dashboard warns that locking has been deferred.
+      if (!cloud.autoLockDeferred) {
+        cloud.autoLockDeferred = true;
+        setGlobalStatus("Auto-lock delayed: this vault contains changes not saved to the cloud. Retry sync or download an encrypted backup.", "error");
+        window.pvRenderApprovedStatus?.();
+      }
+      if (!cloud.conflict && !cloud.savePromise && !cloud.saveTimer && !cloud.retryTimer && navigator.onLine && !document.hidden) void saveCloudVault();
+      return;
+    }
     lockVault("Session timed out due to inactivity.");
   }
 }
@@ -741,6 +745,7 @@ function saveCredential() {
     credential.updatedAt = now;
     setGlobalStatus("Credential updated locally. Encrypted cloud sync scheduled…", "warning");
   } else {
+    if (state.vault.credentials.length >= 10) throw new Error('Maximum 10 items per vault. Existing items can still be edited.');
     state.vault.credentials.push({
       id: secureId(),
       title: draft.title,

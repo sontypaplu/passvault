@@ -28,7 +28,18 @@ function computeHealth(){
 function tip(message){$('toastText').textContent=message;$('toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.remove('show'),3100);}
 function info(title,message){$('infoTitle').textContent=title;$('infoMessage').textContent=message;$('infoDialog').showModal();}
 function theme(dark){window.PassVaultTheme.set(dark?'dark':'light');$('themeToggle').innerHTML=icon(dark?'sun':'moon');$('darkSwitch').classList.toggle('on',dark);$('darkSwitch').setAttribute('aria-checked',String(dark));}
-function closeMenu(){$('approvedSidebar').classList.remove('open');$('approvedMobileBackdrop').classList.remove('show');$('openMenu').setAttribute('aria-expanded','false');}
+function updateMobileSidebarFocus(){
+ const mobile=window.matchMedia('(max-width:760px)').matches;
+ $('approvedSidebar').inert=mobile&&!$('approvedSidebar').classList.contains('open');
+}
+function closeAccountMenu(){
+ $('accountMenu').classList.add('hidden');
+ $('accountShortcut').setAttribute('aria-expanded','false');
+}
+function closeMenu(){
+ $('approvedSidebar').classList.remove('open');$('approvedMobileBackdrop').classList.remove('show');$('openMenu').setAttribute('aria-expanded','false');
+ closeAccountMenu();updateMobileSidebarFocus();
+}
 function navigate(target,push=true){
  if(!ready()||!pageTitles[target])return;
  page=target;closeMenu();$('flowsMenu').classList.add('hidden');$('flowsToggle').setAttribute('aria-expanded','false');
@@ -50,7 +61,7 @@ function filtered(items){
  return out;
 }
 function buildTable(items,empty='No items found.',headers=true){
- if(!items.length)return `<div class="empty">${icon('search')}<h3>${safe(empty)}</h3><p>Try a different filter or add a new item.</p><button class="btn btn-primary" data-new>${icon('plus')}New item</button></div>`;
+ if(!items.length)return `<div class="empty">${icon('search')}<h3>${safe(empty)}</h3><p>Try a different filter or add a new item.</p>${basketCapacityReached()?'':`<button class="btn btn-primary" data-new>${icon('plus')}New item</button>`}</div>`;
  const local=getItems();const pwCount=new Map();for(const x of local.filter(x=>itemKind(x)==='login'))pwCount.set(x.password,(pwCount.get(x.password)||0)+1);
  return `<div class="table-wrap"><table class="item-table"><thead>${headers?'<tr><th>ITEM</th><th>TYPE</th><th class="hide-mobile">USERNAME / DETAILS</th><th>STATUS</th><th aria-label="Actions"></th></tr>':''}</thead><tbody>${items.map(x=>{
   const k=itemKind(x);const weak=k==='login'&&basicWeak(x.password);const reused=k==='login'&&pwCount.get(x.password)>1;
@@ -115,7 +126,7 @@ function renderBaskets(){
    const letter=safe((x.title||'•').slice(0,1).toUpperCase());
    return `<div class="pvb-tile" draggable="true" data-basket-drag="${safe(x.id)}"><button type="button" class="pvb-tile-open" data-open="${safe(x.id)}" aria-label="Open ${safe(x.title)}"><span class="pvb-appicon pvb-${itemKind(x)}">${letter}</span><span class="pvb-appname">${safe(x.title)}</span></button><button class="pvb-tile-move" type="button" data-basket-move="${safe(x.id)}" aria-label="Move ${safe(x.title)} to another basket" title="Move item">Move</button></div>`;
   }).join('');
-  return `<article class="pvb-basket pvb-color-${b.id}" data-basket-drop="${b.id}"><div class="pvb-basket-top"><span class="pvb-folder" aria-hidden="true">${icon('folder')}</span><button type="button" class="pvb-rename" data-basket-rename="${b.id}" aria-label="Rename ${safe(basketName(b.id))} basket" title="Rename basket">${icon('more')}</button></div><h3>${safe(basketName(b.id))}</h3><p class="pvb-num">${these.length} ${these.length===1?'item':'items'}</p><div class="pvb-apps">${tiles}${!basketCapacityReached()?`<button type="button" class="pvb-add-tile" data-basket-add="${b.id}" aria-label="Add item to ${safe(basketName(b.id))}"><span>+</span><small>Add item</small></button>`:''}</div><div class="pvb-basket-foot"><span>Drag to organize</span><button type="button" data-basket-add="${b.id}" ${basketCapacityReached()?'disabled title="10-item limit reached"':''}>Add item →</button></div></article>`;
+  return `<article class="pvb-basket pvb-color-${b.id}" data-basket-drop="${b.id}"><div class="pvb-basket-top"><span class="pvb-folder" aria-hidden="true">${icon('folder')}</span><button type="button" class="pvb-rename" data-basket-rename="${b.id}" aria-label="Rename ${safe(basketName(b.id))} basket" title="Rename basket">${icon('more')}</button></div><h3>${safe(basketName(b.id))}</h3><p class="pvb-num">${these.length} ${these.length===1?'item':'items'}</p><div class="pvb-apps">${tiles}${!basketCapacityReached()?`<button type="button" class="pvb-add-tile" data-basket-add="${b.id}" aria-label="Add item to ${safe(basketName(b.id))}"><span>+</span><small>Add item</small></button>`:''}</div><div class="pvb-basket-foot"><span>Drag to organize</span></div></article>`;
  }).join('');
 }
 function clearBaskets(){
@@ -131,6 +142,7 @@ function render(){
  if(!ready())return;
  const items=getItems(),h=computeHealth(),vs=vaults();
  $('navCount').textContent=items.length;
+ document.querySelectorAll('#approvedUI [data-new]').forEach(button=>{button.disabled=basketCapacityReached();button.title=basketCapacityReached()?'10-item limit reached':'';});
  renderBaskets();
  $('healthNumber').textContent=h.issues.length;
  // Update only CSS custom property; the approved dashboard's SVG/CSS ring is unchanged.
@@ -142,14 +154,20 @@ function render(){
  $('favoritesTable').innerHTML=buildTable(filtered(items.filter(x=>x.favorite)),'No favorite items yet.');
  $('vaultUsed').textContent=vs.length;$('capacityBar').style.width=(vs.length/2*100)+'%';
  $('capLabel').textContent=vs.length>=2?'Limit reached':`${2-vs.length} slot${2-vs.length===1?'':'s'} left`;
- $('quickCreateVault').disabled=vs.length>=2;$('newVaultButton').disabled=vs.length>=2;
+ $('quickCreateVault').disabled=vs.length>=2;$('newVaultButton').disabled=vs.length>=2;$('topNew').disabled=vs.length>=2;$('topNew').title=vs.length>=2?'Two-vault limit reached':'Create new vault';
  $('vaultCountTag').textContent=vs.length+' of 2 used';$('manageVaults').innerHTML=vs.map(vaultTile).join('');
  const checks=[{title:'Weak passwords',body:'Short, patterned, or common-prefix login passwords',count:h.weak,icon:'alert',good:h.weak===0},{title:'Reused passwords',body:'Logins sharing an identical password',count:h.reused,icon:'refresh',good:h.reused===0},{title:'Logins without local warnings',body:'No issues found by these basic local checks',count:h.good,icon:'shield-check',good:true}];
  $('securityIssues').innerHTML=checks.map(c=>`<div class="issue-row"><span class="issue-dot ${c.good?'good':''}">${icon(c.icon)}</span><div><h3>${c.title}</h3><p>${c.body}</p></div><strong>${c.count}</strong></div>`).join('')+(h.issues.length?`<div class="section-subhead"><h3>Items worth reviewing</h3></div>${h.issues.map(x=>`<div class="issue-row"><div><h3>${safe(x.title)}</h3><p>Weak or reused login password</p></div><button class="linkbtn" data-open="${safe(x.id)}">Review →</button></div>`).join('')}`:'');
  const syncLabel=cloud.conflict?'Sync conflict':state.dirty?'Unsaved changes':cloud.saveInProgress?'Syncing…':'Unlocked';
+ const failure=cloud.lastSaveError || (cloud.conflict?'Another device saved a newer version. Download a backup and reconcile before continuing.':cloud.autoLockDeferred?'Automatic lock deferred while changes are unsaved. Retry sync or download an encrypted backup.':'');
+ $('approvedSyncNotice').hidden=!failure;
+ $('approvedSyncMessage').textContent=failure;
+ $('approvedSyncRetry').disabled=!!cloud.conflict || cloud.saveInProgress;
+ $('approvedVaultStatus').title=failure||syncLabel;
  $('approvedVaultStatus').innerHTML=`<span class="dot"></span> ${safe(cloud.vaultLabel||state.vault.name||'Your vault')} · ${syncLabel}`;
  const account=document.querySelector('#approvedUI .identity small');if(account)account.textContent=cloud.email||'Signed in';
 }
+window.pvRenderApprovedStatus=()=>{if(ready())render();};
 function addCustom(label='',value=''){
  const holder=$('approvedCustomFields');if(holder.children.length>=10){tip('Maximum 10 custom fields');return;}
  const div=document.createElement('div');div.className='approved-custom-row';
@@ -182,16 +200,29 @@ function saveItem(event){
  event.preventDefault();if(!ready())return;
  try{
   const title=$('itemTitle').value.trim();if(!title)throw new Error('Title is required.');
-  const url=kind==='login'?$('itemUrl').value.trim():'';
-  if(url){const parsed=new URL(url);if(!['http:','https:'].includes(parsed.protocol))throw new Error('Website must use http or https.');}
+  let url=kind==='login'?$('itemUrl').value.trim():'';
+  if(url){
+   if(!/^[a-zA-Z][a-zA-Z\d+.-]*:\/\//.test(url))url='https://'+url;
+   let parsed;try{parsed=new URL(url);}catch{throw new Error('Enter a valid website address.');}
+   if(!['http:','https:'].includes(parsed.protocol)||!parsed.hostname.includes('.')||parsed.username||parsed.password)throw new Error('Enter a valid http or https website address.');
+   if(url.length>2048)throw new Error('Website address is too long.');
+  }
   const username=kind==='login'?$('itemUsername').value.trim():kind==='card'?$('itemCardholder').value.trim():'Secure note';
-  const password=kind==='login'?$('itemPassword').value:kind==='note'?$('itemContent').value:$('itemCardnumber').value.replace(/\s/g,'');
+  const password=kind==='login'?$('itemPassword').value:kind==='note'?$('itemContent').value:$('itemCardnumber').value.replace(/[\s-]/g,'');
   if(!username||!password)throw new Error(kind==='login'?'Username and password are required.':kind==='note'?'Enter a note.':'Enter cardholder and card number.');
   if(password.length>2048)throw new Error('Secret is too long.');
   const tags=[...new Set($('approvedTags').value.split(',').map(x=>x.trim()).filter(Boolean))];
   if(tags.length>10||tags.some(x=>x.length>40))throw new Error('Maximum 10 tags, up to 40 characters each.');
   const customFields=[];for(const row of $('approvedCustomFields').children){const [name,value]=row.querySelectorAll('input');if(name.value.trim())customFields.push({label:name.value.trim(),value:value.value});}
   const existing=editId?findItem(editId):null,now=new Date().toISOString();
+  if(kind==='card'){
+   const number=$('itemCardnumber').value.replace(/[\s-]/g,'');
+   if((!existing||number!==existing.password)&&(!/^\d{12,19}$/.test(number)))throw new Error('Card number must contain 12–19 digits.');
+   const expiry=$('approvedExpiry').value.trim();
+   if(expiry&&(!existing||expiry!==(existing.expiry||''))&&!/^(0[1-9]|1[0-2])\/(\d{2}|\d{4})$/.test(expiry))throw new Error('Expiry must be MM/YY or MM/YYYY.');
+   const cvv=$('approvedCvv').value.trim();
+   if(cvv&&(!existing||cvv!==(existing.cvv||''))&&!/^\d{3,4}$/.test(cvv))throw new Error('Security code must be 3 or 4 digits.');
+  }
   if(!existing&&basketCapacityReached())throw new Error('Maximum 10 items per vault. Existing items are unchanged.');
   const data={id:existing?.id||secureId(),kind,title,url,username,password,notes:$('itemNotes').value,favorite:$('itemFavorite').checked,tags,customFields,expiry:kind==='card'?$('approvedExpiry').value.trim():'',cvv:kind==='card'?$('approvedCvv').value:'',createdAt:existing?.createdAt||now,updatedAt:now};
   const candidate=existing?getItems().map(x=>x.id===existing.id?data:x):[...getItems(),data];
@@ -259,13 +290,20 @@ function createVaultModal(){
  if(vaults().length>=2)return tip('Maximum two encrypted vaults per account.');
  $('vaultName').value='';$('vaultDialog').showModal();$('vaultName').focus();
 }
+function clearGeneratedDisplays(){
+ quick='';generated='';$('quickPassword').textContent='';$('approvedGeneratedPassword').textContent='';
+ for(const id of ['itemPassword','itemContent','itemCardnumber','approvedCvv'])$(id).value='';
+ $('itemPassword').type='password';$('editorReveal').textContent='Show';
+ $('detailBody').replaceChildren();
+}
+window.pvClearApprovedSecrets=clearGeneratedDisplays;
 function clearPrivateUI(){
- selected=null;editId=null;quick='';generated='';query='';$('search').value='';
+ selected=null;editId=null;clearGeneratedDisplays();query='';$('search').value='';
  for(const id of ['editorDialog','detailDialog','infoDialog','vaultDialog'])if($(id).open)$(id).close();
  $('editorForm').reset();$('detailBody').replaceChildren();$('approvedCustomFields').replaceChildren();
  $('fullTable').replaceChildren();$('favoritesTable').replaceChildren();$('recentTable').replaceChildren();
  $('overviewVaults').replaceChildren();$('manageVaults').replaceChildren();$('quickPassword').textContent='';$('approvedGeneratedPassword').textContent='';
- clearBaskets();
+ clearBaskets();$('approvedBackupFallback').classList.add('hidden');$('approvedBackupFallback').removeAttribute('href');
  closeMenu();$('flowsMenu').classList.add('hidden');
 }
 // The approved vault chooser originally had markup but no event handlers.
@@ -383,12 +421,21 @@ $('editorReveal').addEventListener('click',()=>{const input=$('itemPassword');in
 $('approvedAddCustom').addEventListener('click',()=>addCustom());
 $('themeToggle').addEventListener('click',()=>theme(document.documentElement.dataset.theme!=='dark'));
 $('darkSwitch').addEventListener('click',()=>theme(document.documentElement.dataset.theme!=='dark'));
-$('openMenu').addEventListener('click',()=>{const open=$('approvedSidebar').classList.toggle('open');$('approvedMobileBackdrop').classList.toggle('show',open);$('openMenu').setAttribute('aria-expanded',String(open));});
+$('openMenu').addEventListener('click',()=>{const open=$('approvedSidebar').classList.toggle('open');$('approvedMobileBackdrop').classList.toggle('show',open);$('openMenu').setAttribute('aria-expanded',String(open));updateMobileSidebarFocus();});
 $('approvedMobileBackdrop').addEventListener('click',closeMenu);
 $('flowsToggle').addEventListener('click',()=>{const visible=$('flowsMenu').classList.toggle('hidden');$('flowsToggle').setAttribute('aria-expanded',String(!visible));});
 $('lockShortcut').addEventListener('click',()=>lockVault('Manual lock'));
-$('accountShortcut').addEventListener('click',()=>void handleSignOut());
-$('topNew').addEventListener('click',()=>openEditor());
+$('accountShortcut').addEventListener('click',()=>{const open=$('accountMenu').classList.toggle('hidden');$('accountShortcut').setAttribute('aria-expanded',String(!open));if(!open)$('accountMenu button').focus();});
+$('topNew').addEventListener('click',createVaultModal);
+$('approvedSyncRetry').addEventListener('click',()=>void saveCloudVault(true));
+$('approvedSyncBackup').addEventListener('click',async()=>{
+ await handleExportVault();
+ if(els.downloadVaultLink.dataset.objectUrl){
+  $('approvedBackupFallback').href=els.downloadVaultLink.href;
+  $('approvedBackupFallback').download=els.downloadVaultLink.download;
+  $('approvedBackupFallback').classList.remove('hidden');
+ }
+});
 $('quickCreateVault').addEventListener('click',createVaultModal);$('newVaultButton').addEventListener('click',createVaultModal);
 $('quickGenerate').addEventListener('click',createQuick);$('quickCopy').addEventListener('click',()=>void copyValue(quick));
 $('generateMain').addEventListener('click',createMain);$('copyGenerator').addEventListener('click',()=>void copyValue(generated));
@@ -404,20 +451,22 @@ $('vaultForm').addEventListener('submit',e=>{e.preventDefault(); // Important: n
 });
 $('editorDialog').addEventListener('close',()=>{$('editorForm').reset();$('approvedCustomFields').replaceChildren();});
 $('detailDialog').addEventListener('close',()=>$('detailBody').replaceChildren());
+document.addEventListener('click',e=>{if(!e.target.closest('#accountMenu, #accountShortcut'))closeAccountMenu();});
+window.addEventListener('resize',updateMobileSidebarFocus);
 $('approvedUI').addEventListener('click',e=>{
  const target=e.target.closest('button');if(!target||!$('approvedUI').contains(target))return;
  const addBasket=target.closest('[data-basket-add]');if(addBasket){openEditor(null,'',addBasket.dataset.basketAdd);return;}
  const renameBasket=target.closest('[data-basket-rename]');if(renameBasket){basketRenameTarget=renameBasket.dataset.basketRename;$('pvbRenameInput').value=basketName(basketRenameTarget);$('pvbRenameDialog').showModal();$('pvbRenameInput').focus();return;}
  const moveBasket=target.closest('[data-basket-move]');if(moveBasket){basketMoveTarget=moveBasket.dataset.basketMove;const x=findItem(basketMoveTarget);if(!x)return;$('pvbMoveDescription').textContent=x.title;const sel=$('pvbMoveSelect');sel.replaceChildren();for(const b of basketDefs){const opt=document.createElement('option');opt.value=b.id;opt.textContent=basketName(b.id);opt.selected=b.id===itemBasket(basketMoveTarget);sel.append(opt);}$('pvbMoveDialog').showModal();return;}
  const close=target.closest('[data-close]');if(close){$(close.dataset.close).close();return;}
- const to=target.closest('[data-page]');if(to){navigate(to.dataset.page);return;}
+ const to=target.closest('[data-page]');if(to){closeAccountMenu();navigate(to.dataset.page);return;}
  const newb=target.closest('[data-new]');if(newb){openEditor();return;}
  const filteredButton=target.closest('[data-filter]');if(filteredButton){filter=filteredButton.dataset.filter;document.querySelectorAll('#approvedUI [data-filter]').forEach(x=>x.classList.toggle('selected',x===filteredButton));render();return;}
  const typeb=target.closest('[data-kind]');if(typeb){changeKind(typeb.dataset.kind);return;}
  const open=target.closest('[data-open]');if(open){openDetail(open.dataset.open);return;}
  const fav=target.closest('[data-fav]');if(fav){toggleFavorite(fav.dataset.fav);return;}
  const v=target.closest('[data-selectvault]');if(v){selectVault(v.dataset.selectvault);return;}
- const flow=target.closest('[data-flow]');if(flow){if(flow.dataset.flow==='signout')void handleSignOut();else if(flow.dataset.flow==='lock')lockVault('Manual lock');else navigate('vaults');return;}
+ const flow=target.closest('[data-flow]');if(flow){closeAccountMenu();if(flow.dataset.flow==='signout')void handleSignOut();else if(flow.dataset.flow==='lock')lockVault('Manual lock');else navigate('vaults');return;}
  const unw=target.closest('[data-unwired]');if(unw){
   switch(unw.dataset.unwired){
   case 'Encrypted backup export':case 'Backup export': void handleExportVault();break;
@@ -461,7 +510,7 @@ $('pvbGrid').addEventListener('dragend',()=>{basketDragging=null;document.queryS
 document.addEventListener('keydown',e=>{
  if(!ready())return;
  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();$('search').focus();}
- if(e.key==='Escape'){$('flowsMenu').classList.add('hidden');closeMenu();}
+ if(e.key==='Escape'){$('flowsMenu').classList.add('hidden');closeAccountMenu();closeMenu();}
 });
 window.addEventListener('popstate',()=>{if(ready()){const v=new URL(location.href).searchParams.get('view');navigate(pageTitles[v]?v:'overview',false);}});
 // Keep the chooser synchronized when vaults are opened/switched or created from
@@ -494,7 +543,7 @@ const download=document.getElementById('downloadVaultLink');if(download){downloa
 $('autoLock').value=String(state.sessionTimeoutMs/60000);
 $('clipboardTime').value=String(state.clipboardTimeoutMs/1000);
 $('search').placeholder='Search your unlocked vault...';
-$('topNew').disabled=false;
+$('topNew').disabled=false;updateMobileSidebarFocus();
 // Preserve a previously chosen appearance; use the approved light preview on a fresh session.
 let savedTheme=null;try{savedTheme=sessionStorage.getItem('passvault-theme');}catch{}
 theme(savedTheme==='dark');

@@ -254,6 +254,7 @@
       const data={id:existing?.id||secureId(),kind,title,url,username,password,notes,
         favorite:pv('pv3ItemFavorite').checked,tags,customFields,expiry,cvv,
         createdAt:existing?.createdAt||now,updatedAt:now};
+      if(!existing && records().length>=10)throw new Error('Maximum 10 items per vault. Existing items can still be edited.');
       const candidate = existing ? records().map(x => x.id === existing.id ? data : x) : [...records(),data];
       validateVaultPlaintext({...state.vault, credentials:candidate});
       if(existing)Object.assign(existing,data);else state.vault.credentials.push(data);

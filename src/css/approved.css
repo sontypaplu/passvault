@@ -3,7 +3,7 @@
 #premiumApp{display:none!important}
 #approvedUI{min-height:100vh;font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-synthesis:none; font-size:14px;}
 #approvedUI *,#approvedUI *::before,#approvedUI *::after{box-sizing:border-box}
-#approvedUI{font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-synthesis:none;--bg:#f6f7fb;--surface:#fff;--surface-2:#fafbfe;--sidebar:#fff;--text:#1b2340;--muted:#717b93;--subtle:#99a2b5;--border:#e6eaf2;--primary:#6052d9;--primary-d:#4e40bf;--primary-wash:#f0eeff;--green:#12816a;--green-wash:#e8f8f2;--amber:#af711a;--amber-wash:#fff6e6;--red:#b85159;--red-wash:#fff0f0;--shadow:0 12px 35px rgba(21,32,63,.045);--radius:16px}
+#approvedUI{font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-synthesis:none;--bg:#f6f7fb;--surface:#fff;--surface-2:#fafbfe;--sidebar:#fff;--text:#1b2340;--muted:#667085;--subtle:#667085;--border:#e6eaf2;--primary:#6052d9;--primary-d:#4e40bf;--primary-wash:#f0eeff;--green:#12816a;--green-wash:#e8f8f2;--amber:#af711a;--amber-wash:#fff6e6;--red:#b85159;--red-wash:#fff0f0;--shadow:0 12px 35px rgba(21,32,63,.045);--radius:16px}
 html[data-theme="dark"] #approvedUI{--bg:#0c1020;--surface:#151b2e;--surface-2:#1a2237;--sidebar:#111729;--text:#f0f3fb;--muted:#a1acc6;--subtle:#8591ab;--border:#303950;--primary:#a294ff;--primary-d:#b4a9ff;--primary-wash:#292442;--green:#72dfc0;--green-wash:#163a38;--amber:#f2c27c;--amber-wash:#403220;--red:#ff9ea4;--red-wash:#442c37;--shadow:0 12px 35px rgba(0,0,0,.17)}
 #approvedUI *{box-sizing:border-box}
 /* Prevent the untouched legacy global button and typography rules from altering the approved preview geometry. */
@@ -474,3 +474,33 @@ body.approved-gate-active #unlockedView{display:block!important}
 @media(max-width:390px){#approvedUI .pvb-basket{padding:15px 8px 12px}#approvedUI .pvb-appicon,#approvedUI .pvb-add-tile>span{width:42px;height:42px}#approvedUI .pvb-appname{font-size:10px}#approvedUI .pvb-basket-foot span{display:none}#approvedUI .pvb-vault-count{width:75px}}
 @media(max-width:325px){#approvedUI .pvb-grid{grid-template-columns:1fr}#approvedUI .pvb-basket{min-height:190px}}
 html[data-theme="dark"] #approvedUI .pvb-folder{background:var(--primary-wash);color:var(--pvb-accent)}
+
+/* Targeted accessibility / interaction fixes; retain the approved layout. */
+#approvedUI .account-menu-wrap{position:relative;margin-left:auto}
+#approvedUI .identity .account-menu-wrap .more{margin-left:0;width:44px;height:44px;display:grid;place-items:center}
+#approvedUI .account-menu{position:absolute;bottom:calc(100% + 8px);right:0;width:190px;z-index:35;padding:6px;border:1px solid var(--border);background:var(--surface);box-shadow:var(--shadow);border-radius:12px}
+#approvedUI .account-menu button{display:block;width:100%;padding:12px;text-align:left;border-radius:8px;min-height:44px;color:var(--text);font-weight:600}
+#approvedUI .account-menu button:hover,#approvedUI .account-menu button:focus-visible{background:var(--primary-wash)}
+#approvedUI .account-menu button[data-flow="signout"]{color:var(--red)}
+#approvedUI .sync-notice{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding:14px 16px;margin-bottom:20px;border:1px solid var(--amber);border-radius:12px;background:var(--amber-wash);color:var(--text);font-size:13px;line-height:1.5}
+#approvedUI .sync-notice[hidden]{display:none!important}
+#approvedUI .sync-notice .sync-actions{display:flex;flex-wrap:wrap;gap:8px}
+#approvedUI .rowbtn{min-width:40px;min-height:40px;display:inline-grid;place-items:center}
+#approvedUI .linkbtn,#approvedUI .pvb-tile-move,#approvedUI .pvb-rename,#approvedUI .name-button{min-height:40px}
+#approvedUI .pvb-tile-move{min-width:40px;padding:7px 6px}
+#approvedUI .pvb-basket-foot{min-height:30px}
+#approvedUI .pvb-basket-foot span{color:var(--muted)}
+#approvedUI .pvb-add-tile{min-height:68px}
+@media(max-width:760px){
+ #approvedUI .topbar{position:sticky}
+ #approvedUI .top-search:focus-within{position:absolute;left:10px;right:10px;top:13px;width:auto;z-index:12;box-shadow:0 8px 26px rgba(25,32,63,.18)}
+ #approvedUI .top-search:focus-within input{min-width:0;width:100%}
+}
+@media(max-width:480px){
+ #approvedUI .pvb-grid{grid-template-columns:1fr}
+ #approvedUI .pvb-basket{min-height:180px;padding:16px}
+ #approvedUI .pvb-apps{grid-template-columns:repeat(4,minmax(0,1fr));gap:10px 4px}
+ #approvedUI .pvb-appname{font-size:11px}
+ #approvedUI .pvb-basket-foot span{display:inline}
+ #approvedUI .pvb-capacity{overflow-wrap:anywhere}
+}
