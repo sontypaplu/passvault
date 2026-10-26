@@ -176,7 +176,7 @@ const state = {
   dirty: false,
   editingId: null,
   lastActivity: Date.now(),
-  sessionTimeoutMs: 600000,
+  sessionTimeoutMs: 900000,
   clipboardTimeoutMs: CLIPBOARD_DEFAULT_MS,
   clipboardTimer: null,
   clipboardClearDeadline: 0,

@@ -23,7 +23,12 @@ function initializeEvents() {
   });
   els.chooseVaultFile.addEventListener("click", () => els.vaultFile.click());
   els.vaultFile.addEventListener("change", handleFileChoose);
-  els.unlockVaultButton.addEventListener("click", handleUnlockVault);
+  // A real form lets Enter in the master-password or pepper field unlock the vault.
+  // Clicking Unlock uses the same submit path, avoiding duplicate attempts.
+  document.getElementById("unlockVaultForm").addEventListener("submit", (event) => {
+    event.preventDefault();
+    if (!els.unlockVaultButton.disabled) void handleUnlockVault();
+  });
   els.exportVaultButton.addEventListener("click", () => { void saveCloudVault(true); });
   els.backupVaultButton.addEventListener("click", handleExportVault);
   els.lockVaultButton.addEventListener("click", () => lockVault("Manual lock"));
@@ -55,6 +60,7 @@ function initializeEvents() {
   document.addEventListener("keydown", (event) => { if (event.key === "Escape") { if (window.pvCloseMobileNav?.()) return; handleEscape(); } });
   window.addEventListener("pagehide", handlePageExit);
   window.addEventListener("beforeunload", beforeUnload);
+  setInterval(updateAccountInactivity, 1000);
   setInterval(updateInactivityLock, 1000);
   setInterval(updateAccessLockoutStatus, 250);
 }
@@ -97,8 +103,30 @@ async function initialize() {
   if (!window.supabase || typeof window.supabase.createClient !== "function") {
     return setStatus(els.accessStatus, "Locally hosted Supabase SDK did not load. Check the GitHub Actions build and browser console.", "error");
   }
+  // Tab-scoped storage avoids keeping login credentials in localStorage indefinitely.
+  // A closed tab normally loses its local session; closing cannot guarantee server
+  // revocation. Browser "restore closed tab" may also restore sessionStorage.
+  const authStorage = (() => {
+    try { const check = '__pv_storage_test__'; sessionStorage.setItem(check,'1');sessionStorage.removeItem(check);return sessionStorage; }
+    catch { const memory=new Map();return {getItem:k=>memory.get(k)??null,setItem:(k,v)=>memory.set(k,v),removeItem:k=>memory.delete(k)}; }
+  })();
+  // Enforce the same idle deadline if the page is refreshed or the browser
+  // restores a tab. This is browser-side protection, not Supabase's paid server
+  // enforcement option.
+  try {
+    const last=Number(authStorage.getItem('passvault-account-last-active'));
+    if(Number.isFinite(last)&&last>0){
+      const project=new URL(SUPABASE_URL).hostname.split('.')[0];
+      if(Date.now()-last>=ACCOUNT_IDLE_LIMIT_MS || last>Date.now()){
+        authStorage.removeItem('sb-'+project+'-auth-token');
+        authStorage.removeItem('passvault-account-last-active');
+      }else state.lastActivity=last;
+    }
+  }catch{}
+  // Do not inherit an old indefinite localStorage session from earlier releases.
+  try { const project=new URL(SUPABASE_URL).hostname.split('.')[0];localStorage.removeItem('sb-'+project+'-auth-token'); } catch {}
   cloud.client = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
-    auth: { autoRefreshToken: true, persistSession: true, detectSessionInUrl: true }
+    auth: { autoRefreshToken: true, persistSession: true, storage: authStorage, detectSessionInUrl: true }
   });
   cloud.client.auth.onAuthStateChange((event, session) => {
     // Recovery session must not open the vault workspace before its password is updated.

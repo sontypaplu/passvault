@@ -41,6 +41,7 @@ function resetCloudUserState() {
   cloud.lastSaveError = '';
   cloud.autoLockDeferred = false;
   if (!state.locked) lockVault('Account signed out');
+  try { sessionStorage.removeItem('passvault-account-last-active'); } catch {}
   cloud.userId = null; cloud.email = ''; cloud.loaded = false;
   cloud.vaults = []; cloud.selectedVaultId = null; cloud.vaultLabel = '';
   cloud.revision = 0; cloud.conflict = false; cloud.encryptedEnvelope = null;
@@ -57,6 +58,9 @@ async function loadAccountVault(session) {
   if (cloud.userId) resetCloudUserState();
   const requestEpoch = ++cloud.epoch;
   cloud.userId = userId; cloud.email = session.user.email || 'Account';
+  // A fresh login begins the 15-minute account idle clock. A restored tab
+  // retains its previous clock rather than gaining another 15 minutes.
+  try { if(!sessionStorage.getItem('passvault-account-last-active'))markActivity(); } catch { markActivity(); }
   cloud.loaded = false; cloud.vaults = []; cloud.selectedVaultId = null;
   cloud.revision = 0; cloud.conflict = false;cloud.lastSaveError='';cloud.retryAttempt=0;
   uiState.accessGranted = true; uiState.accessScreen = 'dashboard';
@@ -76,6 +80,32 @@ async function loadAccountVault(session) {
   }
 }
 
+const ACCOUNT_IDLE_LIMIT_MS=15*60*1000;
+let idleSignOutPending=false;
+function updateAccountInactivity(){
+ if(!cloud.userId || idleSignOutPending)return;
+ if(Date.now()-state.lastActivity<ACCOUNT_IDLE_LIMIT_MS)return;
+ if(state.dirty){
+  // Never discard the only decrypted copy of unsynced changes. Reuse the
+  // existing warning/retry flow and sign out once cloud synchronization succeeds.
+  if(!cloud.autoLockDeferred){cloud.autoLockDeferred=true;setGlobalStatus('Sign-out deferred: unsynced vault changes need a successful save or encrypted backup before logging out.','error');window.pvRenderApprovedStatus?.();}
+  if(!state.locked && !cloud.conflict && !cloud.savePromise && !cloud.saveTimer && !cloud.retryTimer && navigator.onLine && !document.hidden)void saveCloudVault();
+  return;
+ }
+ idleSignOutPending=true;
+ // Immediately clear decrypted state before awaiting the network, and then
+ // revoke this session's refresh token via Supabase local sign-out.
+ if(!state.locked)lockVault('Account signed out after 15 minutes of inactivity.');
+ void cloud.client.auth.signOut({scope:'local'}).then(({error})=>{
+   if(error)throw error;
+   resetCloudUserState();
+ }).catch(error=>{
+   // Fail closed locally on network outage; only remote revocation is unverified.
+   try { const project=new URL(SUPABASE_URL).hostname.split('.')[0]; sessionStorage.removeItem('sb-'+project+'-auth-token'); } catch {}
+   resetCloudUserState();
+   setStatus(els.accessStatus,'Account timed out. Sign in again. Server-side token revocation could not be confirmed: '+(error.message||'Network error'),'warning');
+ }).finally(()=>{idleSignOutPending=false;});
+}
 async function handleSignOut() {
   if (!cloud.client) return;
   if (state.dirty && !window.confirm("Unsynced changes may be lost. Download a backup before signing out. Continue?")) return;

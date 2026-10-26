@@ -9,7 +9,17 @@ function setDirty(value) {
 }
 
 function markActivity() {
-  state.lastActivity = Date.now();
+  const now = Date.now();
+  // A first click after a throttled/background tab must not renew an expired
+  // authenticated session before the inactivity watcher gets a chance to run.
+  if (cloud.userId && now - state.lastActivity >= ACCOUNT_IDLE_LIMIT_MS) {
+    updateAccountInactivity();
+    return;
+  }
+  state.lastActivity = now;
+  if (cloud.userId) {
+    try { sessionStorage.setItem('passvault-account-last-active', String(now)); } catch {}
+  }
 }
 
 function validateCredentialDraft() {
@@ -805,7 +815,7 @@ function handleCancelEdit() {
 }
 
 function handleSessionSettings() {
-  state.sessionTimeoutMs = Number(els.sessionTimeout.value) || 600000;
+  state.sessionTimeoutMs = Number(els.sessionTimeout.value) || 900000;
   state.clipboardTimeoutMs = Number(els.clipboardTimeout.value) || CLIPBOARD_DEFAULT_MS;
   markActivity();
 }
@@ -818,6 +828,7 @@ function handlePageVisibility() {
    * visible after the deadline has elapsed.
    */
   if (!document.hidden) {
+    updateAccountInactivity();
     updateInactivityLock();
     if (state.clipboardPending && Date.now() >= state.clipboardClearDeadline) {
       void clearClipboardBestEffort({ announce: true });
@@ -837,6 +848,7 @@ function handleFocus() {
   });
 
   /* Focus alone is not user activity. Preserve the original inactivity clock. */
+  updateAccountInactivity();
   updateInactivityLock();
   if (state.clipboardPending && Date.now() >= state.clipboardClearDeadline) {
     void clearClipboardBestEffort({ announce: true });

@@ -504,3 +504,34 @@ html[data-theme="dark"] #approvedUI .pvb-folder{background:var(--primary-wash);c
  #approvedUI .pvb-basket-foot span{display:inline}
  #approvedUI .pvb-capacity{overflow-wrap:anywhere}
 }
+
+/* Adaptive navigation: compact by default, expands over content on hover/focus or pin.
+   Mobile keeps the existing slide-out drawer and backdrop. Theme colors unchanged. */
+@media (min-width:761px){
+ #approvedUI .app{grid-template-columns:76px minmax(0,1fr)}
+ #approvedUI .sidebar{width:76px;min-width:76px;padding:25px 12px 16px;overflow-x:hidden;transition:width .18s ease;box-shadow:none}
+ #approvedUI .sidebar:is(:hover,:focus-within,.pinned){width:252px;box-shadow:0 15px 35px rgba(21,32,63,.10)}
+ #approvedUI .sidebar .brand{margin:0 4px 30px;gap:12px;white-space:nowrap}
+ #approvedUI .sidebar .brandicon{flex:0 0 40px}
+ #approvedUI .sidebar .navitem{white-space:nowrap;padding:11px 14px;gap:13px}
+ #approvedUI .sidebar .navitem svg{flex:0 0 19px}
+ #approvedUI .sidebar:not(:hover):not(:focus-within):not(.pinned) .brand>div:last-child,
+ #approvedUI .sidebar:not(:hover):not(:focus-within):not(.pinned) .nav-text,
+ #approvedUI .sidebar:not(:hover):not(:focus-within):not(.pinned) .navlabel,
+ #approvedUI .sidebar:not(:hover):not(:focus-within):not(.pinned) .badgecount,
+ #approvedUI .sidebar:not(:hover):not(:focus-within):not(.pinned) .side-support,
+ #approvedUI .sidebar:not(:hover):not(:focus-within):not(.pinned) .identity .preview-inline-1,
+ #approvedUI .sidebar:not(:hover):not(:focus-within):not(.pinned) .account-menu-wrap{display:none}
+ #approvedUI .sidebar:not(:hover):not(:focus-within):not(.pinned) .identity{justify-content:center}
+ #approvedUI .sidebar:not(:hover):not(:focus-within):not(.pinned) .sidedivider{margin-top:16px}
+ #approvedUI .mobile-menu{display:grid;flex:0 0 auto}
+}
+@media(max-width:760px){
+ #approvedUI .sidebar{width:258px;min-width:0}
+ #approvedUI .sidebar .nav-text{display:inline}
+}
+#approvedUI .pvb-heading-actions{display:flex;align-items:center;justify-content:flex-end;gap:9px;flex-wrap:wrap}
+#approvedUI .pvb-heading-actions .btn{min-height:39px;padding:8px 13px;white-space:nowrap}
+#approvedUI .pvb-heading-actions .btn:disabled{opacity:.55;cursor:not-allowed}
+@media(max-width:760px){#approvedUI .pvb-heading-actions{justify-content:flex-start}}
+@media(prefers-reduced-motion:reduce){#approvedUI .sidebar{transition:none}}
