@@ -9,6 +9,7 @@ document.querySelectorAll('#approvedUI [data-icon]').forEach(x=>x.innerHTML=icon
 const pageTitles={overview:'Overview',items:'All items',favorites:'Favorites',vaults:'My vaults',security:'Security center',generator:'Password generator',profile:'My profile',settings:'Settings'};
 const kindLabel={login:'Login',note:'Secure note',card:'Payment card'};
 let page='overview',kind='login',filter='all',sort='recent',query='',selected=null,editId=null,generated='',quick='',toastTimer;
+let mobileBasketSelectedId=null,mobileBasketScrollFrame=0;
 let accountProfile=null,profileLoadedUserId=null,profileLoading=null,profileAvatarUrl=null,profilePreviewUrl=null,profilePendingPhoto=null,profileRemovePhoto=false,profileSaving=false;
 let basketCreateTarget='everyday',basketRenameTarget=null,basketMoveTarget=null,basketDragging=null,basketDeleteTarget=null,basketReordering=null,basketPointerHold=null;
 const ready=()=>!state.locked && !!state.vault && uiState.accessGranted;
@@ -39,6 +40,7 @@ function closeAccountMenu(){
 }
 function closeMenu(){
  $('approvedSidebar').classList.remove('open');$('approvedMobileBackdrop').classList.remove('show');$('openMenu').setAttribute('aria-expanded','false');
+ $('pvMobileMore').setAttribute('aria-expanded','false');
  closeAccountMenu();updateMobileSidebarFocus();
 }
 function navigate(target,push=true){
@@ -49,6 +51,7 @@ function navigate(target,push=true){
   x.classList.toggle('active',x.dataset.page===target);
   if(x.dataset.page===target)x.setAttribute('aria-current','page');else x.removeAttribute('aria-current');
  });
+ document.querySelectorAll('#approvedUI .pv-mobile-dock [data-page]').forEach(x=>{const selected=x.dataset.page===target;x.classList.toggle('active',selected);if(selected)x.setAttribute('aria-current','page');else x.removeAttribute('aria-current');});
  document.querySelectorAll('#approvedUI .page').forEach(el=>el.classList.toggle('active',el.id==='page-'+target));
  if(push){const url=new URL(location.href);url.searchParams.set('view',target);url.searchParams.delete('auth');if(url.href!==location.href)history.pushState({pvView:target},'',url);}
  render();window.scrollTo({top:0,behavior:'instant'});
@@ -142,8 +145,37 @@ function basketMove(id,to){
  mutateBaskets(b=>{b.assignments[id]=to;});
  tip('Item moved to '+basketName(to));
 }
+// Mobile-only presentation: centered scroll-snap carousel. It does not change basket data,
+// reordering, item handlers, encryption, or cloud synchronization.
+function mobileBasketCards(){return [...$('pvbGrid').querySelectorAll('.pvb-basket')];}
+function updateMobileBasketCarousel(){
+ const grid=$('pvbGrid'),cards=mobileBasketCards();
+ if(!cards.length)return;
+ if(!window.matchMedia('(max-width:760px)').matches){cards.forEach(card=>card.classList.remove('pvb-carousel-active','pvb-carousel-before','pvb-carousel-after'));return;}
+ const center=grid.scrollLeft+grid.clientWidth/2;
+ let index=0,distance=Infinity;
+ cards.forEach((card,i)=>{const d=Math.abs(card.offsetLeft+card.offsetWidth/2-center);if(d<distance){distance=d;index=i;}});
+ mobileBasketSelectedId=cards[index].dataset.basketDrop;
+ cards.forEach((card,i)=>{card.classList.toggle('pvb-carousel-active',i===index);card.classList.toggle('pvb-carousel-before',i<index);card.classList.toggle('pvb-carousel-after',i>index);});
+ const status=(index+1)+' / '+cards.length;
+ if($('pvbCarouselStatus').textContent!==status)$('pvbCarouselStatus').textContent=status;
+ $('pvbCarouselPrev').disabled=index===0;$('pvbCarouselNext').disabled=index===cards.length-1;
+ [...$('pvbCarouselDots').children].forEach((dot,i)=>{dot.classList.toggle('active',i===index);dot.setAttribute('aria-label','Go to basket '+(i+1)+': '+basketName(cards[i].dataset.basketDrop));dot.setAttribute('aria-current',i===index?'true':'false');});
+}
+function centerMobileBasket(index,behavior='smooth'){
+ const grid=$('pvbGrid'),cards=mobileBasketCards();
+ if(!window.matchMedia('(max-width:760px)').matches||!cards.length)return;
+ const card=cards[Math.max(0,Math.min(cards.length-1,index))];
+ grid.scrollTo({left:card.offsetLeft-(grid.clientWidth-card.offsetWidth)/2,behavior});
+ if(behavior==='instant')updateMobileBasketCarousel();
+}
+function scheduleMobileBasketUpdate(){
+ if(mobileBasketScrollFrame)return;
+ mobileBasketScrollFrame=requestAnimationFrame(()=>{mobileBasketScrollFrame=0;updateMobileBasketCarousel();});
+}
 function renderBaskets(){
  const grid=$('pvbGrid');if(!grid||!ready())return;
+ const previousBasket=mobileBasketSelectedId;
  const items=getItems(),used=items.length,vs=vaults();
  $('pvbVaultName').textContent=cloud.vaultLabel||state.vault.name||'Personal vault';
  $('pvbUsed').textContent=used+' of 10 items used';
@@ -162,9 +194,17 @@ function renderBaskets(){
   }).join('');
   return `<article class="pvb-basket pvb-color-${b.theme||b.id}" data-basket-drop="${b.id}"><div class="pvb-basket-top" data-basket-reorder="${b.id}" draggable="true" title="Drag the colored header to reorder"><span class="pvb-folder" aria-hidden="true">${icon('folder')}</span><span class="pvb-grip" tabindex="0" role="button" data-basket-keyboard="${b.id}" aria-label="Move ${safe(basketName(b.id))} basket. Press arrow keys to reorder." title="Arrow keys to reorder">⋮⋮</span><button type="button" class="pvb-rename" data-basket-rename="${b.id}" aria-label="Rename ${safe(basketName(b.id))} basket" title="Rename basket">${icon('more')}</button></div><h3>${safe(basketName(b.id))}</h3><p class="pvb-num">${these.length} ${these.length===1?'item':'items'}</p><div class="pvb-apps">${tiles}${!basketCapacityReached()?`<button type="button" class="pvb-add-tile" data-basket-add="${b.id}" aria-label="Add item to ${safe(basketName(b.id))}"><span>+</span><small>Add item</small></button>`:''}</div><div class="pvb-basket-foot"><span>Drag to organize</span>${basketDefs().length>1?`<button type="button" data-basket-delete="${b.id}" aria-label="Delete ${safe(basketName(b.id))} basket">Delete basket</button>`:'<span class="pvb-last-basket">Required basket</span>'}</div></article>`;
  }).join('');
+ const cards=mobileBasketCards();
+ $('pvbCarouselDots').replaceChildren();
+ cards.forEach((card,i)=>{const dot=document.createElement('button');dot.type='button';dot.className='pvb-carousel-dot';dot.dataset.carouselIndex=String(i);dot.setAttribute('aria-label','Go to basket '+(i+1));$('pvbCarouselDots').append(dot);});
+ if(!cards.some(card=>card.dataset.basketDrop===previousBasket))mobileBasketSelectedId=cards[0]?.dataset.basketDrop||null;
+ if(window.matchMedia('(max-width:760px)').matches){
+  requestAnimationFrame(()=>{if(!grid.isConnected||!grid.children.length)return;const selected=mobileBasketCards().findIndex(card=>card.dataset.basketDrop===mobileBasketSelectedId);centerMobileBasket(Math.max(0,selected),'instant');});
+ }else updateMobileBasketCarousel();
 }
 function clearBaskets(){
  $('pvbGrid')?.replaceChildren();
+ mobileBasketSelectedId=null;$('pvbCarouselDots').replaceChildren();$('pvbCarouselStatus').textContent='0 / 0';
  $('pvbVaultName').textContent='Locked vault';
  $('pvbUsed').textContent='0 of 10 items used';
  $('pvbFree').textContent='';
@@ -556,7 +596,9 @@ function syncVisible(){
   if(profileLoadedUserId && profileLoadedUserId!==cloud.userId)resetAccountProfile();
   if(profileLoadedUserId!==cloud.userId && !profileLoading)void loadAccountProfile();
   const saved=new URL(location.href).searchParams.get('view');
-  if(!window.__pvApprovedWasUnlocked){window.__pvApprovedWasUnlocked=true;createMain();createQuick();navigate(pageTitles[saved]?saved:'overview',false);}
+  if(!window.__pvApprovedWasUnlocked){window.__pvApprovedWasUnlocked=true;createMain();createQuick();navigate(pageTitles[saved]?saved:'overview',false);
+   if(window.matchMedia('(max-width:760px)').matches){try{if(!sessionStorage.getItem('pv-mobile-greeted')){sessionStorage.setItem('pv-mobile-greeted','1');tip('Welcome back · Your vault is ready');}}catch{}}
+  }
   render();
  }else{
   if(window.__pvApprovedWasUnlocked){window.__pvApprovedWasUnlocked=false;clearPrivateUI();}
@@ -587,11 +629,16 @@ $('themeToggle').addEventListener('click',()=>theme(document.documentElement.dat
 $('darkSwitch').addEventListener('click',()=>theme(document.documentElement.dataset.theme!=='dark'));
 function toggleSidebarPin(){
  const mobile=window.matchMedia('(max-width:760px)').matches;
- if(mobile){const open=$('approvedSidebar').classList.toggle('open');$('approvedMobileBackdrop').classList.toggle('show',open);$('openMenu').setAttribute('aria-expanded',String(open));}
+ if(mobile){const open=$('approvedSidebar').classList.toggle('open');$('approvedMobileBackdrop').classList.toggle('show',open);$('openMenu').setAttribute('aria-expanded',String(open));$('pvMobileMore').setAttribute('aria-expanded',String(open));}
  else {const pinned=$('approvedSidebar').classList.toggle('pinned');$('openMenu').setAttribute('aria-expanded',String(pinned));$('openMenu').setAttribute('aria-label',pinned?'Unpin navigation':'Pin navigation open');$('openMenu').title=pinned?'Unpin navigation':'Pin navigation open';}
  updateMobileSidebarFocus();
 }
 $('openMenu').addEventListener('click',toggleSidebarPin);
+$('pvMobileMore').addEventListener('click',toggleSidebarPin);
+$('pvbCarouselPrev').addEventListener('click',()=>centerMobileBasket(mobileBasketCards().findIndex(card=>card.dataset.basketDrop===mobileBasketSelectedId)-1));
+$('pvbCarouselNext').addEventListener('click',()=>centerMobileBasket(mobileBasketCards().findIndex(card=>card.dataset.basketDrop===mobileBasketSelectedId)+1));
+$('pvbCarouselDots').addEventListener('click',e=>{const dot=e.target.closest('[data-carousel-index]');if(dot)centerMobileBasket(Number(dot.dataset.carouselIndex));});
+$('pvbGrid').addEventListener('scroll',scheduleMobileBasketUpdate,{passive:true});
 $('approvedMobileBackdrop').addEventListener('click',closeMenu);
 $('flowsToggle').addEventListener('click',()=>{closeAccountMenu();const visible=$('flowsMenu').classList.toggle('hidden');$('flowsToggle').setAttribute('aria-expanded',String(!visible));});
 $('lockShortcut').addEventListener('click',()=>lockVault('Manual lock'));
@@ -629,7 +676,7 @@ document.addEventListener('click',e=>{
   $('openMenu').setAttribute('aria-label','Pin navigation open');$('openMenu').title='Pin navigation open';
  }
 });
-window.addEventListener('resize',()=>{if(window.matchMedia('(max-width:760px)').matches){$('approvedSidebar').classList.remove('pinned');}else{closeMenu();}updateMobileSidebarFocus();});
+window.addEventListener('resize',()=>{if(window.matchMedia('(max-width:760px)').matches){$('approvedSidebar').classList.remove('pinned');}else{closeMenu();}updateMobileSidebarFocus();scheduleMobileBasketUpdate();});
 $('approvedUI').addEventListener('click',e=>{
  const target=e.target.closest('button');if(!target||!$('approvedUI').contains(target))return;
  const deleteBasket=target.closest('[data-basket-delete]');if(deleteBasket){basketDeleteTarget=deleteBasket.dataset.basketDelete;if(!isBasketId(basketDeleteTarget)||basketDefs().length<=1)return;const destination=basketDefs().find(b=>b.id!==basketDeleteTarget);$('pvbDeleteDescription').textContent='Delete '+basketName(basketDeleteTarget)+'? Its items will be moved to '+basketName(destination.id)+'. This cannot be undone.';$('pvbDeleteDialog').showModal();return;}
