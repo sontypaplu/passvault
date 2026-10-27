@@ -29,6 +29,8 @@ jobs:
         run: npm run verify:source
       - name: Test vault-lock and recovery safety
         run: npm run test:security
+      - name: Test encrypted edit history
+        run: npm run test:history
       - name: Build local SDK and project-scoped CSP
         run: npm run build
       - name: Verify static build

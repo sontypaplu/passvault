@@ -464,6 +464,110 @@ function validateVaultPlaintext(vault) {
     }
   }
 
+  validateVaultHistory(vault);
+  return true;
+}
+
+/* History stays inside the same authenticated AES-GCM vault payload.
+ * Nothing is logged to browser storage, Supabase plaintext tables or telemetry.
+ * Older vaults without editHistory remain valid. Existing history is never
+ * silently truncated: if it will not fit, reject the edit before mutation.
+ */
+const HISTORY_FIELDS = Object.freeze([
+  'kind', 'title', 'url', 'username', 'password', 'notes', 'favorite',
+  'tags', 'customFields', 'expiry', 'cvv'
+]);
+const MAX_VAULT_HISTORY = 2000;
+const HISTORY_PLAINTEXT_BUDGET = 24 * 1024 * 1024;
+const HISTORY_ACTIONS = Object.freeze(['created', 'edited', 'deleted']);
+function historySnapshot(item) {
+  if (!item) return null;
+  const snapshot = {};
+  for (const name of HISTORY_FIELDS) {
+    if (Object.hasOwn(item, name)) snapshot[name] = JSON.parse(JSON.stringify(item[name]));
+  }
+  return snapshot;
+}
+function changedHistoryFields(before, after) {
+  const a = historySnapshot(before) || {};
+  const b = historySnapshot(after) || {};
+  return HISTORY_FIELDS.filter(key => JSON.stringify(a[key] ?? null) !== JSON.stringify(b[key] ?? null));
+}
+function validateVaultHistory(vault) {
+  if (vault.editHistory === undefined) return;
+  if (!Array.isArray(vault.editHistory) || vault.editHistory.length > MAX_VAULT_HISTORY)
+    throw new Error('Encrypted edit history is invalid or exceeds the allowed limit.');
+  const ids = new Set();
+  for (const record of vault.editHistory) {
+    if (!record || typeof record !== 'object' || Array.isArray(record) ||
+        typeof record.id !== 'string' || record.id.length > 128 || !record.id || ids.has(record.id) ||
+        typeof record.itemId !== 'string' || !record.itemId || record.itemId.length > 128 ||
+        !HISTORY_ACTIONS.includes(record.action) ||
+        typeof record.at !== 'string' || !Number.isFinite(Date.parse(record.at)) ||
+        typeof record.title !== 'string' || record.title.length > 256 ||
+        !Array.isArray(record.fields) || !record.fields.length || record.fields.length > HISTORY_FIELDS.length ||
+        record.fields.some(field => !HISTORY_FIELDS.includes(field)) ||
+        (record.before === null && record.after === null) ||
+        (record.action === 'created' && record.before !== null) ||
+        (record.action === 'deleted' && record.after !== null) ||
+        (record.action === 'edited' && (record.before === null || record.after === null)))
+      throw new Error('Encrypted edit history record is invalid.');
+    ids.add(record.id);
+    for (const snapshot of [record.before, record.after]) {
+      if (snapshot === null) continue;
+      if (!snapshot || typeof snapshot !== 'object' || Array.isArray(snapshot) ||
+          Object.keys(snapshot).some(key => !HISTORY_FIELDS.includes(key)))
+        throw new Error('Encrypted edit history snapshot is invalid.');
+      // Validate the same field limits as current entries, without requiring
+      // legacy optional values to exist in old snapshots.
+      for (const [name,max] of [['title',256],['url',2048],['username',512],['password',2048],['notes',4096],['expiry',32],['cvv',20]])
+        if (Object.hasOwn(snapshot,name) && (typeof snapshot[name] !== 'string' || snapshot[name].length > max))
+          throw new Error('Encrypted edit history field is invalid.');
+      if (snapshot.kind !== undefined && !['login','note','card'].includes(snapshot.kind)) throw new Error('Invalid historical item kind.');
+      if (snapshot.favorite !== undefined && typeof snapshot.favorite !== 'boolean') throw new Error('Invalid historical favorite.');
+      if (snapshot.tags !== undefined && (!Array.isArray(snapshot.tags) || snapshot.tags.length > 10 || snapshot.tags.some(x => typeof x !== 'string' || x.length > 40))) throw new Error('Invalid historical tags.');
+      if (snapshot.customFields !== undefined && (!Array.isArray(snapshot.customFields) || snapshot.customFields.length > 10 || snapshot.customFields.some(x => !x || typeof x.label !== 'string' || x.label.length > 60 || typeof x.value !== 'string' || x.value.length > 1024))) throw new Error('Invalid historical custom fields.');
+    }
+  }
+}
+// A permanent item deletion must also remove its historical secrets from the
+// current vault. Keeping old passwords after "Delete permanently" is unsafe.
+function purgeVaultItemHistory(itemId) {
+  if (!state.vault || state.locked || !itemId) throw new Error('Unlock the vault to delete an item.');
+  const history = Array.isArray(state.vault.editHistory) ? state.vault.editHistory : [];
+  const remaining = history.filter(event => event.itemId !== itemId);
+  validateVaultPlaintext({
+    ...state.vault,
+    credentials: state.vault.credentials.filter(item => item.id !== itemId),
+    editHistory: remaining
+  });
+  if (state.vault.editHistory !== undefined) state.vault.editHistory = remaining;
+}
+function recordVaultHistory(before, after, action, at = new Date().toISOString()) {
+  if (!state.vault || state.locked) throw new Error('Unlock the vault to save an edit.');
+  if (!HISTORY_ACTIONS.includes(action) || !(before?.id || after?.id) ||
+      (before && after && before.id !== after.id)) throw new Error('Invalid history change.');
+  const fields = changedHistoryFields(before, after);
+  if (!fields.length) return false;
+  const log = Array.isArray(state.vault.editHistory) ? state.vault.editHistory : [];
+  if (log.length >= MAX_VAULT_HISTORY)
+    throw new Error('Edit history is full. Export an encrypted backup before making more changes.');
+  const record = {
+    id: secureId(), itemId: (after || before).id, action, at,
+    title: (after || before).title, fields,
+    before: historySnapshot(before), after: historySnapshot(after)
+  };
+  const nextLog = [...log, record];
+  const credentials = action === 'deleted'
+    ? state.vault.credentials.filter(item => item.id !== before.id)
+    : action === 'created'
+      ? [...state.vault.credentials, after]
+      : state.vault.credentials.map(item => item.id === after.id ? after : item);
+  const candidate = {...state.vault, credentials, editHistory: nextLog};
+  validateVaultPlaintext(candidate);
+  if (new TextEncoder().encode(JSON.stringify(candidate)).length > HISTORY_PLAINTEXT_BUDGET)
+    throw new Error('Vault is approaching its encrypted size limit. Export an encrypted backup before continuing.');
+  state.vault.editHistory = nextLog;
   return true;
 }
 
