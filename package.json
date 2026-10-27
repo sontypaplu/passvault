@@ -8,7 +8,8 @@
     "build:preview": "node tools/build.mjs",
     "verify": "node tools/verify.mjs",
     "verify:source": "node tools/verify-source.mjs",
-    "verify:upgrade": "node tools/verify-upgrade.mjs"
+    "verify:upgrade": "node tools/verify-upgrade.mjs",
+    "test:security": "node tools/test-security-hardening.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.117.3"

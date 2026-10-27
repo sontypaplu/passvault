@@ -623,3 +623,6 @@ html[data-theme="dark"] .entry-view { background: radial-gradient(ellipse 55% 55
 .dashboard-actions { margin-top: 18px; }
 .generator-actions { margin-top: 10px; }
 .clipboard-fallback-input { position: fixed; left: -9999px; top: 0; opacity: 0; }
+
+/* Confidentiality while encrypting an inactivity recovery checkpoint. */
+html.pv-secure-lock-pending #unlockedView { visibility: hidden !important; pointer-events: none !important; }

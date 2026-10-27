@@ -91,6 +91,12 @@ async function runStartupSelfTest() {
 }
 
 async function initialize() {
+  // GitHub Pages cannot set an HTTP frame-ancestors policy. This JS guard is
+  // defense in depth; hosting-level frame restrictions remain recommended.
+  if (window.self !== window.top) {
+    document.body.replaceChildren(document.createTextNode('PassVault cannot run inside another website. Open it in a direct browser tab.'));
+    return;
+  }
   populateGeneratorLengths();
   initializeEvents();
   updateMasterStrength();

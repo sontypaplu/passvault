@@ -73,6 +73,8 @@ const cloud = {
   retryAttempt: 0,
   lastSaveError: "",
   autoLockDeferred: false,
+  secureLockPromise: null,
+  restoredRecoveryKey: null,
   mutation: 0,
   conflict: false,
   epoch: 0,
@@ -304,17 +306,16 @@ function constantTimeBytesEqual(a, b) {
   return diff === 0;
 }
 
-function estimatePasswordEntropy(password) {
-  if (typeof password !== "string" || password.length === 0) return 0;
-  let alphabet = 0;
-  if (/[a-z]/.test(password)) alphabet += 26;
-  if (/[A-Z]/.test(password)) alphabet += 26;
-  if (/[0-9]/.test(password)) alphabet += 10;
-  if (/[^A-Za-z0-9]/.test(password)) alphabet += 33;
-  if (alphabet === 0) alphabet = Math.min(128, new Set([...password]).size * 8);
-  return Math.max(0, password.length * Math.log2(alphabet));
-}
-
+// Human-created passwords are not uniformly random over character classes.
+// This is a conservative UI warning meter, NOT an entropy or cracking-time
+// estimator. It does not change existing vault unlocking or key derivation.
+const MASTER_OBVIOUS_WORDS = Object.freeze([
+  'password','passvault','example','welcome','secure','security','secret','master',
+  'admin','login','letmein','qwerty','correct','horse','battery','staple',
+  'summer','winter','autumn','spring','january','february','march','april','may',
+  'june','july','august','september','october','november','december',
+  'india','football','monkey','dragon','iloveyou','hello','changeme'
+]);
 function hasRepeatedPattern(password) {
   if (!password) return false;
   if (/^(.)\1{5,}$/su.test(password)) return true;
@@ -326,72 +327,56 @@ function hasRepeatedPattern(password) {
   }
   return false;
 }
-
 function normalizePasswordForCheck(password) {
-  return password.toLowerCase().replace(/\s+/g, "");
+  return password.toLowerCase().replace(/\s+/g, '');
 }
-
+function masterPredictabilitySignals(password) {
+  const lowered = normalizePasswordForCheck(password)
+    .replace(/0/g,'o').replace(/1/g,'i').replace(/3/g,'e').replace(/4/g,'a').replace(/5/g,'s');
+  const letters = lowered.replace(/[^a-z]/g,'');
+  const words = MASTER_OBVIOUS_WORDS.filter(word => letters.includes(word));
+  let residual = letters;
+  for (const word of [...words].sort((a,b)=>b.length-a.length)) residual=residual.replaceAll(word,'');
+  const year = /(?:19|20)\d{2}/.test(password);
+  const sequence = /(?:1234|abcd|qwerty|asdf|0000|1111|9876)/i.test(password);
+  const obvious = COMMON_PASSWORDS.has(normalizePasswordForCheck(password)) ||
+    hasRepeatedPattern(password) || sequence ||
+    (words.length > 0 && (residual.length < 8 || (year && residual.length < 12)));
+  return { obvious, year, sequence, words };
+}
 function evaluateMasterPassword(password) {
-  if (typeof password !== "string" || !password) {
-    return { score: 0, label: "Enter a master password.", reasons: ["No password entered."], entropy: 0 };
+  if (typeof password !== 'string' || !password) {
+    return { score: 0, label: 'Enter a master password.', reasons: ['No password entered.'], predictable: false };
   }
-
-  const normalized = normalizePasswordForCheck(password);
-  const entropy = estimatePasswordEntropy(password);
   const reasons = [];
-
-  if (password.length < 16) reasons.push("Use at least 16 characters.");
-  if (password.length < 20) reasons.push("20+ characters are recommended.");
-  if (COMMON_PASSWORDS.has(normalized)) reasons.push("This is a commonly used password.");
-  if (hasRepeatedPattern(password)) reasons.push("Avoid repeated or obvious patterns.");
-  if (/^(?:[a-z]+|[0-9]+)$/i.test(password)) reasons.push("Use more than one character category or a strong random passphrase.");
-
-  let score = 0;
-  if (password.length >= 16) score += 25;
-  if (password.length >= 20) score += 15;
-  if (password.length >= 28) score += 10;
-  if (entropy >= 60) score += 20;
-  if (entropy >= 80) score += 15;
-  if (entropy >= 100) score += 10;
-  if (/[a-z]/.test(password)) score += 2;
-  if (/[A-Z]/.test(password)) score += 2;
-  if (/[0-9]/.test(password)) score += 2;
-  if (/[^A-Za-z0-9]/.test(password)) score += 4;
-  if (COMMON_PASSWORDS.has(normalized)) score -= 35;
-  if (hasRepeatedPattern(password)) score -= 15;
-
-  score = Math.max(0, Math.min(100, score));
-  const label = score >= 85 ? "Strong" : score >= 65 ? "Good" : score >= 45 ? "Moderate" : "Weak";
-  return { score, label, reasons, entropy };
+  const predictable = masterPredictabilitySignals(password);
+  if (password.length < 16) reasons.push('Use at least 16 characters.');
+  else if (password.length < 20) reasons.push('20+ characters are recommended.');
+  if (predictable.obvious) reasons.push('Contains common words, dates, repeated text or predictable sequences.');
+  if (/^(?:[a-z]+|[0-9]+)$/i.test(password)) reasons.push('Use a randomly generated password or an unpredictable multiword passphrase.');
+  let score = password.length >= 30 ? 85 : password.length >= 24 ? 75 : password.length >= 20 ? 65 : password.length >= 16 ? 50 : 15;
+  if (/[a-z]/.test(password) && /[A-Z]/.test(password)) score += 5;
+  if (/\d/.test(password)) score += 5;
+  if (/[^a-z0-9]/i.test(password)) score += 5;
+  if (predictable.obvious) score = Math.min(score,25);
+  if (COMMON_PASSWORDS.has(normalizePasswordForCheck(password))) score = 0;
+  score = Math.max(0, Math.min(score, 95));
+  return {score, label:score>=80?'Promising':score>=65?'Better':score>=45?'Needs review':'Predictable', reasons, predictable:predictable.obvious};
 }
-
 function updateMasterStrength() {
   const assessment = evaluateMasterPassword(els.newMaster.value);
   els.newMasterStrengthFill.style.width = `${assessment.score}%`;
   els.newMasterStrengthText.textContent = assessment.score
-    ? `${assessment.label} • approximately ${assessment.entropy.toFixed(0)} bits by a simple character-set heuristic.`
-    : "Enter a master password.";
-
-  if (assessment.reasons.length > 0) {
-    els.newMasterStrengthText.textContent += ` ${assessment.reasons.join(" ")}`;
-  }
+    ? `${assessment.label} — heuristic only; not an entropy or cracking-time estimate. Prefer a randomly generated password or unpredictable passphrase.`
+    : 'Enter a master password.';
+  if (assessment.reasons.length) els.newMasterStrengthText.textContent += ` ${assessment.reasons.join(' ')}`;
 }
-
 function validateMasterForCreation(password) {
-  if (!password) throw new Error("Master password is required.");
-  if (password.length > MAX_MASTER_LENGTH) throw new Error("Master password is too long.");
-  if (password.length < 16) throw new Error("Master password must contain at least 16 characters.");
-
-  const assessment = evaluateMasterPassword(password);
-  if (COMMON_PASSWORDS.has(normalizePasswordForCheck(password))) {
-    throw new Error("Choose a master password that is not a common password.");
-  }
-  if (hasRepeatedPattern(password)) {
-    throw new Error("Choose a master password without repeated or obvious patterns.");
-  }
-  if (assessment.entropy < 45) {
-    throw new Error("The master password is too predictable. Use a longer, less predictable passphrase or random password.");
-  }
+  if (!password) throw new Error('Master password is required.');
+  if (password.length > MAX_MASTER_LENGTH) throw new Error('Master password is too long.');
+  if (password.length < 16) throw new Error('Master password must contain at least 16 characters.');
+  if (masterPredictabilitySignals(password).obvious)
+    throw new Error('Master password has predictable words, dates, repetitions or sequences. Use a genuinely unpredictable password or passphrase.');
 }
 
 function canonicalAAD(meta) {

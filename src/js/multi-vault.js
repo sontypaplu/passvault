@@ -15,6 +15,8 @@ async function reloadVaultList() {
 
 function renderVaultDashboard() {
   const list = $('vaultDashboardList');
+  const localRecoveries = listUnsyncedNewVaultRecoveries(cloud.userId)
+    .filter(draft => !cloud.vaults.some(v => v.vault_id === draft.vaultId));
   const atLimit = cloud.vaults.length >= 2;
   $('dashboardCreateVault').disabled = atLimit;
   $('dashboardCreateVault').textContent = atLimit ? 'Vault limit reached (2/2)' : '+ Create new vault';
@@ -25,10 +27,23 @@ function renderVaultDashboard() {
     msg.textContent = 'Could not load vaults. Check your internet and try Refresh.';
     list.append(msg); return;
   }
-  if (!cloud.vaults.length) {
+  if (!cloud.vaults.length && !localRecoveries.length) {
     const empty = document.createElement('div'); empty.className='empty-state';
     empty.textContent='No cloud vaults yet. Create your first vault to get started.';
     list.append(empty); return;
+  }
+  for (const draft of localRecoveries) {
+    const row = document.createElement('div'); row.className = 'vault-tile';
+    const icon = document.createElement('span'); icon.className = 'vault-tile-icon'; icon.textContent = '🔒';
+    const text = document.createElement('div'); text.className = 'vault-tile-text';
+    const name = document.createElement('strong'); name.textContent = 'Unsynced local vault';
+    const sub = document.createElement('small');
+    sub.textContent = 'Encrypted on this device only. Unlock to restore and sync to cloud.';
+    text.append(name, sub);
+    const restore = document.createElement('button'); restore.type = 'button';
+    restore.textContent = 'Restore';
+    restore.addEventListener('click', () => openUnsyncedNewVaultRecovery(draft.vaultId));
+    row.append(icon, text, restore); list.append(row);
   }
   for (const v of cloud.vaults) {
     const row = document.createElement('div'); row.className = 'vault-tile';
@@ -45,6 +60,27 @@ function renderVaultDashboard() {
     remove.setAttribute('aria-label',`Delete ${v.label || 'vault'}`);
     remove.addEventListener('click',()=>requestDeletion('vault',v.vault_id,v.label));
     row.append(icon,text,open,remove); list.append(row);
+  }
+}
+
+function openUnsyncedNewVaultRecovery(vaultId) {
+  if (!cloud.userId || !cloud.loaded || !state.locked) return;
+  if (cloud.vaults.some(v => v.vault_id === vaultId)) return;
+  const draft = readEncryptedRecovery(cloud.userId, vaultId);
+  if (!draft || draft.revision !== 0) return;
+  try {
+    const parsed = parseVaultFileText(JSON.stringify(draft.envelope));
+    if (parsed.type !== 'v2') throw new Error('Recovery format is unsupported');
+    cloud.selectedVaultId = vaultId; cloud.revision = 0;
+    cloud.vaultLabel = 'Recovered vault'; cloud.encryptedEnvelope = draft.envelope;
+    cloud.importSource = 'local-recovery'; cloud.conflict = false;
+    state.pendingImport = parsed;
+    els.selectedFileName.textContent = 'Encrypted local recovery loaded';
+    els.unlockPepperHint.textContent = parsed.record.pepperRequired
+      ? 'This recovery requires the original secret pepper.' : 'Enter the original master password.';
+    showAccessScreen('unlock');
+  } catch (error) {
+    setStatus($('dashboardStatus'), 'Cannot open local recovery: ' + (error.message || 'Invalid data'), 'error');
   }
 }
 
@@ -178,11 +214,14 @@ async function confirmDeletion(event) {
     if (!data?.deleted) throw new Error('Deletion not confirmed by server');
     $('deleteDialog').close(); deleteTarget=null;
     if(target.kind==='account') {
-      resetCloudUserState();
+      const deletedUserId = cloud.userId;
+      await resetCloudUserState();
+      purgeEncryptedRecoveriesForContext(deletedUserId);
       try {await cloud.client.auth.signOut({scope:'local'});}catch{}
       setGlobalStatus('Account deleted. Previous exported backups remain on your devices.','success');
       return;
     }
+    purgeEncryptedRecoveriesForContext(cloud.userId, target.vaultId);
     if (cloud.selectedVaultId===target.vaultId && !state.locked) {
       // Decrypted contents must be cleared even if currently viewing deleted vault.
       lockVault('Selected vault deleted.');

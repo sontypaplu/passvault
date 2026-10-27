@@ -13,6 +13,17 @@ const protectedFetch = withSupabase({auth:'user'}, async(req,ctx) => {
   if (profileErr || !profile.user?.email) return json({error:'Account lookup failed'},401);
   const {data: verified, error: authErr} = await ctx.supabase.auth.signInWithPassword({email: profile.user.email, password: body.account_password});
   if (authErr || verified.user?.id !== id) return json({error:'Current account password is incorrect'},403);
+  // Remove the private avatar first. Deleting auth.users does not implicitly
+  // delete Storage objects. Treat non-existent files as harmless, but fail if
+  // cleanup returns an error so private account data is not orphaned.
+  const {error: avatarError} = await ctx.supabaseAdmin.storage
+    .from('passvault-avatars').remove([`${id}/avatar.webp`]);
+  // The avatar feature is optional on older projects. If its bucket was never
+  // created there is nothing to clean up; all other Storage errors fail closed.
+  if (avatarError && !(/not found|does not exist|no such bucket/i.test(avatarError.message || '') ||
+      String(avatarError.status || avatarError.statusCode || '') === '404')) {
+    return json({error:'Account data cleanup failed; account was not deleted'},500);
+  }
   // Both legacy vaults and vault_items use ON DELETE CASCADE referencing auth.users.
   const {error} = await ctx.supabaseAdmin.auth.admin.deleteUser(id);
   if (error) return json({error:'Account deletion failed; please contact support'},500);

@@ -31,7 +31,10 @@ async function handleAccountLogin(event) {
 }
 
 
-function resetCloudUserState() {
+async function resetCloudUserState() {
+  // An auth event can arrive during an unsynced edit. Preserve the same
+  // encrypted-only recovery rule before clearing account/vault state.
+  if (!state.locked) await secureLockWithCheckpoint('Account session ended.');
   ++cloud.epoch;
   clearTimeout(cloud.saveTimer);
   clearTimeout(cloud.retryTimer);
@@ -40,6 +43,7 @@ function resetCloudUserState() {
   cloud.retryAttempt = 0;
   cloud.lastSaveError = '';
   cloud.autoLockDeferred = false;
+  cloud.restoredRecoveryKey = null;
   if (!state.locked) lockVault('Account signed out');
   try { sessionStorage.removeItem('passvault-account-last-active'); } catch {}
   cloud.userId = null; cloud.email = ''; cloud.loaded = false;
@@ -52,10 +56,10 @@ function resetCloudUserState() {
 
 async function loadAccountVault(session) {
   if (window.PassVaultAuth?.recoveryPending) return;
-  if (!session?.user?.id) { resetCloudUserState(); return; }
+  if (!session?.user?.id) { await resetCloudUserState(); return; }
   const userId = session.user.id;
   if (cloud.userId === userId) return;
-  if (cloud.userId) resetCloudUserState();
+  if (cloud.userId) await resetCloudUserState();
   const requestEpoch = ++cloud.epoch;
   cloud.userId = userId; cloud.email = session.user.email || 'Account';
   // A fresh login begins the 15-minute account idle clock. A restored tab
@@ -80,41 +84,41 @@ async function loadAccountVault(session) {
   }
 }
 
-const ACCOUNT_IDLE_LIMIT_MS=15*60*1000;
-let idleSignOutPending=false;
-function updateAccountInactivity(){
- if(!cloud.userId || idleSignOutPending)return;
- if(Date.now()-state.lastActivity<ACCOUNT_IDLE_LIMIT_MS)return;
- if(state.dirty){
-  // Never discard the only decrypted copy of unsynced changes. Reuse the
-  // existing warning/retry flow and sign out once cloud synchronization succeeds.
-  if(!cloud.autoLockDeferred){cloud.autoLockDeferred=true;setGlobalStatus('Sign-out deferred: unsynced vault changes need a successful save or encrypted backup before logging out.','error');window.pvRenderApprovedStatus?.();}
-  if(!state.locked && !cloud.conflict && !cloud.savePromise && !cloud.saveTimer && !cloud.retryTimer && navigator.onLine && !document.hidden)void saveCloudVault();
-  return;
- }
- idleSignOutPending=true;
- // Immediately clear decrypted state before awaiting the network, and then
- // revoke this session's refresh token via Supabase local sign-out.
- if(!state.locked)lockVault('Account signed out after 15 minutes of inactivity.');
- void cloud.client.auth.signOut({scope:'local'}).then(({error})=>{
-   if(error)throw error;
-   resetCloudUserState();
- }).catch(error=>{
-   // Fail closed locally on network outage; only remote revocation is unverified.
-   try { const project=new URL(SUPABASE_URL).hostname.split('.')[0]; sessionStorage.removeItem('sb-'+project+'-auth-token'); } catch {}
-   resetCloudUserState();
-   setStatus(els.accessStatus,'Account timed out. Sign in again. Server-side token revocation could not be confirmed: '+(error.message||'Network error'),'warning');
- }).finally(()=>{idleSignOutPending=false;});
+const ACCOUNT_IDLE_LIMIT_MS = 15 * 60 * 1000;
+let idleSignOutPending = false;
+async function updateAccountInactivity() {
+  if (!cloud.userId || idleSignOutPending) return;
+  if (Date.now() - state.lastActivity < ACCOUNT_IDLE_LIMIT_MS) return;
+  idleSignOutPending = true;
+  try {
+    // Encrypt any pending edits, clear unlocked memory, THEN contact the
+    // network. Network errors must never leave the vault readable.
+    await secureLockWithCheckpoint('Account signed out after 15 minutes of inactivity.');
+    if (!cloud.client) return;
+    const { error } = await cloud.client.auth.signOut({ scope: 'local' });
+    if (error) throw error;
+    await resetCloudUserState();
+  } catch (error) {
+    try {
+      const project = new URL(SUPABASE_URL).hostname.split('.')[0];
+      sessionStorage.removeItem('sb-' + project + '-auth-token');
+    } catch {}
+    await resetCloudUserState();
+    setStatus(els.accessStatus,
+      'Session timed out. Sign in again. Remote refresh-token revocation could not be confirmed.', 'warning');
+  } finally { idleSignOutPending = false; }
 }
 async function handleSignOut() {
   if (!cloud.client) return;
-  if (state.dirty && !window.confirm("Unsynced changes may be lost. Download a backup before signing out. Continue?")) return;
+  // Signing out always locks immediately. Unsaved changes are encrypted into
+  // an on-device recovery snapshot first, rather than abandoned.
+  await secureLockWithCheckpoint('Vault locked before account sign-out.');
   try {
-    const { error } = await cloud.client.auth.signOut({ scope: "local" });
+    const { error } = await cloud.client.auth.signOut({ scope: 'local' });
     if (error) throw error;
-    resetCloudUserState();
+    await resetCloudUserState();
   } catch (error) {
-    setGlobalStatus("Could not sign out: " + error.message, "error");
+    setGlobalStatus('Could not revoke remote session. Your vault is locked locally; retry sign-out. ' + (error.message || ''), 'error');
   }
 }
 
@@ -182,7 +186,10 @@ async function saveCloudVault(manual = false) {
       cloud.retryAttempt = 0;
       clearTimeout(cloud.retryTimer);
       cloud.retryTimer = null;
-      if (cloud.mutation === saveMutation) setDirty(false);
+      if (cloud.mutation === saveMutation) {
+        setDirty(false);
+        deleteEncryptedRecovery(saveUser, saveVaultId);
+      }
       cloudStatus("SAVED");
       setGlobalStatus(cloud.mutation === saveMutation ? "Encrypted vault saved to cloud." : "Cloud saved an earlier version; saving recent edits next…", "success");
       return true;
