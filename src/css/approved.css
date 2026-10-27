@@ -758,3 +758,54 @@ html[data-theme="dark"] #approvedUI .pvb-folder{background:var(--primary-wash);c
 #approvedUI .approved-account-management input{width:100%;max-width:480px;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:9px;padding:10px 12px}
 #approvedUI .approved-account-management button[type=submit]{justify-self:start;border-radius:10px;background:var(--primary);color:white;padding:10px 14px;font-weight:750;font-size:12px}
 @media(max-width:600px){#approvedUI .danger-card .pv-danger-action{align-items:stretch;flex-direction:column}#approvedUI .danger-card .pv-danger-button{align-self:flex-start}#pvHistoryDialog .dialog-head{padding:16px;gap:8px}#pvHistoryDialog .dialog-body{padding:14px}#pvHistoryDialog .pv-history-back{padding:6px 8px}}
+
+/* Settings drill-down: existing control styles and theme tokens are retained. */
+#approvedUI #pvSettingsHome[hidden],#approvedUI #pvSettingsDetail[hidden],#approvedUI .pv-settings-panel[hidden]{display:none!important}
+#approvedUI .pv-settings-home,#approvedUI .pv-settings-detail{max-width:950px}
+#approvedUI .pv-settings-intro{display:flex;gap:17px;align-items:center;padding:23px 24px;border:1px solid var(--border);background:linear-gradient(120deg,var(--surface),var(--primary-wash));border-radius:18px;margin-bottom:30px;box-shadow:var(--shadow)}
+#approvedUI .pv-settings-intro-icon{display:grid;place-items:center;flex:0 0 47px;width:47px;height:47px;border-radius:14px;background:var(--surface);color:var(--primary);box-shadow:0 3px 12px #0000000a}
+#approvedUI .pv-settings-intro-icon svg{width:23px;height:23px}
+#approvedUI .pv-settings-intro strong{display:block;font-size:16px;letter-spacing:-.25px}
+#approvedUI .pv-settings-intro p{font-size:12px;margin:6px 0 0}
+#approvedUI .pv-settings-group{margin:0 0 27px}
+#approvedUI .pv-settings-group-label{font-size:11px;letter-spacing:1.4px;font-weight:800;color:var(--subtle);margin:0 0 12px;text-transform:uppercase}
+#approvedUI .pv-settings-catalog{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+#approvedUI button.pv-settings-tile{display:flex;align-items:center;text-align:left;gap:15px;padding:20px 18px;min-width:0;min-height:104px;border:1px solid var(--border);background:var(--surface);border-radius:16px;box-shadow:var(--shadow);transition:box-shadow .18s ease,border-color .18s ease,transform .18s ease}
+#approvedUI button.pv-settings-tile:hover{border-color:var(--primary);box-shadow:0 9px 27px rgba(70,61,140,.10);transform:translateY(-1px)}
+#approvedUI .pv-settings-tile-icon{display:grid;place-items:center;flex:0 0 45px;width:45px;height:45px;border-radius:14px;background:var(--primary-wash);color:var(--primary)}
+#approvedUI .pv-settings-tile-icon svg{width:21px;height:21px}
+#approvedUI .pv-settings-tile-copy{display:flex;flex:1;flex-direction:column;gap:7px;min-width:0}
+#approvedUI .pv-settings-tile-copy strong{font-size:14px;font-weight:760;letter-spacing:-.15px}
+#approvedUI .pv-settings-tile-copy small{font-size:11px;line-height:1.55;color:var(--muted)}
+#approvedUI .pv-settings-tile-arrow{align-self:center;color:var(--subtle);font-size:24px;line-height:1;font-weight:400}
+#approvedUI button.pv-settings-back{display:inline-flex;align-items:center;gap:9px;padding:9px 13px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--muted);font-size:12px;font-weight:750;margin-bottom:19px}
+#approvedUI button.pv-settings-back:hover{background:var(--surface-2);color:var(--primary)}
+#approvedUI .pv-settings-back span{font-size:18px}
+#approvedUI .pv-settings-detail-head{display:flex;align-items:center;gap:16px;margin:0 0 22px}
+#approvedUI .pv-settings-detail-icon{display:grid;place-items:center;flex:0 0 52px;width:52px;height:52px;border-radius:15px;background:var(--primary-wash);color:var(--primary)}
+#approvedUI .pv-settings-detail-icon svg{width:26px;height:26px}
+#approvedUI .pv-settings-detail-head h2{font-size:23px;letter-spacing:-.6px;margin:0 0 5px}
+#approvedUI .pv-settings-detail-head p{font-size:12px;margin:0}
+#approvedUI .pv-settings-detail-body>.pv-settings-panel>.setting-card{margin-bottom:18px}
+#approvedUI .pv-settings-panel>.setting-card{padding:24px}
+#approvedUI .pv-settings-panel .danger-card{grid-column:auto}
+#approvedUI .pv-settings-detail .approved-account-management{margin-top:18px}
+#approvedUI .pv-settings-detail .approved-account-management .section-card{box-shadow:var(--shadow)}
+#approvedUI .pv-settings-detail .pv-history-settings .pv-history-stats{margin-top:13px}
+@media(max-width:720px){#approvedUI .pv-settings-catalog{grid-template-columns:1fr}#approvedUI button.pv-settings-tile{min-height:90px}#approvedUI .pv-settings-intro{padding:19px}#approvedUI .pv-settings-detail-head h2{font-size:20px}}
+@media(max-width:440px){#approvedUI .pv-settings-tile-icon{flex-basis:41px;width:41px;height:41px}#approvedUI button.pv-settings-tile{gap:11px;padding:16px 13px}#approvedUI .pv-settings-detail-head{align-items:flex-start}}
+/* Full-text popover for long encrypted-history values. No HTML insertion of secrets. */
+#approvedUI #pvHistoryTextDialog{width:min(580px,calc(100vw - 26px));max-height:min(84vh,760px);overflow:hidden;color:var(--text);background:var(--surface);border-radius:17px;box-shadow:0 26px 85px #07122766;transition:width .2s ease}
+#approvedUI #pvHistoryTextDialog.is-expanded{width:min(1040px,calc(100vw - 26px));max-height:92vh}
+#approvedUI #pvHistoryTextDialog .pv-history-text-head{align-items:center}
+#approvedUI #pvHistoryTextDialog .pv-history-text-head h2{font-size:19px;overflow-wrap:anywhere}
+#approvedUI #pvHistoryTextDialog .pv-history-text-body{padding:18px 23px}
+#approvedUI #pvHistoryTextDialog .pv-history-text-readable{white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;overflow-y:auto;max-height:min(290px,38vh);background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:17px 18px;font:inherit;font-size:13px;line-height:1.85;color:var(--text);user-select:text}
+#approvedUI #pvHistoryTextDialog.is-expanded .pv-history-text-readable{max-height:66vh;min-height:45vh}
+#approvedUI #pvHistoryTextDialog .pv-history-text-foot{align-items:center}
+#approvedUI #pvHistoryTextDialog .pv-history-text-foot .pv-history-text-count{font-size:11px;color:var(--muted);margin-right:auto}
+#approvedUI #pvHistoryTextDialog .pv-history-text-foot .btn{font-size:12px;padding:9px 13px;border-radius:9px;min-height:36px}
+#pvHistoryDialog .pv-history-full-text{display:inline-flex;padding:6px 10px;background:var(--primary-wash);color:var(--primary);border:1px solid var(--border);border-radius:8px;font-size:11px;font-weight:750;cursor:pointer;white-space:nowrap}
+#pvHistoryDialog .pv-history-full-text:hover{filter:brightness(.97)}
+#pvHistoryDialog .pv-history-long-caption{display:block;color:var(--muted);font-size:10px;margin-top:5px}
+@media(max-width:600px){#approvedUI #pvHistoryTextDialog .pv-history-text-body{padding:12px}#approvedUI #pvHistoryTextDialog .pv-history-text-foot{flex-wrap:wrap}#approvedUI #pvHistoryTextDialog .pv-history-text-head{padding:15px}}
