@@ -886,3 +886,41 @@ html[data-theme="dark"] #approvedUI .pvb-folder{background:var(--primary-wash);c
 
 #approvedUI .pv-custom-field-row select{min-width:0;width:100%;border:1px solid var(--border);border-radius:9px;background:var(--surface);color:var(--text);padding:9px 4px;font-size:12px}
 #approvedUI .pv-custom-field-row .pv-custom-reveal[hidden]{display:none}
+
+/* Targeted Phase 3 refinement: basket personalization and readable dark-mode
+   palette. Only existing appearance tokens and local SVG icons are used. */
+#approvedUI .pvb-theme-violet{--pvb-accent:#6857d8;--pvb-pale:#f0edff}
+#approvedUI .pvb-theme-amber{--pvb-accent:#ad701f;--pvb-pale:#fff3e2}
+#approvedUI .pvb-theme-teal{--pvb-accent:#168f80;--pvb-pale:#e7f7f1}
+#approvedUI .pvb-theme-rose{--pvb-accent:#ba5381;--pvb-pale:#fff0f5}
+#approvedUI .pvb-theme-blue{--pvb-accent:#386db7;--pvb-pale:#eaf2ff}
+#approvedUI .pvb-theme-indigo{--pvb-accent:#555ab9;--pvb-pale:#eceeff}
+#approvedUI .pvb-theme-emerald{--pvb-accent:#16825e;--pvb-pale:#e8f7ed}
+#approvedUI .pvb-theme-slate{--pvb-accent:#526b83;--pvb-pale:#e9eef4}
+html[data-theme="dark"] #approvedUI .pvb-theme-violet{--pvb-accent:#aa9dff;--pvb-pale:#2a2448}
+html[data-theme="dark"] #approvedUI .pvb-theme-amber{--pvb-accent:#eac17e;--pvb-pale:#393023}
+html[data-theme="dark"] #approvedUI .pvb-theme-teal{--pvb-accent:#68d5bd;--pvb-pale:#173a39}
+html[data-theme="dark"] #approvedUI .pvb-theme-rose{--pvb-accent:#efa0bf;--pvb-pale:#40283d}
+html[data-theme="dark"] #approvedUI .pvb-theme-blue{--pvb-accent:#8eb8ff;--pvb-pale:#1f304c}
+html[data-theme="dark"] #approvedUI .pvb-theme-indigo{--pvb-accent:#afb4ff;--pvb-pale:#292d4b}
+html[data-theme="dark"] #approvedUI .pvb-theme-emerald{--pvb-accent:#75dfb7;--pvb-pale:#1a3b33}
+html[data-theme="dark"] #approvedUI .pvb-theme-slate{--pvb-accent:#b4c7dd;--pvb-pale:#2b3548}
+html[data-theme="dark"] #approvedUI .pvb-basket{background:var(--surface);border-color:var(--border)}
+html[data-theme="dark"] #approvedUI .pvb-folder{background:var(--pvb-pale);color:var(--pvb-accent)}
+html[data-theme="dark"] #approvedUI .pvb-appicon{background:#283752;color:#91b7ff}
+html[data-theme="dark"] #approvedUI .pvb-appicon.pvb-note{background:#3b2940;color:#ec9ac3}
+html[data-theme="dark"] #approvedUI .pvb-appicon.pvb-card{background:#1e3b38;color:#81dfc4}
+#approvedUI .pvb-appearance-picker{display:grid;gap:11px;padding-top:16px}
+#approvedUI .pvb-appearance-label{font-size:12px;font-weight:760;color:var(--text);margin-top:4px}
+#approvedUI .pvb-icon-options{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}
+#approvedUI .pvb-icon-choice{height:42px;min-width:0;display:grid;place-items:center!important;border:1px solid var(--border)!important;border-radius:10px!important;background:var(--surface-2)!important;color:var(--muted)!important;transition:border-color .15s ease!important}
+#approvedUI .pvb-icon-choice svg{width:19px;height:19px}
+#approvedUI .pvb-icon-choice[aria-pressed="true"]{color:var(--primary)!important;border-color:var(--primary)!important;background:var(--primary-wash)!important}
+#approvedUI .pvb-color-options{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:7px}
+#approvedUI .pvb-color-choice{display:grid!important;place-items:center!important;height:37px;min-width:0;border:1px solid var(--border)!important;border-radius:10px!important;background:var(--surface-2)!important}
+#approvedUI .pvb-color-dot{display:block;height:20px;width:20px;background:var(--pvb-accent);border-radius:7px}
+#approvedUI .pvb-color-choice[aria-pressed="true"]{border-color:var(--primary)!important;box-shadow:0 0 0 2px var(--primary-wash)!important}
+#approvedUI .pvb-dialog:has(.pvb-appearance-picker){width:min(440px,calc(100vw - 24px));max-height:90dvh;overflow-y:auto}
+#approvedUI .pvb-rename[title]{cursor:pointer}
+#pvHistoryDialog .pv-history-back[hidden]{display:none!important}
+@media(max-width:480px){#approvedUI .pvb-icon-options{grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}#approvedUI .pvb-color-options{gap:4px}#approvedUI .pvb-icon-choice{height:38px}#approvedUI .pvb-color-choice{height:34px}}
