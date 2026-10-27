@@ -11,7 +11,8 @@
     "verify:upgrade": "node tools/verify-upgrade.mjs",
     "test:security": "node tools/test-security-hardening.mjs",
     "test:history": "node tools/test-edit-history.mjs",
-    "test:recovery": "node tools/test-phase1-recovery.mjs"
+    "test:recovery": "node tools/test-phase1-recovery.mjs",
+    "test:phase3": "node tools/test-phase3-experience.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.117.3"

@@ -33,6 +33,8 @@ jobs:
         run: npm run test:history
       - name: Test encrypted data recovery
         run: npm run test:recovery
+      - name: Test premium vault experience and custom-field compatibility
+        run: npm run test:phase3
       - name: Build local SDK and project-scoped CSP
         run: npm run build
       - name: Verify static build

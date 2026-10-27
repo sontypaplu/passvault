@@ -385,14 +385,32 @@ function render(){
  renderAccountIdentity();
 }
 window.pvRenderApprovedStatus=()=>{if(ready())render();};
-function addCustom(label='',value=''){
+function addCustom(label='',value='',fieldType='secret'){
  const holder=$('approvedCustomFields');if(holder.children.length>=10){tip('Maximum 10 custom fields');return;}
- const div=document.createElement('div');div.className='approved-custom-row';
- const key=document.createElement('input');key.placeholder='Field name';key.maxLength=60;key.value=label;key.setAttribute('aria-label','Custom field name');
- const val=document.createElement('input');val.placeholder='Field value';val.maxLength=1024;val.value=value;val.setAttribute('aria-label','Custom field value');
- const btn=document.createElement('button');btn.type='button';btn.className='btn btn-light';btn.textContent='×';btn.setAttribute('aria-label','Remove custom field');btn.addEventListener('click',()=>div.remove());
- div.append(key,val,btn);holder.append(div);
+ const div=document.createElement('div');div.className='approved-custom-row pv-custom-field-row';
+ const key=document.createElement('input');key.placeholder='Field name';key.maxLength=60;key.value=label;key.autocomplete='off';key.setAttribute('aria-label','Custom field name');
+ const fieldTypeSelect=document.createElement('select');fieldTypeSelect.className='pv-custom-type';fieldTypeSelect.setAttribute('aria-label','Custom field type');
+ for(const [v,title] of [['secret','Secret'],['text','Text'],['url','URL'],['date','Date']]){const option=document.createElement('option');option.value=v;option.textContent=title;fieldTypeSelect.append(option);}
+ fieldTypeSelect.value=['secret','text','url','date'].includes(fieldType)?fieldType:'secret';
+ const val=document.createElement('input');val.type=fieldTypeSelect.value==='secret'?'password':'text';val.placeholder='Field value';val.maxLength=1024;val.value=value;val.autocomplete='off';val.spellcheck=false;val.setAttribute('aria-label','Custom field value');
+ fieldTypeSelect.addEventListener('change',()=>{val.type=fieldTypeSelect.value==='secret'?'password':'text';reveal.hidden=fieldTypeSelect.value!=='secret';reveal.textContent='Show';});
+ const reveal=document.createElement('button');reveal.type='button';reveal.className='btn btn-light pv-custom-reveal';reveal.textContent='Show';reveal.setAttribute('aria-label','Show custom field value');
+ reveal.addEventListener('click',()=>{const shown=val.type==='password';val.type=shown?'text':'password';reveal.textContent=shown?'Hide':'Show';reveal.setAttribute('aria-label',(shown?'Hide':'Show')+' custom field value');});
+ const btn=document.createElement('button');btn.type='button';btn.className='btn btn-light pv-custom-remove';btn.textContent='×';btn.setAttribute('aria-label','Remove custom field');btn.addEventListener('click',()=>div.remove());
+ div.append(key,fieldTypeSelect,val,reveal,btn);reveal.hidden=fieldTypeSelect.value!=='secret';holder.append(div);
 }
+function renderTagSuggestions(){
+ const target=$('pvTagSuggestions');target.replaceChildren();if(!ready()||!$('editorDialog').open)return;
+ const current=$('approvedTags').value.split(',').map(tag=>tag.trim().toLocaleLowerCase()).filter(Boolean);
+ const tags=[...new Set(getItems().flatMap(item=>Array.isArray(item.tags)?item.tags:[]))].filter(tag=>!current.includes(tag.toLocaleLowerCase())).sort((a,b)=>a.localeCompare(b)).slice(0,8);
+ if(!tags.length)return;
+ const label=document.createElement('span');label.className='pv-tag-suggestion-label';label.textContent='USE EXISTING TAG';target.append(label);
+ for(const tag of tags){
+  const button=document.createElement('button');button.type='button';button.className='pv-tag-suggestion';button.textContent='+ '+tag;
+  button.addEventListener('click',()=>{const existing=$('approvedTags').value.split(',').map(x=>x.trim()).filter(Boolean);if(existing.length>=10){tip('Maximum 10 tags');return;}if(!existing.some(x=>x.toLowerCase()===tag.toLowerCase()))existing.push(tag);$('approvedTags').value=existing.join(', ');renderTagSuggestions();$('approvedTags').focus();});target.append(button);
+ }
+}
+
 function openEditor(id=null,prepass='',targetBasket='everyday'){
  if(!ready())return;
  if(!id&&basketCapacityReached()){tip('This vault is full: maximum 10 items.');return;}
@@ -407,10 +425,77 @@ function openEditor(id=null,prepass='',targetBasket='everyday'){
  $('itemNotes').value=x?.notes||'';$('itemFavorite').checked=!!x?.favorite;
  $('approvedExpiry').value=x?.expiry||'';$('approvedCvv').value=x?.cvv||'';
  $('approvedTags').value=Array.isArray(x?.tags)?x.tags.join(', '):'';
- for(const f of (x?.customFields||[]))addCustom(f.label,f.value);
+ for(const f of (x?.customFields||[]))addCustom(f.label,f.value,f.type||'secret');
  $('approvedEditorError').textContent='';$('approvedEditorTitle').textContent=x?'Edit item':'New item';
  $('itemPassword').type='password';$('editorReveal').textContent='Show';changeKind(kind);
- $('editorDialog').showModal();$('itemTitle').focus();
+ $('editorDialog').showModal();renderTagSuggestions();$('itemTitle').focus();
+}
+// Quick Access never searches passwords, secure-note bodies, card numbers, or custom-field values.
+// Query and results exist only in the unlocked document and are erased when the vault locks.
+const commandEntries=[
+ {name:'All items',description:'Browse encrypted items',action:'page:items'},
+ {name:'Security center',description:'Review local security checks',action:'page:security'},
+ {name:'Encrypted history',description:'Browse item versions',action:'settings:history'},
+ {name:'Recycle Bin',description:'Restore deleted items',action:'settings:recycle'},
+ {name:'Encrypted backups',description:'Export and verify backups',action:'settings:backups'},
+ {name:'Create login',description:'New password entry',action:'create:login'},
+ {name:'Create secure note',description:'New private note',action:'create:note'},
+ {name:'Create payment card',description:'New card entry',action:'create:card'},
+ {name:'Lock vault',description:'Secure the current vault',action:'lock'}
+];
+function commandOpen(){
+ if(!ready()||document.querySelector('dialog[open]'))return;
+ $('pvCommandInput').value='';commandRender();$('pvCommandDialog').showModal();$('pvCommandInput').focus();
+}
+function commandClear(){
+ $('pvCommandInput').value='';$('pvCommandResults').replaceChildren();
+ if($('pvCommandDialog').open)$('pvCommandDialog').close();
+}
+function commandRender(){
+ const results=$('pvCommandResults');results.replaceChildren();if(!ready())return;
+ const term=$('pvCommandInput').value.trim().toLocaleLowerCase();
+ const actions=commandEntries.filter(c=>!term||c.name.toLocaleLowerCase().includes(term)||c.description.toLocaleLowerCase().includes(term));
+ const matches=getItems().filter(item=>[item.title,item.username,item.url,...(item.tags||[])].some(value=>String(value||'').toLocaleLowerCase().includes(term))).slice(0,12);
+ const section=(name)=>{const heading=document.createElement('p');heading.className='pv-command-group';heading.textContent=name;results.append(heading);};
+ if(matches.length){section('VAULT ITEMS');for(const item of matches){
+  const button=document.createElement('button');button.type='button';button.className='pv-command-entry';button.dataset.commandItem=item.id;
+  const emblem=document.createElement('span');emblem.className='pv-command-emblem';emblem.textContent=itemKind(item)==='card'?'▣':itemKind(item)==='note'?'▤':'⚿';
+  const content=document.createElement('span');content.className='pv-command-copy';
+  const title=document.createElement('strong');title.textContent=item.title;
+  const sub=document.createElement('small');sub.textContent=kindLabel[itemKind(item)]+(Array.isArray(item.tags)&&item.tags.length?' · '+item.tags.join(' · '):'');
+  content.append(title,sub);const arrow=document.createElement('span');arrow.textContent='↗';arrow.setAttribute('aria-hidden','true');button.append(emblem,content,arrow);results.append(button);
+ }}
+ if(actions.length){section('ACTIONS');for(const action of actions){
+  const button=document.createElement('button');button.type='button';button.className='pv-command-entry';button.dataset.commandAction=action.action;
+  const emblem=document.createElement('span');emblem.className='pv-command-emblem';emblem.textContent='→';
+  const copy=document.createElement('span');copy.className='pv-command-copy';const title=document.createElement('strong');title.textContent=action.name;const small=document.createElement('small');small.textContent=action.description;copy.append(title,small);button.append(emblem,copy);results.append(button);
+ }}
+ if(!matches.length&&!actions.length){const empty=document.createElement('p');empty.className='pv-command-empty';empty.textContent='No matching items or actions.';results.append(empty);}
+}
+function commandRun(button){
+ if(!ready())return;
+ const itemId=button.dataset.commandItem,action=button.dataset.commandAction;
+ commandClear();
+ if(itemId){openDetail(itemId);return;}
+ if(!action)return;
+ if(action==='lock'){lockVault('Manual lock');return;}
+ if(action.startsWith('page:')){navigate(action.slice(5));return;}
+ if(action.startsWith('settings:')){navigate('settings');openSettingsSection(action.slice(9));return;}
+ if(action.startsWith('create:')){openEditor();if($('editorDialog').open)changeKind(action.slice(7));}
+}
+function detailNoteClose(){
+ $('pvDetailNoteContent').textContent='';$('pvDetailNoteTitle').textContent='Secure note';$('pvDetailNoteDialog').classList.remove('expanded');
+ $('pvDetailNoteExpand').textContent='Expand';$('pvDetailNoteExpand').setAttribute('aria-expanded','false');
+ if($('pvDetailNoteDialog').open)$('pvDetailNoteDialog').close();
+}
+function detailNoteOpen(field){
+ if(!ready()||!['content','notes'].includes(field))return;
+ const item=findItem(selected);if(!item)return;
+ const content=field==='content'?(itemKind(item)==='note'?item.password:''):item.notes;
+ if(!content)return;
+ $('pvDetailNoteTitle').textContent=field==='content'?item.title:'Additional notes';
+ $('pvDetailNoteContent').textContent=content;
+ $('pvDetailNoteDialog').showModal();$('pvDetailNoteDone').focus();
 }
 function changeKind(v){kind=v;for(const k of ['login','note','card'])$(k+'Fields').classList.toggle('hidden',k!==kind);document.querySelectorAll('#approvedUI [data-kind]').forEach(el=>el.classList.toggle('selected',el.dataset.kind===kind));}
 function saveItem(event){
@@ -430,7 +515,15 @@ function saveItem(event){
   if(password.length>2048)throw new Error('Secret is too long.');
   const tags=[...new Set($('approvedTags').value.split(',').map(x=>x.trim()).filter(Boolean))];
   if(tags.length>10||tags.some(x=>x.length>40))throw new Error('Maximum 10 tags, up to 40 characters each.');
-  const customFields=[];for(const row of $('approvedCustomFields').children){const [name,value]=row.querySelectorAll('input');if(name.value.trim())customFields.push({label:name.value.trim(),value:value.value});}
+  const customFields=[];for(const row of $('approvedCustomFields').children){
+   const [name,value]=row.querySelectorAll('input'),fieldType=row.querySelector('select')?.value||'secret';
+   if(!name.value.trim()){if(value.value.trim())throw new Error('Give every custom field a name.');continue;}
+   const val=value.value;
+   if(fieldType==='date'&&val){const date=new Date(val+'T00:00:00Z');if(!/^\d{4}-\d{2}-\d{2}$/.test(val)||!Number.isFinite(date.getTime())||date.toISOString().slice(0,10)!==val)throw new Error('Custom dates must be valid YYYY-MM-DD dates.');}
+   if(fieldType==='url'&&val){let parsed;try{parsed=new URL(val);}catch{throw new Error('Custom URLs must include https:// and a valid domain.');}if(!['https:','http:'].includes(parsed.protocol)||!parsed.hostname||parsed.username||parsed.password)throw new Error('Invalid custom URL.');}
+   customFields.push({label:name.value.trim(),value:val,type:fieldType});
+  }
+  if(new Set(customFields.map(f=>f.label.toLowerCase())).size!==customFields.length)throw new Error('Custom field names must be unique.');
   const existing=editId?findItem(editId):null,now=new Date().toISOString();
   if(kind==='card'){
    const number=$('itemCardnumber').value.replace(/[\s-]/g,'');
@@ -465,10 +558,12 @@ function openDetail(id){
  $('detailTitle').textContent=x.title;
  const k=itemKind(x),fields=[detail('Type',kindLabel[k])];
  if(k==='login')fields.push(detail('Username',x.username,true),detail('Password',x.password,true,true),detail('Website',x.url));
- else if(k==='note')fields.push(detail('Content',x.password,true,true));
+ else if(k==='note')fields.push(`<div class="detail-row"><small>Secure note</small><div class="detail-value"><button type="button" class="pv-note-open" data-detail-note="content">Read full note →</button><button type="button" class="rowbtn" data-copy="Content" aria-label="Copy secure note" title="Copy note">${icon('copy')}</button></div></div>`);
  else{fields.push(detail('Cardholder',x.username),detail('Card number',x.password,true,true));if(x.expiry)fields.push(detail('Expiry',x.expiry));if(x.cvv)fields.push(detail('Security code',x.cvv,true,true));}
- fields.push(detail('Notes',x.notes));if(x.tags?.length)fields.push(detail('Tags',x.tags.join(', ')));
- for(const [i,f] of (x.customFields||[]).entries())fields.push(detail(f.label,f.value,false,true,'custom-'+i));
+ if(x.notes)fields.push(`<div class="detail-row"><small>Additional notes</small><div class="detail-value"><button type="button" class="pv-note-open" data-detail-note="notes">Read full note →</button></div></div>`);
+ if(x.tags?.length)fields.push(detail('Tags',x.tags.join(', ')));
+ fields.push(detail('Created',new Date(x.createdAt).toLocaleString()));fields.push(detail('Updated',new Date(x.updatedAt).toLocaleString()));
+ for(const [i,f] of (x.customFields||[]).entries())fields.push(detail(f.label,f.value,false,!f.type||f.type==='secret','custom-'+i));
  $('detailBody').innerHTML=fields.join('');$('favoriteDetail').innerHTML=icon('star')+(x.favorite?'Unfavorite':'Favorite');$('detailDialog').showModal();
 }
 function currentValue(label,x){if(/^custom-\d+$/.test(label))return x.customFields?.[Number(label.slice(7))]?.value||'';if(label==='Username')return x.username;if(label==='Password'||label==='Content'||label==='Card number')return x.password;if(label==='Security code')return x.cvv||'';return '';}
@@ -513,6 +608,7 @@ function createVaultModal(){
 function clearGeneratedDisplays(){
  window.PassVaultHistoryUI?.clear();
  window.PassVaultPhase1?.clear();
+ commandClear();detailNoteClose();$('pvTagSuggestions').replaceChildren();
  quick='';generated='';$('quickPassword').textContent='';$('approvedGeneratedPassword').textContent='';
  for(const id of ['itemPassword','itemContent','itemCardnumber','approvedCvv'])$(id).value='';
  $('itemPassword').type='password';$('editorReveal').textContent='Show';
@@ -697,7 +793,29 @@ $('learnDesign').addEventListener('click',()=>info('Private by design','Encrypti
 $('vaultForm').addEventListener('submit',e=>{e.preventDefault(); // Important: never use the fake prototype form as a vault creation endpoint.
  const label=$('vaultName').value.trim();$('vaultDialog').close();createVault();if(label){els.newVaultName.value=label;}
 });
-$('editorDialog').addEventListener('close',()=>{$('editorForm').reset();$('approvedCustomFields').replaceChildren();});
+$('editorDialog').addEventListener('close',()=>{$('editorForm').reset();$('approvedCustomFields').replaceChildren();$('pvTagSuggestions').replaceChildren();});
+$('approvedTags').addEventListener('input',renderTagSuggestions);
+$('pvCommandTrigger').addEventListener('click',commandOpen);
+$('pvCommandNav').addEventListener('click',()=>{closeMenu();commandOpen();});
+$('pvCommandDismiss').addEventListener('click',commandClear);
+$('pvCommandInput').addEventListener('input',commandRender);
+$('pvCommandInput').addEventListener('keydown',event=>{
+ if(event.key==='ArrowDown'){event.preventDefault();$('pvCommandResults').querySelector('button')?.focus();}
+ else if(event.key==='Enter'){event.preventDefault();const first=$('pvCommandResults').querySelector('button');if(first)commandRun(first);}
+});
+$('pvCommandResults').addEventListener('keydown',event=>{
+ if(event.key!=='ArrowDown'&&event.key!=='ArrowUp')return;
+ const buttons=[...$('pvCommandResults').querySelectorAll('button')];const index=buttons.indexOf(document.activeElement);
+ if(index<0)return;event.preventDefault();const next=index+(event.key==='ArrowDown'?1:-1);if(next<0)$('pvCommandInput').focus();else buttons[Math.min(next,buttons.length-1)]?.focus();
+});
+$('pvCommandResults').addEventListener('click',event=>{const button=event.target.closest('button');if(button)commandRun(button);});
+$('pvCommandDialog').addEventListener('close',()=>{$('pvCommandInput').value='';$('pvCommandResults').replaceChildren();});
+$('pvDetailNoteClose').addEventListener('click',detailNoteClose);
+$('pvDetailNoteDone').addEventListener('click',detailNoteClose);
+$('pvDetailNoteExpand').addEventListener('click',()=>{const dialog=$('pvDetailNoteDialog');const expanded=dialog.classList.toggle('expanded');$('pvDetailNoteExpand').textContent=expanded?'Compact':'Expand';$('pvDetailNoteExpand').setAttribute('aria-expanded',String(expanded));});
+$('pvDetailNoteDialog').addEventListener('close',()=>{ $('pvDetailNoteContent').textContent='';$('pvDetailNoteDialog').classList.remove('expanded');$('pvDetailNoteExpand').textContent='Expand';$('pvDetailNoteExpand').setAttribute('aria-expanded','false');});
+$('detailBody').addEventListener('click',event=>{const button=event.target.closest('[data-detail-note]');if(button)detailNoteOpen(button.dataset.detailNote);});
+
 $('detailDialog').addEventListener('close',()=>$('detailBody').replaceChildren());
 document.addEventListener('click',e=>{
  if(!e.target.closest('#accountMenu, #accountShortcut'))closeAccountMenu();
@@ -817,7 +935,8 @@ $('pvbGrid').addEventListener('pointerup',endBasketPointer);
 $('pvbGrid').addEventListener('pointercancel',endBasketPointer);
 document.addEventListener('keydown',e=>{
  if(!ready())return;
- if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();$('search').focus();}
+ if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();commandOpen();}
+ if(e.altKey&&!e.ctrlKey&&!e.metaKey&&!e.repeat&&!['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName)&&!document.querySelector('dialog[open]')){if(e.key.toLowerCase()==='n'){e.preventDefault();openEditor();}else if(e.key.toLowerCase()==='l'){e.preventDefault();lockVault('Manual lock');}}
  if(e.key==='Escape'){$('flowsMenu').classList.add('hidden');$('flowsToggle').setAttribute('aria-expanded','false');closeAccountMenu();closeMenu();$('approvedSidebar').classList.remove('pinned');$('openMenu').setAttribute('aria-expanded','false');}
 });
 window.addEventListener('popstate',()=>{if(ready()){const v=new URL(location.href).searchParams.get('view');navigate(pageTitles[v]?v:'overview',false);}});
