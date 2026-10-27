@@ -49,6 +49,7 @@ const pvSettingsSectionMeta={
  session:['Sessions & clipboard','Control inactivity locking and clipboard clearing.','lock'],
  backups:['Encrypted backups','Export your encrypted vault securely.','download'],
  history:['Encrypted edit history','Browse changes recorded inside the encrypted vault.','refresh'],
+ recycle:['Recycle Bin','','trash'],
  account:['Account security','Manage your account password.','key'],
  management:['Vault & account management','Review vaults and sensitive account actions.','shield-check']
 };
@@ -60,8 +61,9 @@ function openSettingsSection(key){
  const meta=pvSettingsSectionMeta[key];if(!meta)return;
  $('pvSettingsHome').hidden=true;$('pvSettingsDetail').hidden=false;
  document.querySelectorAll('#approvedUI [data-settings-panel]').forEach(panel=>panel.hidden=panel.dataset.settingsPanel!==key);
- $('pvSettingsDetailTitle').textContent=meta[0];$('pvSettingsDetailDescription').textContent=meta[1];
+ $('pvSettingsDetailTitle').textContent=meta[0];$('pvSettingsDetailDescription').textContent=meta[1];$('pvSettingsDetailDescription').hidden=!meta[1];
  $('pvSettingsDetailIcon').innerHTML=icon(meta[2]);
+ if(key==='recycle')window.PassVaultPhase1?.refresh();
  $('pvSettingsDetailTitle').focus({preventScroll:true});
  document.getElementById('page-settings').scrollIntoView({block:'start',behavior:'instant'});
 }
@@ -479,11 +481,10 @@ function toggleFavorite(id){
 }
 function deleteItem(){
  const x=findItem(selected);if(!x)return;
- if(!window.confirm(`Permanently remove “${x.title}” and its encrypted edit history from this vault?`))return;
- try{purgeVaultItemHistory(x.id);}catch(error){tip(error.message);return;}
- state.vault.credentials=state.vault.credentials.filter(item=>item.id!==x.id);
- state.vault.updatedAt=new Date().toISOString();setDirty(true);
- $('detailDialog').close();selected=null;renderVault();tip('Item removed · encrypted sync scheduled');
+ if(!window.confirm(`Move “${x.title}” to the encrypted Recycle Bin? You can restore it later.`))return;
+ try{moveVaultItemToRecycleBin(x.id);}catch(error){tip(error.message);return;}
+ setDirty(true);
+ $('detailDialog').close();selected=null;renderVault();tip('Item moved to Recycle Bin · encrypted sync scheduled');
 }
 async function copyValue(value){
  if(!ready()||!value)return;
@@ -511,6 +512,7 @@ function createVaultModal(){
 }
 function clearGeneratedDisplays(){
  window.PassVaultHistoryUI?.clear();
+ window.PassVaultPhase1?.clear();
  quick='';generated='';$('quickPassword').textContent='';$('approvedGeneratedPassword').textContent='';
  for(const id of ['itemPassword','itemContent','itemCardnumber','approvedCvv'])$(id).value='';
  $('itemPassword').type='password';$('editorReveal').textContent='Show';

@@ -182,8 +182,15 @@
       const batch=display.slice(offset,offset+BATCH);offset+=batch.length;
       for(const entry of batch) {
         const tr=element('tr');tr.append(element('td','pv-history-time',entry.at?stamp(entry.at):'Earlier state'));
-        tr.append(element('td','pv-history-event-type',entry.action==='created'?'Created':entry.action==='baseline'?'Baseline':entry.action==='deleted'?'Deleted':'Edited'));
+        const eventCell=element('td','pv-history-event-type',entry.action==='created'?'Created':entry.action==='baseline'?'Baseline':entry.action==='deleted'?'Deleted':entry.action==='restored'?'Restored':'Edited');
         const event=lookup(entry.recordId);
+        if(event?.[entry.side] && entry.action!=='deleted') {
+          const restore=element('button','pv-recovery-history-restore','Restore version');restore.type='button';
+          restore.setAttribute('aria-label',`Restore this item version saved ${entry.at?stamp(entry.at):'in the baseline'}`);
+          restore.addEventListener('click',()=>window.PassVaultPhase1?.restoreVersion(itemId,entry.recordId,entry.side==='before'));
+          eventCell.append(restore);
+        }
+        tr.append(eventCell);
         for(const [field,label] of fields) {
           const td=element('td','pv-history-cell');
           const changed=entry.fields.includes(field);

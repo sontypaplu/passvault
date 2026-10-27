@@ -465,6 +465,7 @@ function validateVaultPlaintext(vault) {
   }
 
   validateVaultHistory(vault);
+  validateVaultRecycleBin(vault);
   return true;
 }
 
@@ -479,7 +480,7 @@ const HISTORY_FIELDS = Object.freeze([
 ]);
 const MAX_VAULT_HISTORY = 2000;
 const HISTORY_PLAINTEXT_BUDGET = 24 * 1024 * 1024;
-const HISTORY_ACTIONS = Object.freeze(['created', 'edited', 'deleted']);
+const HISTORY_ACTIONS = Object.freeze(['created', 'edited', 'deleted', 'restored']);
 function historySnapshot(item) {
   if (!item) return null;
   const snapshot = {};
@@ -508,7 +509,7 @@ function validateVaultHistory(vault) {
         !Array.isArray(record.fields) || !record.fields.length || record.fields.length > HISTORY_FIELDS.length ||
         record.fields.some(field => !HISTORY_FIELDS.includes(field)) ||
         (record.before === null && record.after === null) ||
-        (record.action === 'created' && record.before !== null) ||
+        ((record.action === 'created' || record.action === 'restored') && (record.before !== null || record.after === null)) ||
         (record.action === 'deleted' && record.after !== null) ||
         (record.action === 'edited' && (record.before === null || record.after === null)))
       throw new Error('Encrypted edit history record is invalid.');
@@ -568,6 +569,123 @@ function recordVaultHistory(before, after, action, at = new Date().toISOString()
   if (new TextEncoder().encode(JSON.stringify(candidate)).length > HISTORY_PLAINTEXT_BUDGET)
     throw new Error('Vault is approaching its encrypted size limit. Export an encrypted backup before continuing.');
   state.vault.editHistory = nextLog;
+  return true;
+}
+
+/* Phase 1 recovery data shares the EXISTING authenticated encrypted payload.
+ * Never put these entries into browser storage or an unencrypted cloud table.
+ * No automatic pruning: deletion of a bin entry is a conscious user action.
+ */
+const MAX_RECYCLE_ITEMS = 20;
+function validateVaultRecycleBin(vault) {
+  if (vault.recycleBin === undefined) return;
+  if (!Array.isArray(vault.recycleBin) || vault.recycleBin.length > MAX_RECYCLE_ITEMS)
+    throw new Error('Encrypted recycle bin is invalid or full.');
+  const active = new Set(vault.credentials.map(item => item.id));
+  const deleted = new Set();
+  for (const entry of vault.recycleBin) {
+    if (!entry || typeof entry !== 'object' || Array.isArray(entry) ||
+        typeof entry.deletedAt !== 'string' || !Number.isFinite(Date.parse(entry.deletedAt)) ||
+        !entry.item || typeof entry.item !== 'object' || Array.isArray(entry.item) ||
+        typeof entry.item.id !== 'string' || !entry.item.id ||
+        active.has(entry.item.id) || deleted.has(entry.item.id))
+      throw new Error('Encrypted recycle bin entry is invalid.');
+    deleted.add(entry.item.id);
+    // Validate archived items with the same strict limits as active items.
+    validateVaultPlaintext({schemaVersion:1,id:vault.id,name:vault.name,
+      credentials:[entry.item]});
+  }
+}
+function verifyRecoveryCandidate(candidate) {
+  validateVaultPlaintext(candidate);
+  if (new TextEncoder().encode(JSON.stringify(candidate)).length > HISTORY_PLAINTEXT_BUDGET)
+    throw new Error('Encrypted vault is nearing its size limit. Export a backup and permanently clear unneeded bin entries.');
+}
+function recoveryEvent(before, after, action, at) {
+  return {
+    id:secureId(), itemId:(after || before).id, action, at,
+    title:(after || before).title,
+    fields:changedHistoryFields(before,after),
+    before:historySnapshot(before),after:historySnapshot(after)
+  };
+}
+function requireRecoverySlot() {
+  if (!state.vault || state.locked) throw new Error('Unlock your vault first.');
+  if ((state.vault.editHistory || []).length >= MAX_VAULT_HISTORY)
+    throw new Error('Encrypted history is full. Export a backup before changing items.');
+}
+function moveVaultItemToRecycleBin(itemId) {
+  requireRecoverySlot();
+  const item=state.vault.credentials.find(x=>x.id===itemId);
+  if (!item) throw new Error('Item is no longer available.');
+  const recycleBin=state.vault.recycleBin || [];
+  if (recycleBin.length>=MAX_RECYCLE_ITEMS)
+    throw new Error('Recycle Bin is full (20 items). Permanently delete an unneeded item first.');
+  const at=new Date().toISOString();
+  const candidate={...state.vault,
+    credentials:state.vault.credentials.filter(x=>x.id!==itemId),
+    recycleBin:[...recycleBin,{item:JSON.parse(JSON.stringify(item)),deletedAt:at}],
+    editHistory:[...(state.vault.editHistory || []),recoveryEvent(item,null,'deleted',at)],
+    updatedAt:at};
+  verifyRecoveryCandidate(candidate);
+  Object.assign(state.vault,{credentials:candidate.credentials,recycleBin:candidate.recycleBin,
+    editHistory:candidate.editHistory,updatedAt:at});
+  return true;
+}
+function restoreVaultRecycleItem(itemId) {
+  requireRecoverySlot();
+  const entry=(state.vault.recycleBin || []).find(x=>x.item.id===itemId);
+  if (!entry) throw new Error('Deleted item is no longer available.');
+  if (state.vault.credentials.some(x=>x.id===itemId)) throw new Error('An item with this ID already exists.');
+  if (state.vault.credentials.length>=10) throw new Error('Vault is full (10 items). Remove another item before restoring.');
+  const at=new Date().toISOString();
+  const item={...entry.item,updatedAt:at};
+  const candidate={...state.vault,
+    credentials:[...state.vault.credentials,item],
+    recycleBin:state.vault.recycleBin.filter(x=>x.item.id!==itemId),
+    editHistory:[...(state.vault.editHistory || []),recoveryEvent(null,item,'restored',at)],
+    updatedAt:at};
+  verifyRecoveryCandidate(candidate);
+  Object.assign(state.vault,{credentials:candidate.credentials,recycleBin:candidate.recycleBin,
+    editHistory:candidate.editHistory,updatedAt:at});
+  return true;
+}
+function permanentlyDeleteRecycleItem(itemId) {
+  if (!state.vault || state.locked) throw new Error('Unlock your vault first.');
+  if (!(state.vault.recycleBin || []).some(x=>x.item.id===itemId)) throw new Error('Deleted item not found.');
+  const candidate={...state.vault,
+    recycleBin:state.vault.recycleBin.filter(x=>x.item.id!==itemId),
+    editHistory:(state.vault.editHistory || []).filter(e=>e.itemId!==itemId),
+    updatedAt:new Date().toISOString()};
+  verifyRecoveryCandidate(candidate);
+  Object.assign(state.vault,{recycleBin:candidate.recycleBin,editHistory:candidate.editHistory,
+    updatedAt:candidate.updatedAt});
+  return true;
+}
+function restoreVaultItemHistoryVersion(itemId, historyId, useBefore=false) {
+  requireRecoverySlot();
+  const original=state.vault.credentials.find(x=>x.id===itemId);
+  const event=(state.vault.editHistory || []).find(e=>e.id===historyId && e.itemId===itemId);
+  const snapshot=event?.[useBefore?'before':'after'];
+  if (!original || !snapshot) throw new Error('The requested version is unavailable.');
+  // Construct a FULL historical snapshot; do not carry future optional fields
+  // into a version where they did not exist.
+  const at=new Date().toISOString();
+  const restored={id:original.id, createdAt:original.createdAt,updatedAt:at,
+    title:snapshot.title??original.title,url:snapshot.url??'',
+    username:snapshot.username??'',password:snapshot.password??'',notes:snapshot.notes??''};
+  for (const key of HISTORY_FIELDS) {
+    if (Object.hasOwn(snapshot,key) && !['title','url','username','password','notes'].includes(key))
+      restored[key]=JSON.parse(JSON.stringify(snapshot[key]));
+  }
+  const changes=changedHistoryFields(original,restored);
+  if (!changes.length) return false;
+  const candidate={...state.vault,
+    credentials:state.vault.credentials.map(x=>x.id===itemId?restored:x),
+    editHistory:[...(state.vault.editHistory || []),recoveryEvent(original,restored,'edited',at)],
+    updatedAt:at};
+  verifyRecoveryCandidate(candidate);
+  Object.assign(state.vault,{credentials:candidate.credentials,editHistory:candidate.editHistory,updatedAt:at});
   return true;
 }
 
