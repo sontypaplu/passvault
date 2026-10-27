@@ -196,7 +196,9 @@
   function toggleFavorite(id) {
     if(!requireReady())return;
     const it=records().find(x=>x.id===id);if(!it)return;
-    it.favorite=!it.favorite;it.updatedAt=new Date().toISOString();state.vault.updatedAt=it.updatedAt;
+    const now=new Date().toISOString();
+    try{recordVaultHistory(it, {...it, favorite:!it.favorite, updatedAt:now}, 'edited', now);}catch(error){notify(error.message);return;}
+    it.favorite=!it.favorite;it.updatedAt=now;state.vault.updatedAt=now;
     setDirty(true);renderVault();notify(it.favorite?'Added to favorites':'Removed from favorites');
   }
   function openEditor(id=null,prePassword='') {
@@ -257,6 +259,7 @@
       if(!existing && records().length>=10)throw new Error('Maximum 10 items per vault. Existing items can still be edited.');
       const candidate = existing ? records().map(x => x.id === existing.id ? data : x) : [...records(),data];
       validateVaultPlaintext({...state.vault, credentials:candidate});
+      recordVaultHistory(existing, data, existing?'edited':'created', now);
       if(existing)Object.assign(existing,data);else state.vault.credentials.push(data);
       state.vault.updatedAt=now;setDirty(true);
       pv('pv3ItemDialog').close();pv('pv3ItemForm').reset();pv('pv3CustomFields').replaceChildren();
@@ -288,7 +291,8 @@
   function deleteItem() {
     if(!requireReady())return;
     const item=records().find(x=>x.id===ui.detailId);if(!item)return;
-    if(!window.confirm(`Permanently remove “${item.title}” from this vault?`))return;
+    if(!window.confirm(`Permanently remove “${item.title}” and its encrypted edit history from this vault?`))return;
+    try{purgeVaultItemHistory(item.id);}catch(error){notify(error.message);return;}
     state.vault.credentials=state.vault.credentials.filter(x=>x.id!==item.id);
     state.vault.updatedAt=new Date().toISOString();setDirty(true);
     pv('pv3DetailDialog').close();ui.detailId=null;renderVault();notify('Item removed · encrypted sync scheduled');

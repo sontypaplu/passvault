@@ -331,6 +331,7 @@ async function saveAccountProfile(e){
 }
 function render(){
  if(!ready())return;
+ if(page==='settings')window.PassVaultHistoryUI?.refresh();
  const items=getItems(),h=computeHealth(),vs=vaults();
  $('navCount').textContent=items.length;
  document.querySelectorAll('#approvedUI [data-new]').forEach(button=>{button.disabled=basketCapacityReached();button.title=basketCapacityReached()?'10-item limit reached':'';});
@@ -418,6 +419,7 @@ function saveItem(event){
   const data={id:existing?.id||secureId(),kind,title,url,username,password,notes:$('itemNotes').value,favorite:$('itemFavorite').checked,tags,customFields,expiry:kind==='card'?$('approvedExpiry').value.trim():'',cvv:kind==='card'?$('approvedCvv').value:'',createdAt:existing?.createdAt||now,updatedAt:now};
   const candidate=existing?getItems().map(x=>x.id===existing.id?data:x):[...getItems(),data];
   validateVaultPlaintext({...state.vault,credentials:candidate});
+  recordVaultHistory(existing, data, existing?'edited':'created', now);
   if(existing)Object.assign(existing,data);else {
    state.vault.credentials.push(data);
    if(isBasketId(basketCreateTarget)){
@@ -447,12 +449,15 @@ function openDetail(id){
 function currentValue(label,x){if(/^custom-\d+$/.test(label))return x.customFields?.[Number(label.slice(7))]?.value||'';if(label==='Username')return x.username;if(label==='Password'||label==='Content'||label==='Card number')return x.password;if(label==='Security code')return x.cvv||'';return '';}
 function toggleFavorite(id){
  if(!ready())return;const x=findItem(id);if(!x)return;
- x.favorite=!x.favorite;x.updatedAt=new Date().toISOString();state.vault.updatedAt=x.updatedAt;
+ const now=new Date().toISOString();
+ try{recordVaultHistory(x, {...x, favorite:!x.favorite, updatedAt:now}, 'edited', now);}catch(error){tip(error.message);return;}
+ x.favorite=!x.favorite;x.updatedAt=now;state.vault.updatedAt=now;
  setDirty(true);renderVault();tip(x.favorite?'Added to favorites':'Removed from favorites');
 }
 function deleteItem(){
  const x=findItem(selected);if(!x)return;
- if(!window.confirm(`Permanently remove “${x.title}” from this vault?`))return;
+ if(!window.confirm(`Permanently remove “${x.title}” and its encrypted edit history from this vault?`))return;
+ try{purgeVaultItemHistory(x.id);}catch(error){tip(error.message);return;}
  state.vault.credentials=state.vault.credentials.filter(item=>item.id!==x.id);
  state.vault.updatedAt=new Date().toISOString();setDirty(true);
  $('detailDialog').close();selected=null;renderVault();tip('Item removed · encrypted sync scheduled');
@@ -482,6 +487,7 @@ function createVaultModal(){
  $('vaultName').value='';$('vaultDialog').showModal();$('vaultName').focus();
 }
 function clearGeneratedDisplays(){
+ window.PassVaultHistoryUI?.clear();
  quick='';generated='';$('quickPassword').textContent='';$('approvedGeneratedPassword').textContent='';
  for(const id of ['itemPassword','itemContent','itemCardnumber','approvedCvv'])$(id).value='';
  $('itemPassword').type='password';$('editorReveal').textContent='Show';

@@ -848,6 +848,23 @@ function lockVault(reason = "Vault locked.") {
     }
     state.vault.credentials.length = 0;
   }
+  if (Array.isArray(state.vault?.editHistory)) {
+    for (const event of state.vault.editHistory) {
+      for (const snapshot of [event.before, event.after]) {
+        if (!snapshot) continue;
+        for (const field of HISTORY_FIELDS) {
+          if (typeof snapshot[field] === 'string') snapshot[field] = '';
+          else if (Array.isArray(snapshot[field])) {
+            for (const entry of snapshot[field]) if (entry && typeof entry === 'object') {
+              for (const key of Object.keys(entry)) if (typeof entry[key] === 'string') entry[key] = '';
+            }
+            snapshot[field].length = 0;
+          }
+        }
+      }
+    }
+    state.vault.editHistory.length = 0;
+  }
 
   state.vault = null;
   state.vaultKey = null;
@@ -896,8 +913,9 @@ function deleteCredential(id) {
   const index = state.vault.credentials.findIndex((item) => item.id === id);
   if (index < 0) return;
   const credential = state.vault.credentials[index];
-  if (!window.confirm(`Delete the credential for “${credential.title}”?`)) return;
+  if (!window.confirm(`Permanently delete “${credential.title}” and its encrypted edit history from this vault?`)) return;
 
+  purgeVaultItemHistory(credential.id);
   credential.password = "";
   credential.username = "";
   credential.notes = "";
@@ -919,6 +937,8 @@ function saveCredential() {
   if (state.editingId) {
     const credential = state.vault.credentials.find((item) => item.id === state.editingId);
     if (!credential) throw new Error("The credential being edited no longer exists.");
+    const updated = {...credential, ...draft, updatedAt: now};
+    recordVaultHistory(credential, updated, 'edited', now);
     credential.title = draft.title;
     credential.url = draft.url;
     credential.username = draft.username;
@@ -928,7 +948,7 @@ function saveCredential() {
     setGlobalStatus("Credential updated locally. Encrypted cloud sync scheduled…", "warning");
   } else {
     if (state.vault.credentials.length >= 10) throw new Error('Maximum 10 items per vault. Existing items can still be edited.');
-    state.vault.credentials.push({
+    const newCredential = {
       id: secureId(),
       title: draft.title,
       url: draft.url,
@@ -937,7 +957,9 @@ function saveCredential() {
       notes: draft.notes,
       createdAt: now,
       updatedAt: now
-    });
+    };
+    recordVaultHistory(null, newCredential, 'created', now);
+    state.vault.credentials.push(newCredential);
     setGlobalStatus("Credential added locally. Encrypted cloud sync scheduled…", "warning");
   }
 

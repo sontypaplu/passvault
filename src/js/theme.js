@@ -5,10 +5,10 @@
   const allowed = new Set(['dark', 'light']);
   const initial = (() => {
     try { const t = sessionStorage.getItem('passvault-theme'); if (allowed.has(t)) return t; } catch {}
-    return 'dark';
+    return 'light';
   })();
   function set(theme) {
-    const next = allowed.has(theme) ? theme : 'dark';
+    const next = allowed.has(theme) ? theme : 'light';
     root.dataset.theme = next;
     if(themeColor) themeColor.content = next === 'dark' ? '#090e1b' : '#f5f7fb';
     const premium = document.getElementById('premiumApp');

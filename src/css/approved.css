@@ -702,3 +702,29 @@ html[data-theme="dark"] #approvedUI .pvb-folder{background:var(--primary-wash);c
   #approvedUI .topbar #topNew,
   #approvedUI .topbar .preview-flows {flex-shrink:0}
 }
+
+
+/* Edit history: scoped to the approved Settings UI and modal. */
+#approvedUI .pv-history-settings .pv-history-head{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:12px;font-size:12px}
+#approvedUI .pv-history-settings .pv-history-head span{color:var(--muted)}
+#approvedUI .pv-history-list{display:grid;gap:8px;max-height:280px;overflow-y:auto}
+#approvedUI .pv-history-item{width:100%;text-align:left;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--surface);color:var(--text);cursor:pointer}
+#approvedUI .pv-history-item:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+#approvedUI .pv-history-item-main{display:grid;gap:4px;min-width:0}
+#approvedUI .pv-history-item-main strong{overflow-wrap:anywhere}
+#approvedUI .pv-history-item-main small,#approvedUI .pv-history-chevron,#approvedUI .pv-history-empty{font-size:12px;color:var(--muted)}
+#approvedUI .pv-history-chevron{white-space:nowrap}
+#pvHistoryDialog{width:min(700px,calc(100vw - 28px));max-height:min(86vh,780px);color:var(--text);background:var(--surface)}
+#pvHistoryDialog .pv-history-close{font-size:24px;line-height:1}
+#pvHistoryDialog .pv-history-dialog-body{display:grid;gap:16px;max-height:62vh;overflow-y:auto}
+#pvHistoryDialog .pv-history-event{padding:16px;border:1px solid var(--border);border-radius:14px;min-width:0}
+#pvHistoryDialog .pv-history-event-head{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+#pvHistoryDialog .pv-history-event-head time,#pvHistoryDialog .pv-history-changed{font-size:12px;color:var(--muted)}
+#pvHistoryDialog .pv-history-changed{overflow-wrap:anywhere}
+#pvHistoryDialog .pv-history-field{padding:10px 0;border-top:1px solid var(--border);display:grid;gap:8px}
+#pvHistoryDialog .pv-history-pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+#pvHistoryDialog .pv-history-value{display:grid;gap:6px;min-width:0}
+#pvHistoryDialog .pv-history-value small{color:var(--muted)}
+#pvHistoryDialog .pv-history-value-text{white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px}
+#pvHistoryDialog .pv-history-reveal{justify-self:start;padding:5px 10px;border:1px solid var(--border);border-radius:7px;background:transparent;color:inherit;cursor:pointer}
+@media(max-width:500px){#pvHistoryDialog .pv-history-pair{grid-template-columns:1fr}}
