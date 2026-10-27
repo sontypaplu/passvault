@@ -704,27 +704,57 @@ html[data-theme="dark"] #approvedUI .pvb-folder{background:var(--primary-wash);c
 }
 
 
-/* Edit history: scoped to the approved Settings UI and modal. */
-#approvedUI .pv-history-settings .pv-history-head{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:12px;font-size:12px}
-#approvedUI .pv-history-settings .pv-history-head span{color:var(--muted)}
-#approvedUI .pv-history-list{display:grid;gap:8px;max-height:280px;overflow-y:auto}
-#approvedUI .pv-history-item{width:100%;text-align:left;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--surface);color:var(--text);cursor:pointer}
-#approvedUI .pv-history-item:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
-#approvedUI .pv-history-item-main{display:grid;gap:4px;min-width:0}
-#approvedUI .pv-history-item-main strong{overflow-wrap:anywhere}
-#approvedUI .pv-history-item-main small,#approvedUI .pv-history-chevron,#approvedUI .pv-history-empty{font-size:12px;color:var(--muted)}
-#approvedUI .pv-history-chevron{white-space:nowrap}
-#pvHistoryDialog{width:min(700px,calc(100vw - 28px));max-height:min(86vh,780px);color:var(--text);background:var(--surface)}
-#pvHistoryDialog .pv-history-close{font-size:24px;line-height:1}
-#pvHistoryDialog .pv-history-dialog-body{display:grid;gap:16px;max-height:62vh;overflow-y:auto}
-#pvHistoryDialog .pv-history-event{padding:16px;border:1px solid var(--border);border-radius:14px;min-width:0}
-#pvHistoryDialog .pv-history-event-head{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
-#pvHistoryDialog .pv-history-event-head time,#pvHistoryDialog .pv-history-changed{font-size:12px;color:var(--muted)}
-#pvHistoryDialog .pv-history-changed{overflow-wrap:anywhere}
-#pvHistoryDialog .pv-history-field{padding:10px 0;border-top:1px solid var(--border);display:grid;gap:8px}
-#pvHistoryDialog .pv-history-pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-#pvHistoryDialog .pv-history-value{display:grid;gap:6px;min-width:0}
-#pvHistoryDialog .pv-history-value small{color:var(--muted)}
-#pvHistoryDialog .pv-history-value-text{white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px}
-#pvHistoryDialog .pv-history-reveal{justify-self:start;padding:5px 10px;border:1px solid var(--border);border-radius:7px;background:transparent;color:inherit;cursor:pointer}
-@media(max-width:500px){#pvHistoryDialog .pv-history-pair{grid-template-columns:1fr}}
+/* Compact, category-first history. The table intentionally uses no change
+   highlighting: every unchanged field is represented by a dash. */
+#approvedUI .pv-history-settings .pv-history-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:4px 0 19px}
+#approvedUI .pv-history-stat{min-width:0;display:grid;gap:5px;padding:14px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px}
+#approvedUI .pv-history-stat small{font-size:11px;color:var(--muted)}
+#approvedUI .pv-history-stat strong{font-size:16px;font-weight:750;overflow-wrap:anywhere}
+#approvedUI .pv-history-stat span{font-size:11px;color:var(--muted)}
+#approvedUI .pv-history-browse-label{font-size:11px;text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px}
+#approvedUI .pv-history-list,#pvHistoryDialog .pv-history-modal-list{display:grid;gap:9px}
+#approvedUI .pv-history-category,#pvHistoryDialog .pv-history-item{width:100%;text-align:left;display:flex;align-items:center;gap:13px;padding:13px;border:1px solid var(--border);border-radius:12px;background:var(--surface);color:var(--text);cursor:pointer}
+#approvedUI .pv-history-category:hover,#pvHistoryDialog .pv-history-item:hover{background:var(--surface-2)}
+#approvedUI .pv-history-category-icon{display:grid;place-items:center;flex:0 0 37px;height:37px;border-radius:10px;background:var(--primary-wash);color:var(--primary);font-size:21px}
+#approvedUI .pv-history-category-info,#pvHistoryDialog .pv-history-item-main{display:grid;gap:4px;min-width:0;flex:1}
+#approvedUI .pv-history-category-info strong,#pvHistoryDialog .pv-history-item-main strong{overflow-wrap:anywhere;font-size:13px}
+#approvedUI .pv-history-category-info small,#pvHistoryDialog .pv-history-item-main small{font-size:11px;color:var(--muted);overflow-wrap:anywhere}
+#approvedUI .pv-history-chevron,#pvHistoryDialog .pv-history-chevron{font-size:12px;color:var(--muted);white-space:nowrap;margin-left:auto}
+#approvedUI #pvHistoryDialog{width:min(1100px,calc(100vw - 22px));max-height:90vh;overflow:hidden;color:var(--text);background:var(--surface)}
+#pvHistoryDialog .dialog-head{align-items:center}
+#pvHistoryDialog .pv-history-dialog-heading{min-width:0;flex:1}
+#pvHistoryDialog .pv-history-dialog-heading h2{overflow-wrap:anywhere}
+#pvHistoryDialog .pv-history-back{flex:none;padding:8px 12px}
+#pvHistoryDialog .pv-history-close{flex:none;font-size:22px;line-height:1}
+#pvHistoryDialog .pv-history-dialog-body{display:block;max-height:min(72vh,740px);overflow-y:auto}
+#pvHistoryDialog .pv-history-empty{font-size:13px;color:var(--muted);padding:16px 0}
+#pvHistoryDialog .pv-history-table-hint{font-size:12px;color:var(--muted);line-height:1.6;margin:0 0 12px}
+#pvHistoryDialog .pv-history-table-scroll{width:100%;overflow:auto;border:1px solid var(--border);border-radius:12px;max-height:58vh}
+#pvHistoryDialog .pv-history-table{border-collapse:separate;border-spacing:0;width:max-content;min-width:100%;font-size:12px}
+#pvHistoryDialog .pv-history-table-caption{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+#pvHistoryDialog .pv-history-table th{position:sticky;top:0;z-index:1;background:var(--surface-2);font-size:11px;text-align:left;font-weight:750;color:var(--text);padding:12px 13px;min-width:125px;border-bottom:1px solid var(--border)}
+#pvHistoryDialog .pv-history-table th:first-child{min-width:160px}
+#pvHistoryDialog .pv-history-table th:nth-child(2){min-width:85px}
+#pvHistoryDialog .pv-history-table td{padding:12px 13px;max-width:280px;vertical-align:top;white-space:pre-wrap;overflow-wrap:anywhere;border-bottom:1px solid var(--border);color:var(--text)}
+#pvHistoryDialog .pv-history-table tr:last-child td{border-bottom:0}
+#pvHistoryDialog .pv-history-table .pv-history-time{white-space:nowrap;font-variant-numeric:tabular-nums}
+#pvHistoryDialog .pv-history-table .pv-history-event-type{font-weight:650}
+#pvHistoryDialog .pv-history-reveal,#pvHistoryDialog .pv-history-more{display:inline-flex;align-items:center;justify-content:center;margin-left:8px;padding:5px 9px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--primary);font-size:11px;font-weight:700;cursor:pointer}
+#pvHistoryDialog .pv-history-more{margin:12px 0 0;padding:9px 12px}
+#pvHistoryDialog .pv-history-reveal:hover,#pvHistoryDialog .pv-history-more:hover{background:var(--surface-2)}
+#pvHistoryDialog .pv-history-table-footer{min-height:8px}
+/* Actual destructive controls use the existing verified delete flow. */
+#approvedUI .danger-card .pv-danger-action{display:flex;align-items:center;justify-content:space-between;gap:18px;border-top:1px solid var(--border);padding:15px 0}
+#approvedUI .danger-card .pv-danger-action strong{font-size:13px}
+#approvedUI .danger-card .pv-danger-action small{display:block;font-size:11px;line-height:1.6;margin-top:4px;max-width:550px}
+#approvedUI .danger-card .pv-danger-button{border:1px solid var(--red);color:var(--red);background:var(--red-wash);padding:10px 14px;min-width:132px;font-weight:750;border-radius:10px;white-space:nowrap}
+#approvedUI .danger-card .pv-danger-button:hover{filter:brightness(.96)}
+#approvedUI .approved-account-management .account-settings-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:18px}
+#approvedUI .approved-account-management .section-card{padding:22px}
+#approvedUI .approved-account-management .section-head p{margin:8px 0 18px;font-size:12px}
+#approvedUI .approved-account-management form{display:grid;gap:12px}
+#approvedUI .approved-account-management .field{display:grid;gap:5px}
+#approvedUI .approved-account-management .field label{font-size:12px;font-weight:650}
+#approvedUI .approved-account-management input{width:100%;max-width:480px;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:9px;padding:10px 12px}
+#approvedUI .approved-account-management button[type=submit]{justify-self:start;border-radius:10px;background:var(--primary);color:white;padding:10px 14px;font-weight:750;font-size:12px}
+@media(max-width:600px){#approvedUI .danger-card .pv-danger-action{align-items:stretch;flex-direction:column}#approvedUI .danger-card .pv-danger-button{align-self:flex-start}#pvHistoryDialog .dialog-head{padding:16px;gap:8px}#pvHistoryDialog .dialog-body{padding:14px}#pvHistoryDialog .pv-history-back{padding:6px 8px}}
