@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync, cpSync, mkdirSync, rmSync } from 'node:fs';
+import { readFileSync, writeFileSync, cpSync, mkdirSync, rmSync, readdirSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -26,6 +26,8 @@ const target = join(root, 'dist');
 rmSync(target, { recursive: true, force: true });
 mkdirSync(target, { recursive: true });
 cpSync(join(root, 'src'), join(target, 'src'), { recursive: true });
+cpSync(join(root, 'icons'), join(target, 'icons'), { recursive: true });
+cpSync(join(root, 'manifest.webmanifest'), join(target, 'manifest.webmanifest'));
 mkdirSync(join(target, 'src/js/vendor'), { recursive: true });
 writeFileSync(join(target, 'src/js/vendor/supabase.js'), sdkBytes);
 let html = readFileSync(join(root, 'index.html'), 'utf8');
@@ -39,7 +41,29 @@ if (validUrl) {
   const wssOrigin = origin.replace(/^https:/, 'wss:');
   html = html.replace('https://*.supabase.co wss://*.supabase.co', `${origin} ${wssOrigin}`);
 }
+// Every published script and stylesheet receives a per-release query string.
+// GitHub Pages does not expose custom Cache-Control rules for every file.
+// The public build marker lets a running installed app detect a new release.
+const releaseHasher = createHash('sha256');
+function addBuildInputs(directory, prefix = '') {
+  for (const file of readdirSync(directory, { withFileTypes: true }).sort((a,b) => a.name.localeCompare(b.name))) {
+    const filePath = join(directory, file.name);
+    if (file.isDirectory()) addBuildInputs(filePath, prefix + file.name + '/');
+    else if (file.isFile()) {
+      releaseHasher.update(prefix + file.name + '\0');
+      releaseHasher.update(readFileSync(filePath));
+    }
+  }
+}
+releaseHasher.update(html);
+addBuildInputs(join(target, 'src'), 'src/');
+addBuildInputs(join(target, 'icons'), 'icons/');
+releaseHasher.update(readFileSync(join(target, 'manifest.webmanifest')));
+const buildId = releaseHasher.digest('hex').slice(0, 16);
+html = html.replace('name="passvault-build" content="development"', `name="passvault-build" content="${buildId}"`);
+html = html.replace(/((?:src|href)="\.\/src\/[^"?]+)(")/g, `$1?pv=${buildId}$2`);
 writeFileSync(join(target, 'index.html'), html, 'utf8');
+writeFileSync(join(target, 'app-version.json'), JSON.stringify({ version: '3.1.0', build: buildId, onlineOnly: true }) + '\n');
 const digest = createHash('sha256').update(sdkBytes).digest('hex');
 writeFileSync(join(target, 'DEPENDENCY_INFO.txt'), `Supabase JS 2.117.3 (self-hosted from npm package)\nSHA-256: ${digest}\n`, 'utf8');
-console.log(`Built ${target} | SDK SHA-256 ${digest} | CSP ${validUrl ? 'project-scoped' : 'preview-only'}`);
+console.log(`Built ${target} | release ${buildId} | SDK SHA-256 ${digest} | CSP ${validUrl ? 'project-scoped' : 'preview-only'}`);

@@ -924,3 +924,28 @@ html[data-theme="dark"] #approvedUI .pvb-appicon.pvb-card{background:#1e3b38;col
 #approvedUI .pvb-rename[title]{cursor:pointer}
 #pvHistoryDialog .pv-history-back[hidden]{display:none!important}
 @media(max-width:480px){#approvedUI .pvb-icon-options{grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}#approvedUI .pvb-color-options{gap:4px}#approvedUI .pvb-icon-choice{height:38px}#approvedUI .pvb-color-choice{height:34px}}
+
+/* Online-only PWA controls: use the existing color tokens; no theme changes. */
+#approvedUI .pv-pwa-settings .pv-pwa-row{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:16px 0}
+#approvedUI .pv-pwa-row>div{display:grid;gap:6px;min-width:0}
+#approvedUI .pv-pwa-row strong{color:var(--text);font-size:14px}
+#approvedUI .pv-pwa-row small{color:var(--muted);line-height:1.5;max-width:390px}
+#approvedUI .pv-pwa-row button{flex-shrink:0}
+#approvedUI .pv-pwa-divider{height:1px;background:var(--border);margin:8px 0 20px}
+#approvedUI .pv-pwa-status{color:var(--muted);font-size:13px;line-height:1.5;min-height:20px;overflow-wrap:anywhere}
+#approvedUI .pv-pwa-footnote{font-size:12px;color:var(--muted);margin:12px 0 0;line-height:1.6}
+#pvPwaUpdateNotice[hidden],#pvPwaOffline[hidden],#pvPwaApply[hidden]{display:none!important}
+#pvPwaUpdateNotice{position:fixed;z-index:9990;right:18px;bottom:20px;display:flex;align-items:center;gap:12px;max-width:min(460px,calc(100vw - 32px));padding:12px 13px 12px 18px;border:1px solid #e5e8f2;border-radius:14px;background:#fff;color:#1b2340;box-shadow:0 10px 40px rgba(15,24,45,.16);font:500 13px/1.5 Inter,ui-sans-serif,system-ui,sans-serif}
+#pvPwaUpdateNotice button{cursor:pointer;border:1px solid #ddd7ff;border-radius:9px;background:#f1efff;color:#5848bb;padding:7px 11px;font:inherit;font-weight:700}
+#pvPwaUpdateNotice #pvPwaNoticeClose{padding:5px 9px;background:transparent;border-color:transparent;color:#6d7690;font-size:20px}
+html[data-theme="dark"] #pvPwaUpdateNotice{background:#151b2e;color:#f0f3fb;border-color:#303950}
+html[data-theme="dark"] #pvPwaUpdateNotice button{background:#292442;border-color:#454061;color:#b4a9ff}
+#pvPwaOffline{position:fixed;z-index:2147483647;inset:0;background:#f5f7fb;color:#1b2340;display:grid;place-items:center;padding:24px;font:14px/1.6 Inter,ui-sans-serif,system-ui,sans-serif}
+#pvPwaOffline .pv-pwa-offline-card{max-width:400px;width:100%;padding:28px;border:1px solid #e6eaf2;border-radius:18px;background:#fff;text-align:center;box-shadow:0 18px 48px rgba(18,27,48,.08)}
+#pvPwaOffline strong{font-size:20px}
+#pvPwaOffline p{color:#667085;margin:12px 0 20px}
+#pvPwaOffline button{border:0;border-radius:10px;background:#6052d9;color:white;padding:11px 24px;font-weight:700;cursor:pointer}
+html[data-theme="dark"] #pvPwaOffline{background:#0c1020;color:#f0f3fb}
+html[data-theme="dark"] #pvPwaOffline .pv-pwa-offline-card{background:#151b2e;border-color:#303950}
+html[data-theme="dark"] #pvPwaOffline p{color:#a1acc6}
+@media(max-width:600px){#approvedUI .pv-pwa-settings .pv-pwa-row{flex-wrap:wrap;align-items:flex-start;gap:12px}#approvedUI .pv-pwa-row button{width:100%}#pvPwaUpdateNotice{bottom:12px;left:12px;right:12px;max-width:none;justify-content:space-between}#pvPwaUpdateNotice span{flex:1}}

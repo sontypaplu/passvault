@@ -12,7 +12,8 @@
     "test:security": "node tools/test-security-hardening.mjs",
     "test:history": "node tools/test-edit-history.mjs",
     "test:recovery": "node tools/test-phase1-recovery.mjs",
-    "test:phase3": "node tools/test-phase3-experience.mjs"
+    "test:phase3": "node tools/test-phase3-experience.mjs",
+    "test:pwa": "node tools/test-online-pwa.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.117.3"
