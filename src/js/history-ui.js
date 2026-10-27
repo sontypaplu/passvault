@@ -6,6 +6,9 @@
   'use strict';
   const byId = id => document.getElementById(id);
   const dialog = byId('pvHistoryDialog');
+  const textDialog = byId('pvHistoryTextDialog');
+  const textContent = byId('pvHistoryTextContent');
+  const textExpand = byId('pvHistoryTextExpand');
   const details = byId('pvHistoryDetails');
   const categories = byId('pvHistoryList');
   const back = byId('pvHistoryBack');
@@ -58,7 +61,28 @@
     byId('pvHistorySubtitle').textContent=subtitle;
   }
   function emptyMessage(message) { details.replaceChildren(element('p','pv-history-empty',message)); }
+  function closeFullText() {
+    if(textDialog.open)textDialog.close();
+    textContent.replaceChildren();
+    textDialog.classList.remove('is-expanded');
+    textExpand.textContent='Expand view';textExpand.setAttribute('aria-expanded','false');
+    byId('pvHistoryTextCount').textContent='';
+  }
+  function showFullText(recordId, side, field, label, itemId, timestamp) {
+    if(!readable() || activeItemId!==itemId)return clear();
+    const event=lookup(recordId);
+    if(!event)return clear();
+    const full=value(event[side]?.[field]);
+    closeFullText();
+    byId('pvHistoryTextTitle').textContent=label;
+    byId('pvHistoryTextDescription').textContent=timestamp?`Saved ${stamp(timestamp)}`:'Oldest known version';
+    textContent.textContent=full;
+    byId('pvHistoryTextCount').textContent=`${full.length.toLocaleString()} characters`;
+    textDialog.showModal();
+    textContent.focus();
+  }
   function resetViewer() {
+    closeFullText();
     activeKind=null; activeItemId=null; revealed.clear();
     details.replaceChildren(); back.hidden=true;
   }
@@ -166,6 +190,15 @@
           const raw=event?.[entry.side]?.[field];
           if(!changed || entry.action==='deleted')td.textContent='—';
           else if(raw===null || raw===undefined || raw==='' || Array.isArray(raw)&&raw.length===0){td.textContent=entry.action==='created'||entry.action==='baseline'?'—':'(cleared)';}
+          else if(typeof value(raw)==='string' && (value(raw).length>96 || value(raw).includes('\n')) && (field!=='password' || item.kind==='note')) {
+            // Long private notes are never inserted into truncated table cells.
+            // The full value is read from the active decrypted vault only after a click.
+            const fullLabel=field==='password'&&item.kind==='note'?'Secure note content':label;
+            const trigger=element('button','pv-history-full-text',field==='password'&&item.kind==='note'?'View note':'View full text');
+            trigger.type='button';trigger.setAttribute('aria-label',`View full ${fullLabel} saved ${entry.at?stamp(entry.at):'in the baseline'}`);
+            trigger.addEventListener('click',()=>showFullText(entry.recordId,entry.side,field,fullLabel,itemId,entry.at));
+            td.append(trigger,element('span','pv-history-long-caption',`${value(raw).length.toLocaleString()} characters`));
+          }
           else if(secrets.has(field)){
             const masked=element('span','pv-history-mask','••••••••');
             const reveal=element('button','pv-history-reveal','Reveal');reveal.type='button';
@@ -192,6 +225,19 @@
     }
     more();
   }
+  byId('pvHistoryTextClose').addEventListener('click',closeFullText);
+  byId('pvHistoryTextDone').addEventListener('click',closeFullText);
+  textExpand.addEventListener('click',()=>{
+    if(!readable())return clear();
+    const expanded=textDialog.classList.toggle('is-expanded');
+    textExpand.textContent=expanded?'Compact view':'Expand view';
+    textExpand.setAttribute('aria-expanded',String(expanded));
+  });
+  textDialog.addEventListener('close',()=>{
+    textContent.replaceChildren();textDialog.classList.remove('is-expanded');
+    textExpand.textContent='Expand view';textExpand.setAttribute('aria-expanded','false');
+    byId('pvHistoryTextCount').textContent='';
+  });
   back.addEventListener('click',()=>{if(activeKind)showCategory(activeKind);});
   byId('pvHistoryClose').addEventListener('click',()=>dialog.close());
   dialog.addEventListener('close',resetViewer);

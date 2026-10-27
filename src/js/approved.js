@@ -43,8 +43,31 @@ function closeMenu(){
  $('pvMobileMore').setAttribute('aria-expanded','false');
  closeAccountMenu();updateMobileSidebarFocus();
 }
+// Settings are a drill-down workspace, not a page of exposed forms.
+const pvSettingsSectionMeta={
+ appearance:['Appearance','Choose your preferred visual experience.','sun'],
+ session:['Sessions & clipboard','Control inactivity locking and clipboard clearing.','lock'],
+ backups:['Encrypted backups','Export your encrypted vault securely.','download'],
+ history:['Encrypted edit history','Browse changes recorded inside the encrypted vault.','refresh'],
+ account:['Account security','Manage your account password.','key'],
+ management:['Vault & account management','Review vaults and sensitive account actions.','shield-check']
+};
+function showSettingsHome(){
+ $('pvSettingsHome').hidden=false;$('pvSettingsDetail').hidden=true;
+ document.querySelectorAll('#approvedUI [data-settings-panel]').forEach(panel=>panel.hidden=true);
+}
+function openSettingsSection(key){
+ const meta=pvSettingsSectionMeta[key];if(!meta)return;
+ $('pvSettingsHome').hidden=true;$('pvSettingsDetail').hidden=false;
+ document.querySelectorAll('#approvedUI [data-settings-panel]').forEach(panel=>panel.hidden=panel.dataset.settingsPanel!==key);
+ $('pvSettingsDetailTitle').textContent=meta[0];$('pvSettingsDetailDescription').textContent=meta[1];
+ $('pvSettingsDetailIcon').innerHTML=icon(meta[2]);
+ $('pvSettingsDetailTitle').focus({preventScroll:true});
+ document.getElementById('page-settings').scrollIntoView({block:'start',behavior:'instant'});
+}
 function navigate(target,push=true){
  if(!ready()||!pageTitles[target])return;
+ if(target==='settings')showSettingsHome();
  page=target;closeMenu();if(target==='profile')void loadAccountProfile();$('flowsMenu').classList.add('hidden');$('flowsToggle').setAttribute('aria-expanded','false');
  $('crumb').textContent=pageTitles[target];document.title=pageTitles[target]+' | PassVault';
  document.querySelectorAll('#approvedUI [data-page].navitem').forEach(x=>{
@@ -689,7 +712,9 @@ $('approvedUI').addEventListener('click',e=>{
  const addBasket=target.closest('[data-basket-add]');if(addBasket){openEditor(null,'',addBasket.dataset.basketAdd);return;}
  const renameBasket=target.closest('[data-basket-rename]');if(renameBasket){basketRenameTarget=renameBasket.dataset.basketRename;$('pvbRenameInput').value=basketName(basketRenameTarget);$('pvbRenameDialog').showModal();$('pvbRenameInput').focus();return;}
  const moveBasket=target.closest('[data-basket-move]');if(moveBasket){basketMoveTarget=moveBasket.dataset.basketMove;const x=findItem(basketMoveTarget);if(!x)return;$('pvbMoveDescription').textContent=x.title;const sel=$('pvbMoveSelect');sel.replaceChildren();for(const b of basketDefs()){const opt=document.createElement('option');opt.value=b.id;opt.textContent=basketName(b.id);opt.selected=b.id===itemBasket(basketMoveTarget);sel.append(opt);}$('pvbMoveDialog').showModal();return;}
- const profileAction=target.closest('[data-profile-action]');if(profileAction){if(profileAction.dataset.profileAction==='password'){navigate('settings');$('changeAccountPasswordForm').scrollIntoView({behavior:'smooth',block:'center'});$('currentAccountPassword').focus();}return;}
+ const settingsChoice=target.closest('[data-settings-section]');if(settingsChoice){openSettingsSection(settingsChoice.dataset.settingsSection);return;}
+ const settingsBack=target.closest('[data-settings-back]');if(settingsBack){showSettingsHome();$('pvSettingsHome').querySelector('[data-settings-section]').focus({preventScroll:true});return;}
+ const profileAction=target.closest('[data-profile-action]');if(profileAction){if(profileAction.dataset.profileAction==='password'){navigate('settings');openSettingsSection('account');$('changeAccountPasswordForm').scrollIntoView({behavior:'smooth',block:'center'});$('currentAccountPassword').focus();}return;}
  const close=target.closest('[data-close]');if(close){$(close.dataset.close).close();return;}
  const to=target.closest('[data-page]');if(to){closeAccountMenu();navigate(to.dataset.page);return;}
  const newb=target.closest('[data-new]');if(newb){openEditor();return;}
@@ -703,8 +728,8 @@ $('approvedUI').addEventListener('click',e=>{
   switch(unw.dataset.unwired){
   case 'Encrypted backup export':case 'Backup export': void handleExportVault();break;
   case 'Encrypted cloud sync':void saveCloudVault(true);break;
-  case 'Account password change':navigate('settings');$('changeAccountPasswordForm').scrollIntoView({behavior:'smooth',block:'center'});$('currentAccountPassword').focus();break;
-  case 'Protected deletion confirmation':navigate('settings');$('approvedAccountManagement').scrollIntoView({behavior:'smooth',block:'start'});break;
+  case 'Account password change':navigate('settings');openSettingsSection('account');$('changeAccountPasswordForm').scrollIntoView({behavior:'smooth',block:'center'});$('currentAccountPassword').focus();break;
+  case 'Protected deletion confirmation':navigate('settings');openSettingsSection('account');$('approvedAccountManagement').scrollIntoView({behavior:'smooth',block:'start'});break;
   default:info('Account management','Use the protected account controls in Settings.');
   }return;
  }
