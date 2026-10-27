@@ -1,121 +1,199 @@
-/* Encrypted item edit history viewer. Does not store secrets or history outside
- * the existing unlocked AES-GCM vault; DOM nodes are erased on close / lock.
+/* Encrypted history UI. All versions remain inside the existing encrypted
+ * vault. Only requested secrets are inserted into the DOM while unlocked.
+ * Closing or locking clears the entire history viewer.
  */
 (()=>{
   'use strict';
   const byId = id => document.getElementById(id);
   const dialog = byId('pvHistoryDialog');
   const details = byId('pvHistoryDetails');
-  const list = byId('pvHistoryList');
+  const categories = byId('pvHistoryList');
+  const back = byId('pvHistoryBack');
+  const kinds = [
+    {id:'login', name:'Passwords', singular:'Password', description:'Login and password changes'},
+    {id:'note', name:'Secure notes', singular:'Secure note', description:'Private note changes'},
+    {id:'card', name:'Cards', singular:'Card', description:'Payment card changes'}
+  ];
+  // All persisted history fields. Do not silently omit optional fields,
+  // including card details, custom fields, and changes between item types.
+  const fields = [
+    ['title','Item name'],['kind','Type'],['username','Username / cardholder'],
+    ['password','Password / content / card number'],['url','Website'],
+    ['notes','Additional notes'],['expiry','Expiry'],['cvv','Security code'],
+    ['favorite','Favorite'],['tags','Tags'],['customFields','Custom fields']
+  ];
+  const secrets = new Set(['username','password','notes','cvv','customFields']);
+  const BATCH = 25;
+  let activeKind = null;
   let activeItemId = null;
-  const label = {
-    kind:'Item type', title:'Name', url:'Website', username:'Username / cardholder',
-    password:'Password / secret', notes:'Notes', favorite:'Favorite', tags:'Tags',
-    customFields:'Custom fields', expiry:'Expiry', cvv:'Security code'
-  };
-  const sensitive = new Set(['password','notes','username','cvv','customFields']);
+  let revealed = new Set();
   const readable = () => !state.locked && !!state.vault && !!uiState.accessGranted;
   const log = () => readable() && Array.isArray(state.vault.editHistory) ? state.vault.editHistory : [];
-  const eventById = id => log().find(record => record.id === id);
-  const row = (tag,cls,content) => {
+  const element = (tag, css='', text) => {
     const node = document.createElement(tag);
-    if(cls) node.className = cls;
-    if(content!==undefined) node.textContent = String(content);
+    if(css)node.className=css;
+    if(text!==undefined)node.textContent=String(text);
     return node;
   };
-  const time = iso => {
-    const date = new Date(iso);
-    return Number.isFinite(date.getTime()) ? date.toLocaleString(undefined,{dateStyle:'medium',timeStyle:'medium'}) : 'Unknown date';
+  const countText = (count, single, plural) => `${count} ${count===1?single:plural}`;
+  const kindOf = item => kinds.some(k=>k.id===item?.kind)?item.kind:'login';
+  const stamp = iso => {
+    const d = new Date(iso);
+    if(!Number.isFinite(d.getTime()))return 'Unknown time';
+    // Explicit format, local clock; no invented timestamp for older baselines.
+    return `${d.toLocaleDateString('en-GB')} ${d.toLocaleTimeString('en-GB',{hour12:false})}`;
   };
-  const action = kind => kind==='created'?'Created':kind==='deleted'?'Deleted':'Edited';
-  const changes = record => record.fields.map(key => label[key] || key).join(', ');
-  const value = x => {
-    if(x === undefined || x === null || x === '') return '—';
-    if(typeof x==='boolean') return x?'Yes':'No';
-    if(Array.isArray(x))return x.length ? x.map(v => typeof v==='string'?v:`${v.label}: ${v.value}`).join('; ') : '—';
-    return String(x);
+  const value = raw => {
+    if(raw===undefined || raw===null || raw==='')return '—';
+    if(typeof raw==='boolean')return raw?'Yes':'No';
+    if(Array.isArray(raw))return raw.length?raw.map(v=>typeof v==='string'?v:`${v.label}: ${v.value}`).join('; '):'—';
+    return String(raw);
   };
-  function clear(){
-    activeItemId = null;
+  const eventsFor = id => log().filter(e=>e.itemId===id).sort((a,b)=>Date.parse(a.at)-Date.parse(b.at));
+  const lookup = id => log().find(e=>e.id===id);
+  const matchingItems = kind => readable()?state.vault.credentials.filter(i=>kindOf(i)===kind):[];
+  const getLast = events => events.reduce((best,e)=>!best||Date.parse(e.at)>Date.parse(best.at)?e:best,null);
+  function setHeading(title, subtitle) {
+    byId('pvHistoryTitle').textContent=title;
+    byId('pvHistorySubtitle').textContent=subtitle;
+  }
+  function emptyMessage(message) { details.replaceChildren(element('p','pv-history-empty',message)); }
+  function resetViewer() {
+    activeKind=null; activeItemId=null; revealed.clear();
+    details.replaceChildren(); back.hidden=true;
+  }
+  function clear() {
     if(dialog.open)dialog.close();
-    details.replaceChildren();
-    list.replaceChildren();
-    byId('pvHistoryTitle').textContent = 'Item history';
-    byId('pvHistorySubtitle').textContent = 'Previous encrypted versions';
-    byId('pvHistorySummary').textContent = 'Unlock a vault to see its history';
+    resetViewer(); categories.replaceChildren();
+    byId('pvHistorySummary').textContent='0 edits';
+    byId('pvHistoryLastEdit').textContent='No edits yet';
+    byId('pvHistoryLastType').textContent='No changes recorded';
+    setHeading('Edit history','Encrypted versions of saved items');
   }
-  function refresh(){
+  function refresh() {
     if(!readable()){clear();return;}
-    const events = log();
-    const groups = new Map();
-    for(const item of state.vault.credentials)groups.set(item.id,{id:item.id,title:item.title,deleted:false,events:[]});
-    for(const event of events){
-      if(!groups.has(event.itemId))groups.set(event.itemId,{id:event.itemId,title:event.title,deleted:true,events:[]});
-      groups.get(event.itemId).events.push(event);
-    }
-    list.replaceChildren();
-    const edits = events.filter(x=>x.action==='edited').length;
-    byId('pvHistorySummary').textContent = `${edits} edit${edits===1?'':'s'} across ${groups.size} item${groups.size===1?'':'s'}`;
-    if(!groups.size){list.append(row('p','pv-history-empty','No items or edits yet.'));return;}
-    const ordered = [...groups.values()].sort((a,b)=>(b.events.at(-1)?.at||'').localeCompare(a.events.at(-1)?.at||''));
-    for(const item of ordered){
-      const count = item.events.filter(x=>x.action==='edited').length;
-      const button = row('button','pv-history-item');button.type='button';
-      const main=row('span','pv-history-item-main');
-      main.append(row('strong','',item.title || 'Untitled item'),row('small','',`${count} edit${count===1?'':'s'} · ${item.events.length} recorded event${item.events.length===1?'':'s'}${item.deleted?' · Deleted':''}`));
-      button.append(main,row('span','pv-history-chevron','View'));
-      button.addEventListener('click',()=>open(item.id));
-      list.append(button);
+    const records = log();
+    const edits = records.filter(e=>e.action==='edited');
+    const last = getLast(edits);
+    byId('pvHistorySummary').textContent=countText(edits.length,'edit','edits');
+    byId('pvHistoryLastEdit').textContent=last?stamp(last.at):'No edits yet';
+    const latestItem=last&&state.vault.credentials.find(i=>i.id===last.itemId);
+    byId('pvHistoryLastType').textContent=last?(kinds.find(k=>k.id===kindOf(latestItem||last.after||last.before))?.singular||'Item'):'No changes recorded';
+    categories.replaceChildren();
+    for(const category of kinds){
+      const items = matchingItems(category.id);
+      const itemIds = new Set(items.map(i=>i.id));
+      const editCount = edits.filter(e=>itemIds.has(e.itemId)).length;
+      const button=element('button','pv-history-category');button.type='button';
+      button.setAttribute('aria-label',`Browse ${category.name} history`);
+      const icon=element('span','pv-history-category-icon',category.id==='login'?'⌁':category.id==='note'?'▤':'▭');
+      icon.setAttribute('aria-hidden','true');
+      const main=element('span','pv-history-category-info');
+      main.append(element('strong','',category.name),element('small','',`${countText(items.length,'item','items')} · ${countText(editCount,'edit','edits')}`));
+      button.append(icon,main,element('span','pv-history-chevron','View ›'));
+      button.addEventListener('click',()=>showCategory(category.id));
+      categories.append(button);
     }
   }
-  function open(itemId){
-    if(!readable())return;
-    const entries = log().filter(event => event.itemId===itemId).reverse();
-    const live = state.vault.credentials.find(item=>item.id===itemId);
-    activeItemId=itemId;
-    byId('pvHistoryTitle').textContent=live?.title || entries[0]?.title || 'Item history';
-    byId('pvHistorySubtitle').textContent=`${entries.filter(e=>e.action==='edited').length} edits · ${entries.length} recorded events · ${state.vault.name}`;
-    details.replaceChildren();
-    if(!entries.length)details.append(row('p','pv-history-empty','No edits have been recorded for this item yet. Older edits from before this feature cannot be reconstructed.'));
-    for(const event of entries){
-      const section=row('section','pv-history-event');
-      const header=row('div','pv-history-event-head');
-      header.append(row('strong','',action(event.action)),row('time','',time(event.at)));
-      section.append(header,row('p','pv-history-changed',`Changed: ${changes(event)}`));
-      for(const field of event.fields){
-        const changed=row('div','pv-history-field');
-        changed.append(row('strong','',label[field]||field));
-        const pair=row('div','pv-history-pair');
-        for(const side of ['before','after']){
-          const cell=row('div','pv-history-value');
-          cell.append(row('small','',side==='before'?'Before':'After'));
-          const present=event[side] && event[side][field]!==undefined && event[side][field]!==null && event[side][field]!=='';
-          const text=row('span','pv-history-value-text',sensitive.has(field) && present?'••••••••':value(event[side]?.[field]));
-          cell.append(text);
-          if(sensitive.has(field) && present){
-            const button=row('button','pv-history-reveal','Reveal');button.type='button';
-            button.setAttribute('aria-label',`Reveal ${side} ${label[field]||field}`);
-            // Resolve from the currently unlocked vault on every interaction.
-            // Never close over a plaintext password from the snapshot.
-            button.addEventListener('click',()=>{
-              if(!readable()||activeItemId!==itemId){clear();return;}
-              const current=eventById(event.id);
-              if(!current)return;
-              const shown=button.textContent==='Hide';
-              text.textContent=shown?'••••••••':value(current[side]?.[field]);
-              button.textContent=shown?'Reveal':'Hide';
-            });
-            cell.append(button);
-          }
-          pair.append(cell);
-        }
-        changed.append(pair);section.append(changed);
+  function showCategory(kind) {
+    if(!readable())return clear();
+    const category=kinds.find(k=>k.id===kind);if(!category)return;
+    resetViewer(); activeKind=kind;
+    setHeading(category.name,`Edit history · ${state.vault.name}`);
+    const items=matchingItems(kind);
+    back.hidden=true;
+    if(!items.length){emptyMessage(`No ${category.name.toLowerCase()} in this vault.`);}
+    else {
+      const list=element('div','pv-history-modal-list');
+      const ordered=[...items].sort((a,b)=>{
+        const lastA=getLast(eventsFor(a.id));const lastB=getLast(eventsFor(b.id));
+        return (lastB?.at||'').localeCompare(lastA?.at||'') || a.title.localeCompare(b.title);
+      });
+      for(const item of ordered) {
+        const events=eventsFor(item.id), editCount=events.filter(e=>e.action==='edited').length;
+        const last=getLast(events);
+        const button=element('button','pv-history-item');button.type='button';
+        const info=element('span','pv-history-item-main');
+        info.append(element('strong','',item.title||'Untitled item'),element('small','',`${countText(editCount,'edit','edits')} · ${last?`Last change ${stamp(last.at)}`:'No recorded changes'}`));
+        button.append(info,element('span','pv-history-chevron','View ›'));
+        button.addEventListener('click',()=>showItem(item.id));
+        list.append(button);
       }
-      details.append(section);
+      details.replaceChildren(list);
     }
     if(!dialog.open)dialog.showModal();
   }
+  function showItem(itemId) {
+    if(!readable())return clear();
+    const item=matchingItems(activeKind).find(i=>i.id===itemId);
+    if(!item)return;
+    activeItemId=itemId;revealed.clear();back.hidden=false;
+    const events=eventsFor(itemId);
+    setHeading(item.title||'Untitled item',`${countText(events.filter(e=>e.action==='edited').length,'edit','edits')} · Newest changes first · ${state.vault.name}`);
+    if(!events.length){emptyMessage('No saved changes for this item yet. History began when this feature was enabled.');return;}
+    // No changes older than the first saved event can be reconstructed.
+    // A pre-existing item receives one honest "Earlier state" baseline using
+    // the earliest recorded BEFORE snapshot (its exact prior time is unknown).
+    const display=events.map(e=>({recordId:e.id,side:'after',action:e.action,at:e.at,fields:e.fields}));
+    const first=events[0];
+    if(first.action!=='created' && first.before){
+      display.unshift({recordId:first.id,side:'before',action:'baseline',at:null,fields:fields.map(([key])=>key)});
+    }
+    display.reverse();
+    const wrapper=element('div','pv-history-table-scroll');wrapper.tabIndex=0;
+    wrapper.setAttribute('aria-label','Scrollable item history table, newest changes first');
+    const table=element('table','pv-history-table');
+    const caption=element('caption','pv-history-table-caption','Saved changes. A dash means that field was not changed in that row.');
+    const thead=element('thead');const head=element('tr');
+    head.append(element('th','','Date / time'),element('th','','Event'));
+    for(const [,label] of fields)head.append(element('th','',label));
+    thead.append(head);const tbody=element('tbody');
+    table.append(caption,thead,tbody);wrapper.append(table);
+    const hint=element('p','pv-history-table-hint','— = unchanged · (cleared) = value removed · baseline = oldest known values. Sensitive values are masked until revealed. Scroll sideways for every field.');
+    const footer=element('div','pv-history-table-footer');
+    details.replaceChildren(hint,wrapper,footer);
+    let offset=0;
+    function more() {
+      if(!readable()||activeItemId!==itemId)return clear();
+      const batch=display.slice(offset,offset+BATCH);offset+=batch.length;
+      for(const entry of batch) {
+        const tr=element('tr');tr.append(element('td','pv-history-time',entry.at?stamp(entry.at):'Earlier state'));
+        tr.append(element('td','pv-history-event-type',entry.action==='created'?'Created':entry.action==='baseline'?'Baseline':entry.action==='deleted'?'Deleted':'Edited'));
+        const event=lookup(entry.recordId);
+        for(const [field,label] of fields) {
+          const td=element('td','pv-history-cell');
+          const changed=entry.fields.includes(field);
+          const raw=event?.[entry.side]?.[field];
+          if(!changed || entry.action==='deleted')td.textContent='—';
+          else if(raw===null || raw===undefined || raw==='' || Array.isArray(raw)&&raw.length===0){td.textContent=entry.action==='created'||entry.action==='baseline'?'—':'(cleared)';}
+          else if(secrets.has(field)){
+            const masked=element('span','pv-history-mask','••••••••');
+            const reveal=element('button','pv-history-reveal','Reveal');reveal.type='button';
+            reveal.setAttribute('aria-label',`Reveal ${label} for ${entry.at?stamp(entry.at):'baseline'}`);
+            const key=`${entry.recordId}:${entry.side}:${field}`;
+            reveal.addEventListener('click',()=>{
+              if(!readable()||activeItemId!==itemId){clear();return;}
+              const live=lookup(entry.recordId);
+              if(!live)return clear();
+              if(revealed.has(key)){revealed.delete(key);masked.textContent='••••••••';reveal.textContent='Reveal';}
+              else {revealed.add(key);masked.textContent=value(live[entry.side]?.[field]);reveal.textContent='Hide';}
+            });
+            td.append(masked,reveal);
+          } else td.textContent=value(raw);
+          tr.append(td);
+        }
+        tbody.append(tr);
+      }
+      footer.replaceChildren();
+      if(offset<display.length){
+        const button=element('button','pv-history-more',`Load older changes (${display.length-offset} remaining)`);
+        button.type='button';button.addEventListener('click',more);footer.append(button);
+      }
+    }
+    more();
+  }
+  back.addEventListener('click',()=>{if(activeKind)showCategory(activeKind);});
   byId('pvHistoryClose').addEventListener('click',()=>dialog.close());
-  dialog.addEventListener('close',()=>{activeItemId=null;details.replaceChildren();});
+  dialog.addEventListener('close',resetViewer);
   window.PassVaultHistoryUI={refresh,clear};
 })();
