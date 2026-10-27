@@ -4,8 +4,15 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="referrer" content="no-referrer">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'; connect-src https://*.supabase.co wss://*.supabase.co; img-src 'self' blob:; media-src 'none'; frame-src 'none'; style-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src blob:; upgrade-insecure-requests">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'; connect-src https://*.supabase.co wss://*.supabase.co; img-src 'self' blob:; media-src 'none'; frame-src 'none'; style-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src blob:; manifest-src 'self'; upgrade-insecure-requests">
   <meta name="theme-color" content="#F5F7FB">
+  <meta name="passvault-build" content="development">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="PassVault">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon.png">
   <title>PassVault 3.0 — Secure workspace</title>
 <link rel="stylesheet" href="./src/css/main.css">
 <link rel="stylesheet" href="./src/css/premium.css">
@@ -538,11 +545,28 @@
    <span class="pv-settings-tile-copy"><strong>Vault & account management</strong><small>Manage vaults and irreversible deletion.</small></span>
    <span class="pv-settings-tile-arrow" aria-hidden="true">›</span>
   </button></div></div>
+  <div class="pv-settings-group"><h2 class="pv-settings-group-label">APPLICATION</h2><div class="pv-settings-catalog"><button type="button" class="pv-settings-tile" data-settings-section="application" aria-label="Open Install and updates settings">
+   <span class="pv-settings-tile-icon" data-icon="download" aria-hidden="true"></span>
+   <span class="pv-settings-tile-copy"><strong>Install &amp; updates</strong><small>Install on your device and manage new releases.</small></span>
+   <span class="pv-settings-tile-arrow" aria-hidden="true">›</span>
+  </button></div></div>
  </div>
  <div class="pv-settings-detail" id="pvSettingsDetail" hidden>
   <button type="button" class="pv-settings-back" id="pvSettingsBack" data-settings-back><span aria-hidden="true">←</span> All settings</button>
   <div class="pv-settings-detail-head"><span class="pv-settings-detail-icon" id="pvSettingsDetailIcon" aria-hidden="true"></span><div><h2 id="pvSettingsDetailTitle" tabindex="-1">Setting</h2><p id="pvSettingsDetailDescription"></p></div></div>
-  <div class="pv-settings-detail-body"><div class="pv-settings-panel" data-settings-panel="appearance" hidden><div class="card setting-card"><h2>Appearance</h2><p>Choose the experience that suits you.</p><div class="setting-row"><div><strong>Dark appearance</strong><small>Switch between light and dark modes.</small></div><button aria-checked="false" aria-label="Dark appearance" class="switch" id="darkSwitch" role="switch"></button></div></div></div><div class="pv-settings-panel" data-settings-panel="session" hidden><div class="card setting-card"><h2>Session &amp; clipboard</h2><p>Control how long sensitive data remains accessible.</p><div class="setting-row"><div><strong>Auto-lock after</strong><small>On inactivity · Account signs out after 15 minutes</small></div><select class="select" id="autoLock"><option value="5">5 minutes</option><option value="10">10 minutes</option><option selected="" value="15">15 minutes</option><option value="30">30 minutes</option></select></div><div class="setting-row"><div><strong>Clipboard clearing</strong><small>After password copy</small></div><select class="select" id="clipboardTime"><option value="15">15 seconds</option><option selected="" value="30">30 seconds</option><option value="60">60 seconds</option></select></div></div></div><div class="pv-settings-panel" data-settings-panel="backups" hidden><div class="card setting-card"><h2>Encrypted backups</h2><p>Export an encrypted copy of the currently open vault.</p><button class="btn btn-light" data-unwired="Backup export"><span data-icon="download"></span>Download encrypted backup</button>
+  <div class="pv-settings-detail-body"><div class="pv-settings-panel" data-settings-panel="application" hidden>
+ <div class="card setting-card pv-pwa-settings">
+  <h2>Install PassVault</h2>
+  <p>Open PassVault as an app on your phone or computer. Internet is required; vaults are not cached for offline use.</p>
+  <div class="pv-pwa-row"><div><strong>App installation</strong><small id="pvPwaInstallHelp">Use your browser's Install app option.</small></div><button class="btn btn-light" type="button" id="pvPwaInstall">Install app</button></div>
+  <div class="pv-pwa-divider"></div>
+  <h2>Application updates</h2>
+  <div class="pv-pwa-row"><div><strong>Current release</strong><small id="pvPwaVersion">Checking…</small></div><button class="btn btn-light" type="button" id="pvPwaCheck">Check now</button></div>
+  <p class="pv-pwa-status" id="pvPwaStatus" role="status" aria-live="polite">Checking for updates…</p>
+  <button class="btn btn-primary" type="button" id="pvPwaApply" hidden>Lock &amp; update</button>
+  <p class="pv-pwa-footnote">Updates are never applied while the vault is unlocked. Save and sync edits before updating.</p>
+ </div>
+</div><div class="pv-settings-panel" data-settings-panel="appearance" hidden><div class="card setting-card"><h2>Appearance</h2><p>Choose the experience that suits you.</p><div class="setting-row"><div><strong>Dark appearance</strong><small>Switch between light and dark modes.</small></div><button aria-checked="false" aria-label="Dark appearance" class="switch" id="darkSwitch" role="switch"></button></div></div></div><div class="pv-settings-panel" data-settings-panel="session" hidden><div class="card setting-card"><h2>Session &amp; clipboard</h2><p>Control how long sensitive data remains accessible.</p><div class="setting-row"><div><strong>Auto-lock after</strong><small>On inactivity · Account signs out after 15 minutes</small></div><select class="select" id="autoLock"><option value="5">5 minutes</option><option value="10">10 minutes</option><option selected="" value="15">15 minutes</option><option value="30">30 minutes</option></select></div><div class="setting-row"><div><strong>Clipboard clearing</strong><small>After password copy</small></div><select class="select" id="clipboardTime"><option value="15">15 seconds</option><option selected="" value="30">30 seconds</option><option value="60">60 seconds</option></select></div></div></div><div class="pv-settings-panel" data-settings-panel="backups" hidden><div class="card setting-card"><h2>Encrypted backups</h2><p>Export an encrypted copy of the currently open vault.</p><button class="btn btn-light" data-unwired="Backup export"><span data-icon="download"></span>Download encrypted backup</button>
 <div class="pv-recovery-divider"></div><h3>Verify a backup file</h3><p>Check AES-GCM authenticity and whether this backup can be decrypted. Verification never imports or overwrites your current vault.</p>
 <form id="pvBackupVerifyForm" class="pv-recovery-verify-form" autocomplete="off">
 <label for="pvBackupVerifyFile">Encrypted backup (.pvault.json)</label><input type="file" id="pvBackupVerifyFile" accept=".json,.pvault" required>
@@ -653,6 +677,14 @@
     </form>
   </dialog>
 
+  <div id="pvPwaUpdateNotice" class="pv-pwa-update-notice" role="status" aria-live="polite" hidden>
+    <span>A new PassVault version is available.</span>
+    <button type="button" id="pvPwaNoticeAction">Update</button>
+    <button type="button" id="pvPwaNoticeClose" aria-label="Dismiss update notice">×</button>
+  </div>
+  <div id="pvPwaOffline" class="pv-pwa-offline" role="alert" aria-live="assertive" hidden>
+    <div class="pv-pwa-offline-card"><strong id="pvPwaOfflineTitle">Connection required</strong><p id="pvPwaOfflineDescription">PassVault is online only. Connect to the internet, then retry.</p><button type="button" id="pvPwaRetry">Retry connection</button></div>
+  </div>
   <script src="./src/js/theme.js" defer></script>
 
 <!-- Locally hosted, version-pinned Supabase SDK (generated at build time). -->
@@ -668,5 +700,6 @@
 <script defer src="./src/js/approved.js"></script>
 <script defer src="./src/js/history-ui.js"></script>
 <script defer src="./src/js/phase1-ui.js"></script>
+<script defer src="./src/js/pwa.js"></script>
 </body>
 </html>

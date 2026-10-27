@@ -51,7 +51,8 @@ const pvSettingsSectionMeta={
  history:['Encrypted edit history','Browse changes recorded inside the encrypted vault.','refresh'],
  recycle:['Recycle Bin','','trash'],
  account:['Account security','Manage your account password.','key'],
- management:['Vault & account management','Review vaults and sensitive account actions.','shield-check']
+ management:['Vault & account management','Review vaults and sensitive account actions.','shield-check'],
+ application:['Install & updates','Install PassVault or check for a newer release.','download']
 };
 function showSettingsHome(){
  $('pvSettingsHome').hidden=false;$('pvSettingsDetail').hidden=true;
