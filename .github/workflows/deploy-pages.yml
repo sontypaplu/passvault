@@ -31,6 +31,8 @@ jobs:
         run: npm run test:security
       - name: Test encrypted edit history
         run: npm run test:history
+      - name: Test encrypted data recovery
+        run: npm run test:recovery
       - name: Build local SDK and project-scoped CSP
         run: npm run build
       - name: Verify static build

@@ -848,6 +848,21 @@ function lockVault(reason = "Vault locked.") {
     }
     state.vault.credentials.length = 0;
   }
+  // Best-effort removal of references to decrypted deleted items on lock.
+  if (Array.isArray(state.vault?.recycleBin)) {
+    for (const entry of state.vault.recycleBin) {
+      const item=entry.item;
+      if (!item) continue;
+      for (const field of ['title','url','username','password','notes','cvv','expiry'])
+        if (typeof item[field]==='string') item[field]='';
+      if (Array.isArray(item.tags)) item.tags.length=0;
+      if (Array.isArray(item.customFields)) {
+        for (const custom of item.customFields) if (typeof custom.value==='string') custom.value='';
+        item.customFields.length=0;
+      }
+    }
+    state.vault.recycleBin.length=0;
+  }
   if (Array.isArray(state.vault?.editHistory)) {
     for (const event of state.vault.editHistory) {
       for (const snapshot of [event.before, event.after]) {
@@ -913,20 +928,12 @@ function deleteCredential(id) {
   const index = state.vault.credentials.findIndex((item) => item.id === id);
   if (index < 0) return;
   const credential = state.vault.credentials[index];
-  if (!window.confirm(`Permanently delete “${credential.title}” and its encrypted edit history from this vault?`)) return;
-
-  purgeVaultItemHistory(credential.id);
-  credential.password = "";
-  credential.username = "";
-  credential.notes = "";
-  credential.url = "";
-  credential.title = "";
-  state.vault.credentials.splice(index, 1);
-  state.vault.updatedAt = new Date().toISOString();
+  if (!window.confirm(`Move “${credential.title}” to the encrypted Recycle Bin? You can restore it later.`)) return;
+  moveVaultItemToRecycleBin(credential.id);
   setDirty(true);
   if (state.editingId === id) resetCredentialEditor();
   renderVault();
-  setGlobalStatus("Credential deleted locally. Encrypted cloud sync scheduled…", "warning");
+  setGlobalStatus("Credential moved to encrypted Recycle Bin. Cloud sync scheduled…", "warning");
 }
 
 function saveCredential() {

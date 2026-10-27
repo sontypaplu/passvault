@@ -291,11 +291,10 @@
   function deleteItem() {
     if(!requireReady())return;
     const item=records().find(x=>x.id===ui.detailId);if(!item)return;
-    if(!window.confirm(`Permanently remove “${item.title}” and its encrypted edit history from this vault?`))return;
-    try{purgeVaultItemHistory(item.id);}catch(error){notify(error.message);return;}
-    state.vault.credentials=state.vault.credentials.filter(x=>x.id!==item.id);
-    state.vault.updatedAt=new Date().toISOString();setDirty(true);
-    pv('pv3DetailDialog').close();ui.detailId=null;renderVault();notify('Item removed · encrypted sync scheduled');
+    if(!window.confirm(`Move “${item.title}” to the encrypted Recycle Bin? You can restore it later.`))return;
+    try{moveVaultItemToRecycleBin(item.id);}catch(error){notify(error.message);return;}
+    setDirty(true);
+    pv('pv3DetailDialog').close();ui.detailId=null;renderVault();notify('Item moved to Recycle Bin · encrypted sync scheduled');
   }
   async function copySecret(value) {
     if(!requireReady()||!value)return;

@@ -809,3 +809,34 @@ html[data-theme="dark"] #approvedUI .pvb-folder{background:var(--primary-wash);c
 #pvHistoryDialog .pv-history-full-text:hover{filter:brightness(.97)}
 #pvHistoryDialog .pv-history-long-caption{display:block;color:var(--muted);font-size:10px;margin-top:5px}
 @media(max-width:600px){#approvedUI #pvHistoryTextDialog .pv-history-text-body{padding:12px}#approvedUI #pvHistoryTextDialog .pv-history-text-foot{flex-wrap:wrap}#approvedUI #pvHistoryTextDialog .pv-history-text-head{padding:15px}}
+
+/* Phase 1 data recovery. Uses existing PassVault theme variables only. */
+#approvedUI .pv-recovery-card, #approvedUI .pv-recovery-verify-form { min-width:0; }
+#approvedUI .pv-recovery-card{padding:17px 20px;}
+#approvedUI .pv-recovery-toolbar{display:flex;justify-content:flex-end;align-items:center;margin-bottom:7px;}
+#approvedUI .pv-recovery-toolbar #pvRecycleCount{display:inline-flex;align-items:center;padding:5px 10px;border-radius:999px;background:var(--surface-subtle);color:var(--muted);font-size:11px;font-weight:700;}
+#approvedUI .pv-recovery-list{display:grid;}
+#approvedUI .pv-recovery-entry{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;border-bottom:1px solid var(--border);padding:13px 3px;background:transparent;}
+#approvedUI .pv-recovery-entry:last-child{border-bottom:0;}
+#approvedUI .pv-recovery-entry-info{display:flex;flex-direction:column;gap:5px;min-width:0;flex:1}
+#approvedUI .pv-recovery-entry-info strong{font-size:13px;overflow-wrap:anywhere;color:var(--text-strong)}
+#approvedUI .pv-recovery-entry-info small{font-size:11px;color:var(--muted);line-height:1.5}
+#approvedUI .pv-recovery-entry-actions{display:flex;flex-wrap:wrap;gap:8px;}
+#approvedUI .pv-recovery-entry-actions button{min-height:38px;}
+#approvedUI .pv-recovery-danger{color:var(--danger,#bf3a45)!important;border-color:var(--border)!important;}
+#approvedUI .pv-recovery-empty{padding:25px;text-align:center;color:var(--muted);border:1px dashed var(--border);border-radius:12px;font-size:12px;}
+#approvedUI .pv-recovery-divider{height:1px;margin:22px 0;background:var(--border);}
+#approvedUI .pv-recovery-verify-form{display:grid;gap:12px;max-width:620px;margin-top:18px;}
+#approvedUI .pv-recovery-verify-form label{display:block;color:var(--text-strong);font-size:12px;font-weight:700}
+#approvedUI .pv-recovery-verify-form input{width:100%;max-width:100%;background:var(--surface);color:var(--text-strong);border:1px solid var(--border);padding:12px;border-radius:10px;font:inherit;}
+#approvedUI .pv-recovery-verify-form input[type=file]{font-size:12px;}
+#approvedUI .pv-recovery-verify-form details{border:1px solid var(--border);border-radius:12px;padding:12px;background:var(--surface-subtle);display:grid;gap:10px;}
+#approvedUI .pv-recovery-verify-form details:not([open]){display:block}
+#approvedUI .pv-recovery-verify-form summary{cursor:pointer;color:var(--text-strong);font-size:12px;font-weight:700}
+#approvedUI .pv-recovery-verify-form details p{font-size:11px;line-height:1.6;margin:8px 0}
+#approvedUI .pv-recovery-verify-form details label{margin:9px 0 5px;}
+#approvedUI .pv-recovery-verify-form button{justify-self:start}
+#approvedUI .pv-recovery-status{padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--surface-subtle);color:var(--muted);font-size:12px;overflow-wrap:anywhere;line-height:1.65}
+#approvedUI .pv-recovery-history-restore{display:block;margin-top:8px;border:1px solid var(--border);background:var(--surface);color:var(--text-strong);border-radius:7px;padding:6px 9px;font-size:11px;white-space:nowrap;cursor:pointer;}
+#approvedUI .pv-recovery-history-restore:focus-visible,#approvedUI .pv-recovery-verify-form input:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+@media(max-width:600px){#approvedUI .pv-recovery-entry-actions{width:100%}#approvedUI .pv-recovery-entry-actions button{flex:1}#approvedUI .pv-recovery-verify-form button{width:100%}}
