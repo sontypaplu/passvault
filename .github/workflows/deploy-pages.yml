@@ -27,6 +27,8 @@ jobs:
         run: npm install --ignore-scripts --no-audit --no-fund
       - name: Verify source consistency
         run: npm run verify:source
+      - name: Test vault-lock and recovery safety
+        run: npm run test:security
       - name: Build local SDK and project-scoped CSP
         run: npm run build
       - name: Verify static build
