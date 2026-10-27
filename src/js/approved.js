@@ -1,7 +1,7 @@
 /* Approved UI: original preview components, connected to PassVault's existing encrypted state and handlers. */
 (()=>{
 'use strict';
-const paths={shield:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/>',layout:'<rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/>',key:'<circle cx="7.5" cy="15.5" r="5.5"/><path d="M12 12 21 3l-1 5-4 1-1 4"/>',star:'<path d="m12 2 3 6.4 7 .9-5 4.8 1.3 7-6.3-3.4-6.3 3.4 1.3-7-5-4.8 7-.9Z"/>',folder:'<path d="M3 7a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2v9H3Z"/>',settings:'<path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M19.3 13.5a8.5 8.5 0 0 0 0-3l2-1.5-2-3.4-2.4.9a8 8 0 0 0-2.5-1.5L14 2h-4l-.4 3A8 8 0 0 0 7.1 6.5l-2.4-.9-2 3.4 2 1.5a8.5 8.5 0 0 0 0 3l-2 1.5 2 3.4 2.4-.9A8 8 0 0 0 9.6 19l.4 3h4l.4-3a8 8 0 0 0 2.5-1.5l2.4.9 2-3.4Z"/>',sparkles:'<path d="m12 2 2.5 7.5L22 12l-7.5 2.5L12 22l-2.5-7.5L2 12l7.5-2.5Z"/>',search:'<circle cx="10.8" cy="10.8" r="7.3"/><path d="m16 16 5 5"/>',plus:'<path d="M12 5v14M5 12h14"/>',moon:'<path d="M20.9 13.2A9 9 0 0 1 10.8 3.1 9 9 0 1 0 20.9 13.2Z"/>',sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M19 5l-1.5 1.5m-11 11L5 19"/>',lock:'<rect x="5" y="11" width="14" height="11" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',menu:'<path d="M4 6h16M4 12h16M4 18h16"/>',more:'<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>',chevrons:'<path d="m8 10 4 4 4-4"/>',info:'<circle cx="12" cy="12" r="10"/><path d="M12 11v6m0-10h.01"/>',check:'<path d="m5 12 4 4L19 6"/>',copy:'<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/>',refresh:'<path d="M20 7v5h-5M4 17v-5h5"/><path d="M5.5 9A7 7 0 0 1 18 7l2 5M4 12l2 5a7 7 0 0 0 12.5-2"/>',download:'<path d="M12 3v13m-5-5 5 5 5-5M4 18v3h16v-3"/>',cloud:'<path d="M5 18a4 4 0 1 1 1-7.9 6.5 6.5 0 0 1 12.7 1.4A3.5 3.5 0 1 1 19 18Z"/>','shield-check':'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/>',trash:'<path d="M4 7h16M10 3h4m4 4-1 14H7L6 7m4 3v8m4-8v8"/>',edit:'<path d="m15 5 4 4M4 20l4.5-1 11-11a2.1 2.1 0 0 0-4-4l-11 11L4 20Z"/>',x:'<path d="M5 5l14 14M19 5 5 19"/>',user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>','user-plus':'<circle cx="10" cy="8" r="4"/><path d="M2 21a8 8 0 0 1 16 0M19 8v8m-4-4h8"/>',eye:'<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>',alert:'<path d="m12 3 10 18H2L12 3Z"/><path d="M12 9v5m0 4h.01"/>',arrow:'<path d="M5 12h14m-6-6 6 6-6 6"/>'};
+const paths={shield:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/>',layout:'<rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/>',key:'<circle cx="7.5" cy="15.5" r="5.5"/><path d="M12 12 21 3l-1 5-4 1-1 4"/>',star:'<path d="m12 2 3 6.4 7 .9-5 4.8 1.3 7-6.3-3.4-6.3 3.4 1.3-7-5-4.8 7-.9Z"/>',folder:'<path d="M3 7a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2v9H3Z"/>',settings:'<path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M19.3 13.5a8.5 8.5 0 0 0 0-3l2-1.5-2-3.4-2.4.9a8 8 0 0 0-2.5-1.5L14 2h-4l-.4 3A8 8 0 0 0 7.1 6.5l-2.4-.9-2 3.4 2 1.5a8.5 8.5 0 0 0 0 3l-2 1.5 2 3.4 2.4-.9A8 8 0 0 0 9.6 19l.4 3h4l.4-3a8 8 0 0 0 2.5-1.5l2.4.9 2-3.4Z"/>',sparkles:'<path d="m12 2 2.5 7.5L22 12l-7.5 2.5L12 22l-2.5-7.5L2 12l7.5-2.5Z"/>',search:'<circle cx="10.8" cy="10.8" r="7.3"/><path d="m16 16 5 5"/>',plus:'<path d="M12 5v14M5 12h14"/>',moon:'<path d="M20.9 13.2A9 9 0 0 1 10.8 3.1 9 9 0 1 0 20.9 13.2Z"/>',sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M19 5l-1.5 1.5m-11 11L5 19"/>',lock:'<rect x="5" y="11" width="14" height="11" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',menu:'<path d="M4 6h16M4 12h16M4 18h16"/>',more:'<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>',chevrons:'<path d="m8 10 4 4 4-4"/>',info:'<circle cx="12" cy="12" r="10"/><path d="M12 11v6m0-10h.01"/>',check:'<path d="m5 12 4 4L19 6"/>',copy:'<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/>',refresh:'<path d="M20 7v5h-5M4 17v-5h5"/><path d="M5.5 9A7 7 0 0 1 18 7l2 5M4 12l2 5a7 7 0 0 0 12.5-2"/>',download:'<path d="M12 3v13m-5-5 5 5 5-5M4 18v3h16v-3"/>',cloud:'<path d="M5 18a4 4 0 1 1 1-7.9 6.5 6.5 0 0 1 12.7 1.4A3.5 3.5 0 1 1 19 18Z"/>','shield-check':'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/>',trash:'<path d="M4 7h16M10 3h4m4 4-1 14H7L6 7m4 3v8m4-8v8"/>',edit:'<path d="m15 5 4 4M4 20l4.5-1 11-11a2.1 2.1 0 0 0-4-4l-11 11L4 20Z"/>',x:'<path d="M5 5l14 14M19 5 5 19"/>',user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>','user-plus':'<circle cx="10" cy="8" r="4"/><path d="M2 21a8 8 0 0 1 16 0M19 8v8m-4-4h8"/>',eye:'<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>',alert:'<path d="m12 3 10 18H2L12 3Z"/><path d="M12 9v5m0 4h.01"/>',arrow:'<path d="M5 12h14m-6-6 6 6-6 6"/>','wallet':'<rect x="3" y="6" width="18" height="15" rx="2"/><path d="M3 9V5a2 2 0 0 1 2-2h13m1 8h2v5h-5a2.5 2.5 0 1 1 0-5h3"/>','briefcase':'<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M8 7V4h8v3M2 13h20"/>','heart':'<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z"/>','book':'<path d="M3 4.5h7a3 3 0 0 1 3 3V21a3 3 0 0 0-3-3H3V4.5Zm10 3a3 3 0 0 1 3-3h5V18h-5a3 3 0 0 0-3 3"/>','globe':'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c-5 5-5 13 0 18M12 3c5 5 5 13 0 18"/>','shopping':'<path d="M4 9h16l-1 12H5L4 9Zm4 0V6a4 4 0 0 1 8 0v3"/>'};
 const icon=(id)=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths[id]||paths.info}</svg>`;
 const $=(id)=>document.getElementById(id);const safe=(x)=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 document.querySelectorAll('#approvedUI [data-icon]').forEach(x=>x.innerHTML=icon(x.dataset.icon));
@@ -69,6 +69,11 @@ function openSettingsSection(key){
 }
 function navigate(target,push=true){
  if(!ready()||!pageTitles[target])return;
+ // A chosen destination dismisses desktop pinning, without changing hover expansion.
+ $('approvedSidebar').classList.remove('pinned');
+ $('openMenu').setAttribute('aria-expanded','false');
+ $('openMenu').setAttribute('aria-label','Pin navigation open');
+ $('openMenu').title='Pin navigation open';
  if(target==='settings')showSettingsHome();
  page=target;closeMenu();if(target==='profile')void loadAccountProfile();$('flowsMenu').classList.add('hidden');$('flowsToggle').setAttribute('aria-expanded','false');
  $('crumb').textContent=pageTitles[target];document.title=pageTitles[target]+' | PassVault';
@@ -109,11 +114,60 @@ const baseBasketDefs=[
  {id:'private',name:'Private',color:'#e87da3',pale:'#ffedf3'}
 ];
 const BASKET_MAX=8;
+// Appearance is an optional, backwards-compatible extension of encrypted
+// overviewBaskets metadata. No remote URLs, arbitrary HTML, or injected CSS.
+const BASKET_ICONS=Object.freeze([
+ ['folder','Folder'],['key','Key'],['star','Star'],['shield','Shield'],
+ ['lock','Lock'],['user','Personal'],['cloud','Cloud'],['wallet','Wallet'],
+ ['briefcase','Work'],['heart','Heart'],['book','Notes'],['globe','Web'],
+ ['shopping','Shopping'],['sparkles','Special']
+]);
+const BASKET_COLORS=Object.freeze([
+ ['violet','Violet'],['amber','Amber'],['teal','Teal'],['rose','Rose'],
+ ['blue','Blue'],['indigo','Indigo'],['emerald','Emerald'],['slate','Slate']
+]);
+const basketIconKeys=new Set(BASKET_ICONS.map(([key])=>key));
+const basketColorKeys=new Set(BASKET_COLORS.map(([key])=>key));
+let createBasketAppearance={icon:'folder',color:'violet'};
+let renameBasketAppearance={icon:'folder',color:'violet'};
+function basketAppearance(id){
+ const b=basketDefs().find(entry=>entry.id===id);
+ const defaults={folder:'folder',color:{money:'amber',work:'teal',private:'rose',everyday:'violet'}[b?.theme||b?.id]||'violet'};
+ const saved=basketState().appearance[id];
+ return {icon:basketIconKeys.has(saved?.icon)?saved.icon:defaults.folder,
+  color:basketColorKeys.has(saved?.color)?saved.color:defaults.color};
+}
+function drawBasketPicker(dialogId,appearance,update){
+ const icons=$(dialogId+'Icons'),colors=$(dialogId+'Colors');
+ icons.replaceChildren();colors.replaceChildren();
+ for(const [key,name] of BASKET_ICONS){
+  const button=document.createElement('button');button.type='button';button.className='pvb-icon-choice';
+  button.dataset.basketIcon=key;button.setAttribute('aria-label',name+' icon');
+  button.setAttribute('aria-pressed',String(appearance.icon===key));
+  button.title=name;button.innerHTML=icon(key);icons.append(button);
+  button.addEventListener('click',()=>{update('icon',key);drawBasketPicker(dialogId,appearance,update);});
+ }
+ for(const [key,name] of BASKET_COLORS){
+  const button=document.createElement('button');button.type='button';button.className='pvb-color-choice pvb-theme-'+key;
+  button.dataset.basketColor=key;button.setAttribute('aria-label',name+' color');
+  button.setAttribute('aria-pressed',String(appearance.color===key));button.title=name;
+  const dot=document.createElement('span');dot.className='pvb-color-dot';dot.setAttribute('aria-hidden','true');button.append(dot);
+  colors.append(button);
+  button.addEventListener('click',()=>{update('color',key);drawBasketPicker(dialogId,appearance,update);});
+ }
+}
+function setBasketPicker(dialogId,appearance){
+ const target=dialogId==='pvbCreateDialog'?createBasketAppearance=appearance:renameBasketAppearance=appearance;
+ const update=(key,value)=>{target[key]=value;};
+ drawBasketPicker(dialogId,target,update);
+}
+
 // Backward-compatible metadata: older encrypted vaults have no order/removedBase.
 function basketState(){
  const obj=state.vault?.overviewBaskets;
  const names=obj?.names && typeof obj.names==='object' && !Array.isArray(obj.names)?obj.names:{};
  const assignments=obj?.assignments && typeof obj.assignments==='object' && !Array.isArray(obj.assignments)?obj.assignments:{};
+ const appearance=obj?.appearance && typeof obj.appearance==='object' && !Array.isArray(obj.appearance)?obj.appearance:{};
  const removedBase=[...new Set((Array.isArray(obj?.removedBase)?obj.removedBase:[]).filter(id=>baseBasketDefs.some(b=>b.id===id)))];
  // Fail safe against corrupted metadata: always leave one basket.
  if(removedBase.length===baseBasketDefs.length && !(Array.isArray(obj?.custom)&&obj.custom.length))removedBase.pop();
@@ -123,7 +177,7 @@ function basketState(){
  const activeIds=[...activeBases.map(b=>b.id),...custom];
  const order=[...new Set((Array.isArray(obj?.order)?obj.order:[]).filter(id=>activeIds.includes(id)))];
  for(const id of activeIds)if(!order.includes(id))order.push(id);
- return {names,assignments,custom,removedBase,order};
+ return {names,assignments,appearance,custom,removedBase,order};
 }
 function basketDefs(){
  const data=basketState();
@@ -143,7 +197,9 @@ function mutateBaskets(callback){
  const names=Object.create(null),assignments=Object.create(null);
  for(const b of basketDefs())names[b.id]=basketName(b.id);
  for(const item of getItems())if(isBasketId(current.assignments[item.id]))assignments[item.id]=current.assignments[item.id];
- const draft={names,assignments,custom:[...current.custom],removedBase:[...current.removedBase],order:[...current.order]};
+ const appearance=Object.create(null);
+ for(const b of basketDefs())appearance[b.id]=basketAppearance(b.id);
+ const draft={names,assignments,appearance,custom:[...current.custom],removedBase:[...current.removedBase],order:[...current.order]};
  callback(draft);
  state.vault.overviewBaskets=draft;
  state.vault.updatedAt=new Date().toISOString();
@@ -159,7 +215,7 @@ function clearReorderMarkers(){document.querySelectorAll('#pvbGrid .pvb-basket')
 function deleteBasketAndMoveItems(id){
  if(!ready()||!isBasketId(id)||basketDefs().length<=1)return false;
  const destination=basketDefs().find(b=>b.id!==id).id,destinationName=basketName(destination);
- mutateBaskets(b=>{b.custom=b.custom.filter(x=>x!==id);if(baseBasketDefs.some(def=>def.id===id))b.removedBase.push(id);b.order=b.order.filter(x=>x!==id);delete b.names[id];for(const item of getItems())if(itemBasket(item.id)===id)b.assignments[item.id]=destination;});
+ mutateBaskets(b=>{b.custom=b.custom.filter(x=>x!==id);if(baseBasketDefs.some(def=>def.id===id))b.removedBase.push(id);b.order=b.order.filter(x=>x!==id);delete b.names[id];delete b.appearance[id];for(const item of getItems())if(itemBasket(item.id)===id)b.assignments[item.id]=destination;});
  tip('Basket removed · items moved to '+destinationName);
  return true;
 }
@@ -217,7 +273,8 @@ function renderBaskets(){
    const letter=safe((x.title||'•').slice(0,1).toUpperCase());
    return `<div class="pvb-tile" draggable="true" data-basket-drag="${safe(x.id)}"><button type="button" class="pvb-tile-open" data-open="${safe(x.id)}" aria-label="Open ${safe(x.title)}"><span class="pvb-appicon pvb-${itemKind(x)}">${letter}</span><span class="pvb-appname">${safe(x.title)}</span></button><button class="pvb-tile-move" type="button" data-basket-move="${safe(x.id)}" aria-label="Move ${safe(x.title)} to another basket" title="Move item">Move</button></div>`;
   }).join('');
-  return `<article class="pvb-basket pvb-color-${b.theme||b.id}" data-basket-drop="${b.id}"><div class="pvb-basket-top" data-basket-reorder="${b.id}" draggable="true" title="Drag the colored header to reorder"><span class="pvb-folder" aria-hidden="true">${icon('folder')}</span><span class="pvb-grip" tabindex="0" role="button" data-basket-keyboard="${b.id}" aria-label="Move ${safe(basketName(b.id))} basket. Press arrow keys to reorder." title="Arrow keys to reorder">⋮⋮</span><button type="button" class="pvb-rename" data-basket-rename="${b.id}" aria-label="Rename ${safe(basketName(b.id))} basket" title="Rename basket">${icon('more')}</button></div><h3>${safe(basketName(b.id))}</h3><p class="pvb-num">${these.length} ${these.length===1?'item':'items'}</p><div class="pvb-apps">${tiles}${!basketCapacityReached()?`<button type="button" class="pvb-add-tile" data-basket-add="${b.id}" aria-label="Add item to ${safe(basketName(b.id))}"><span>+</span><small>Add item</small></button>`:''}</div><div class="pvb-basket-foot"><span>Drag to organize</span>${basketDefs().length>1?`<button type="button" data-basket-delete="${b.id}" aria-label="Delete ${safe(basketName(b.id))} basket">Delete basket</button>`:'<span class="pvb-last-basket">Required basket</span>'}</div></article>`;
+  const appearance=basketAppearance(b.id);
+  return `<article class="pvb-basket pvb-theme-${appearance.color}" data-basket-drop="${safe(b.id)}"><div class="pvb-basket-top" data-basket-reorder="${safe(b.id)}" draggable="true" title="Drag the colored header to reorder"><span class="pvb-folder" aria-hidden="true">${icon(appearance.icon)}</span><span class="pvb-grip" tabindex="0" role="button" data-basket-keyboard="${b.id}" aria-label="Move ${safe(basketName(b.id))} basket. Press arrow keys to reorder." title="Arrow keys to reorder">⋮⋮</span><button type="button" class="pvb-rename" data-basket-rename="${b.id}" aria-label="Rename ${safe(basketName(b.id))} basket" title="Rename basket">${icon('more')}</button></div><h3>${safe(basketName(b.id))}</h3><p class="pvb-num">${these.length} ${these.length===1?'item':'items'}</p><div class="pvb-apps">${tiles}${!basketCapacityReached()?`<button type="button" class="pvb-add-tile" data-basket-add="${b.id}" aria-label="Add item to ${safe(basketName(b.id))}"><span>+</span><small>Add item</small></button>`:''}</div><div class="pvb-basket-foot"><span>Drag to organize</span>${basketDefs().length>1?`<button type="button" data-basket-delete="${b.id}" aria-label="Delete ${safe(basketName(b.id))} basket">Delete basket</button>`:'<span class="pvb-last-basket">Required basket</span>'}</div></article>`;
  }).join('');
  const cards=mobileBasketCards();
  $('pvbCarouselDots').replaceChildren();
@@ -542,7 +599,7 @@ function saveItem(event){
    state.vault.credentials.push(data);
    if(isBasketId(basketCreateTarget)){
     const current=basketState();
-    state.vault.overviewBaskets={names:Object.fromEntries(basketDefs().map(b=>[b.id,basketName(b.id)])),assignments:{...current.assignments,[data.id]:basketCreateTarget},custom:[...current.custom],removedBase:[...current.removedBase],order:[...current.order]};
+    state.vault.overviewBaskets={names:Object.fromEntries(basketDefs().map(b=>[b.id,basketName(b.id)])),assignments:{...current.assignments,[data.id]:basketCreateTarget},custom:[...current.custom],removedBase:[...current.removedBase],order:[...current.order],appearance:{...current.appearance}};
    }
   }
   state.vault.updatedAt=now;setDirty(true);
@@ -562,7 +619,6 @@ function openDetail(id){
  else{fields.push(detail('Cardholder',x.username),detail('Card number',x.password,true,true));if(x.expiry)fields.push(detail('Expiry',x.expiry));if(x.cvv)fields.push(detail('Security code',x.cvv,true,true));}
  if(x.notes)fields.push(`<div class="detail-row"><small>Additional notes</small><div class="detail-value"><button type="button" class="pv-note-open" data-detail-note="notes">Read full note →</button></div></div>`);
  if(x.tags?.length)fields.push(detail('Tags',x.tags.join(', ')));
- fields.push(detail('Created',new Date(x.createdAt).toLocaleString()));fields.push(detail('Updated',new Date(x.updatedAt).toLocaleString()));
  for(const [i,f] of (x.customFields||[]).entries())fields.push(detail(f.label,f.value,false,!f.type||f.type==='secret','custom-'+i));
  $('detailBody').innerHTML=fields.join('');$('favoriteDetail').innerHTML=icon('star')+(x.favorite?'Unfavorite':'Favorite');$('detailDialog').showModal();
 }
@@ -830,13 +886,16 @@ $('approvedUI').addEventListener('click',e=>{
  const target=e.target.closest('button');if(!target||!$('approvedUI').contains(target))return;
  const deleteBasket=target.closest('[data-basket-delete]');if(deleteBasket){basketDeleteTarget=deleteBasket.dataset.basketDelete;if(!isBasketId(basketDeleteTarget)||basketDefs().length<=1)return;const destination=basketDefs().find(b=>b.id!==basketDeleteTarget);$('pvbDeleteDescription').textContent='Delete '+basketName(basketDeleteTarget)+'? Its items will be moved to '+basketName(destination.id)+'. This cannot be undone.';$('pvbDeleteDialog').showModal();return;}
  const addBasket=target.closest('[data-basket-add]');if(addBasket){openEditor(null,'',addBasket.dataset.basketAdd);return;}
- const renameBasket=target.closest('[data-basket-rename]');if(renameBasket){basketRenameTarget=renameBasket.dataset.basketRename;$('pvbRenameInput').value=basketName(basketRenameTarget);$('pvbRenameDialog').showModal();$('pvbRenameInput').focus();return;}
+ const renameBasket=target.closest('[data-basket-rename]');if(renameBasket){basketRenameTarget=renameBasket.dataset.basketRename;if(!isBasketId(basketRenameTarget))return;$('pvbRenameInput').value=basketName(basketRenameTarget);setBasketPicker('pvbRenameDialog',basketAppearance(basketRenameTarget));$('pvbRenameDialog').showModal();$('pvbRenameInput').focus();return;}
  const moveBasket=target.closest('[data-basket-move]');if(moveBasket){basketMoveTarget=moveBasket.dataset.basketMove;const x=findItem(basketMoveTarget);if(!x)return;$('pvbMoveDescription').textContent=x.title;const sel=$('pvbMoveSelect');sel.replaceChildren();for(const b of basketDefs()){const opt=document.createElement('option');opt.value=b.id;opt.textContent=basketName(b.id);opt.selected=b.id===itemBasket(basketMoveTarget);sel.append(opt);}$('pvbMoveDialog').showModal();return;}
  const settingsChoice=target.closest('[data-settings-section]');if(settingsChoice){openSettingsSection(settingsChoice.dataset.settingsSection);return;}
  const settingsBack=target.closest('[data-settings-back]');if(settingsBack){showSettingsHome();$('pvSettingsHome').querySelector('[data-settings-section]').focus({preventScroll:true});return;}
  const profileAction=target.closest('[data-profile-action]');if(profileAction){if(profileAction.dataset.profileAction==='password'){navigate('settings');openSettingsSection('account');$('changeAccountPasswordForm').scrollIntoView({behavior:'smooth',block:'center'});$('currentAccountPassword').focus();}return;}
  const close=target.closest('[data-close]');if(close){$(close.dataset.close).close();return;}
- const to=target.closest('[data-page]');if(to){closeAccountMenu();navigate(to.dataset.page);return;}
+ const to=target.closest('[data-page]');if(to){closeAccountMenu();navigate(to.dataset.page);
+  // Pointer activation leaves focus on the menu button; that otherwise keeps
+  // :focus-within expanded after the mouse has left the sidebar.
+  if(e.detail>0 && document.activeElement===to)to.blur();return;}
  const newb=target.closest('[data-new]');if(newb){openEditor();return;}
  const filteredButton=target.closest('[data-filter]');if(filteredButton){filter=filteredButton.dataset.filter;document.querySelectorAll('#approvedUI [data-filter]').forEach(x=>x.classList.toggle('selected',x===filteredButton));render();return;}
  const typeb=target.closest('[data-kind]');if(typeb){changeKind(typeb.dataset.kind);return;}
@@ -858,13 +917,13 @@ $('approvedUI').addEventListener('click',e=>{
 });
 $('pvbCreateButton').addEventListener('click',()=>{
  if(!ready()||basketDefs().length>=BASKET_MAX)return;
- $('pvbCreateInput').value='';$('pvbCreateDialog').showModal();$('pvbCreateInput').focus();
+ $('pvbCreateInput').value='';setBasketPicker('pvbCreateDialog',{icon:'folder',color:'violet'});$('pvbCreateDialog').showModal();$('pvbCreateInput').focus();
 });
 $('pvbCreateForm').addEventListener('submit',e=>{
  e.preventDefault();if(!ready()||basketDefs().length>=BASKET_MAX)return;
  const name=$('pvbCreateInput').value.trim();if(!name||name.length>20)return;
  const id='custom-'+secureId();
- $('pvbCreateDialog').close();mutateBaskets(b=>{b.custom.push(id);b.order.push(id);b.names[id]=name;});tip('Basket created');
+ $('pvbCreateDialog').close();mutateBaskets(b=>{b.custom.push(id);b.order.push(id);b.names[id]=name;b.appearance[id]={...createBasketAppearance};});tip('Basket created');
 });
 $('pvbDeleteForm').addEventListener('submit',e=>{
  e.preventDefault();const id=basketDeleteTarget;
@@ -875,7 +934,7 @@ $('pvbDeleteForm').addEventListener('submit',e=>{
 $('pvbRenameForm').addEventListener('submit',e=>{
  e.preventDefault();if(!ready()||!isBasketId(basketRenameTarget))return;
  const name=$('pvbRenameInput').value.trim();if(!name||name.length>20)return;
- const id=basketRenameTarget;$('pvbRenameDialog').close();mutateBaskets(b=>{b.names[id]=name;});tip('Basket renamed');
+ const id=basketRenameTarget;$('pvbRenameDialog').close();mutateBaskets(b=>{b.names[id]=name;b.appearance[id]={...renameBasketAppearance};});basketRenameTarget=null;tip('Basket updated');
 });
 $('pvbMoveForm').addEventListener('submit',e=>{
  e.preventDefault();if(!ready())return;

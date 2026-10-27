@@ -125,7 +125,7 @@
     resetViewer(); activeKind=kind;
     setHeading(category.name,`Edit history · ${state.vault.name}`);
     const items=matchingItems(kind);
-    back.hidden=true;
+    back.hidden=false;back.setAttribute('aria-label','Back to encrypted history overview');
     if(!items.length){emptyMessage(`No ${category.name.toLowerCase()} in this vault.`);}
     else {
       const list=element('div','pv-history-modal-list');
@@ -151,7 +151,7 @@
     if(!readable())return clear();
     const item=matchingItems(activeKind).find(i=>i.id===itemId);
     if(!item)return;
-    activeItemId=itemId;revealed.clear();back.hidden=false;
+    activeItemId=itemId;revealed.clear();back.hidden=false;back.setAttribute('aria-label','Back to category items');
     const events=eventsFor(itemId);
     setHeading(item.title||'Untitled item',`${countText(events.filter(e=>e.action==='edited').length,'edit','edits')} · Newest changes first · ${state.vault.name}`);
     if(!events.length){emptyMessage('No saved changes for this item yet. History began when this feature was enabled.');return;}
@@ -245,7 +245,11 @@
     textExpand.textContent='Expand view';textExpand.setAttribute('aria-expanded','false');
     byId('pvHistoryTextCount').textContent='';
   });
-  back.addEventListener('click',()=>{if(activeKind)showCategory(activeKind);});
+  back.addEventListener('click',()=>{
+    if(!readable())return clear();
+    if(activeItemId && activeKind){showCategory(activeKind);back.focus({preventScroll:true});}
+    else if(activeKind){dialog.close();refresh();byId('pvHistoryList').querySelector('button')?.focus({preventScroll:true});}
+  });
   byId('pvHistoryClose').addEventListener('click',()=>dialog.close());
   dialog.addEventListener('close',resetViewer);
   window.PassVaultHistoryUI={refresh,clear};
