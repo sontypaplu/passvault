@@ -445,6 +445,7 @@
 <div class="navlabel">WORKSPACE</div>
 <button class="navitem active" data-page="overview" aria-label="Overview" title="Overview"><span data-icon="layout"></span><span class="nav-text">Overview</span></button>
 <button class="navitem" data-page="items" aria-label="All items" title="All items"><span data-icon="key"></span><span class="nav-text">All items</span> <span class="badgecount" id="navCount">6</span></button>
+<button type="button" class="navitem" id="pvCommandNav" aria-label="Quick access" title="Quick access"><span data-icon="search"></span><span class="nav-text">Quick access</span></button>
 <button class="navitem" data-page="favorites" aria-label="Favorites" title="Favorites"><span data-icon="star"></span><span class="nav-text">Favorites</span></button>
 <button class="navitem" data-page="vaults" aria-label="My vaults" title="My vaults"><span data-icon="folder"></span><span class="nav-text">My vaults</span></button>
 <div class="sidedivider"></div><div class="navlabel">TOOLS &amp; SECURITY</div>
@@ -456,7 +457,7 @@
 </aside>
 <button aria-label="Close navigation" class="mobile-backdrop" id="approvedMobileBackdrop"></button>
 <div class="main">
-<header class="topbar"><button aria-label="Pin navigation open" aria-expanded="false" aria-controls="approvedSidebar" class="iconbtn mobile-menu" data-icon="menu" id="openMenu" title="Pin navigation open"></button><div class="crumb"><span>Workspace /</span><span class="preview-inline-2" id="crumb">Overview</span></div><label class="top-search" id="searchWrap"><span data-icon="search"></span><input aria-label="Search unlocked vault items" autocomplete="off" id="search" placeholder="Search your vault..." type="search"/><span class="kbd">⌘ K</span></label><button aria-label="Toggle light or dark appearance" class="iconbtn" data-icon="moon" id="themeToggle" title="Toggle theme"></button><button aria-label="Lock current vault" class="iconbtn" data-icon="lock" id="lockShortcut" title="Lock current vault"></button><button class="btn btn-primary newbtn" id="topNew" type="button" title="Create new vault" aria-label="Create new vault"><span data-icon="plus"></span><span class="buttonlabel">New vault</span></button><div class="preview-flows"><button aria-expanded="false" aria-label="Vault actions" class="iconbtn" data-icon="more" id="flowsToggle" title="Vault actions"></button><div class="flow-menu hidden" id="flowsMenu"><button data-flow="vaults" type="button"><span data-icon="folder"></span> My vaults</button><button data-flow="lock" type="button"><span data-icon="lock"></span> Lock vault</button><button data-flow="signout" type="button"><span data-icon="user"></span> Sign out</button></div></div></header>
+<header class="topbar"><button aria-label="Pin navigation open" aria-expanded="false" aria-controls="approvedSidebar" class="iconbtn mobile-menu" data-icon="menu" id="openMenu" title="Pin navigation open"></button><div class="crumb"><span>Workspace /</span><span class="preview-inline-2" id="crumb">Overview</span></div><div class="top-search" id="searchWrap"><span data-icon="search"></span><input aria-label="Search unlocked vault items" autocomplete="off" id="search" placeholder="Search your vault..." type="search"/><button id="pvCommandTrigger" type="button" class="kbd pv-command-trigger" title="Quick search (Ctrl/⌘ K)" aria-label="Open quick search">⌘ K</button></div><button aria-label="Toggle light or dark appearance" class="iconbtn" data-icon="moon" id="themeToggle" title="Toggle theme"></button><button aria-label="Lock current vault" class="iconbtn" data-icon="lock" id="lockShortcut" title="Lock current vault"></button><button class="btn btn-primary newbtn" id="topNew" type="button" title="Create new vault" aria-label="Create new vault"><span data-icon="plus"></span><span class="buttonlabel">New vault</span></button><div class="preview-flows"><button aria-expanded="false" aria-label="Vault actions" class="iconbtn" data-icon="more" id="flowsToggle" title="Vault actions"></button><div class="flow-menu hidden" id="flowsMenu"><button data-flow="vaults" type="button"><span data-icon="folder"></span> My vaults</button><button data-flow="lock" type="button"><span data-icon="lock"></span> Lock vault</button><button data-flow="signout" type="button"><span data-icon="user"></span> Sign out</button></div></div></header>
 <div class="preview-strip"><span data-icon="info"></span><b>Encrypted vault</b> — Local encryption · Signed-in vault</div>
 <div class="container" id="workspace"><div id="approvedSyncNotice" class="sync-notice" role="alert" hidden><span id="approvedSyncMessage"></span><div class="sync-actions"><button type="button" class="btn btn-light" id="approvedSyncRetry">Retry sync</button><button type="button" class="btn btn-light" id="approvedSyncBackup">Download backup</button><a id="approvedBackupFallback" class="btn btn-light hidden" download>Save prepared backup file</a></div></div>
 <section class="page active" id="page-overview"><div class="heading"><div><div class="eyebrow">YOUR WORKSPACE</div><h1><span class="pv-desktop-heading">Welcome back to your vault <span class="preview-inline-3">✦</span></span><span class="pv-mobile-heading">Overview</span></h1><p>Here's a clear view of your digital essentials and what needs attention.</p></div><div class="heading-actions"><span class="status" id="approvedVaultStatus"><span class="dot"></span> Your vault · Unlocked</span></div></div><section class="pvb-capacity card" aria-label="Current vault item capacity">
@@ -589,11 +590,11 @@
   <summary>Optional additional fields</summary>
   <div class="field">
     <label for="approvedTags">Tags (up to 10, comma separated)</label>
-    <input id="approvedTags" autocomplete="off" maxlength="400"/>
+    <input id="approvedTags" autocomplete="off" maxlength="400" spellcheck="false" placeholder="e.g. Work, Finance"/><div id="pvTagSuggestions" class="pv-tag-suggestions" aria-label="Suggested tags"></div>
   </div>
   <div class="field">
     <label>Custom fields</label>
-    <div id="approvedCustomFields"></div>
+    <div id="approvedCustomFields"></div><small class="pv-field-hint">Encrypted custom values are hidden while editing until you choose Show.</small>
     <button class="btn btn-light" id="approvedAddCustom" type="button">+ Add custom field</button>
   </div>
   <div class="note">Optional information is stored in your encrypted vault.</div>
@@ -624,6 +625,17 @@
     <button class="btn btn-light" id="approvedGateSignOut" type="button">Sign out</button>
     <button class="btn btn-primary" id="approvedGateCreate" type="button" hidden>Create new vault</button>
   </div>
+</dialog>
+<dialog class="pv-command-dialog" id="pvCommandDialog" aria-labelledby="pvCommandHeading">
+  <div class="pv-command-top"><div><span class="pv-command-overline">QUICK ACCESS</span><h2 id="pvCommandHeading">Find something</h2></div><button type="button" class="pv-command-dismiss" id="pvCommandDismiss" aria-label="Close quick search">×</button></div>
+  <label class="pv-command-search-label" for="pvCommandInput"><span aria-hidden="true">⌕</span><input type="search" autocomplete="off" spellcheck="false" maxlength="128" id="pvCommandInput" placeholder="Search names, websites or tags" aria-controls="pvCommandResults"/><kbd>Esc</kbd></label>
+  <div class="pv-command-results" id="pvCommandResults" aria-label="Quick access results"></div>
+  <div class="pv-command-footer"><span>↑ ↓ Navigate · Enter Open</span><span>Only unlocked item metadata is searched</span></div>
+</dialog>
+<dialog class="pv-detail-note-dialog" id="pvDetailNoteDialog" aria-labelledby="pvDetailNoteTitle">
+  <div class="pv-detail-note-head"><div><span class="pv-command-overline">ENCRYPTED CONTENT</span><h2 id="pvDetailNoteTitle">Secure note</h2></div><button type="button" class="pv-command-dismiss" id="pvDetailNoteClose" aria-label="Close note">×</button></div>
+  <div class="pv-detail-note-body" id="pvDetailNoteContent"></div>
+  <div class="pv-detail-note-foot"><button type="button" class="btn btn-light" id="pvDetailNoteExpand" aria-expanded="false">Expand</button><button type="button" class="btn btn-primary" id="pvDetailNoteDone">Close</button></div>
 </dialog>
 <div aria-live="polite" class="toast" id="toast" role="status"><span data-icon="check"></span><span id="toastText"></span></div>
 </div>

@@ -459,7 +459,7 @@ function validateVaultPlaintext(vault) {
     }
     if (credential.customFields !== undefined) {
       if (!Array.isArray(credential.customFields) || credential.customFields.length > 10 || credential.customFields.some(f =>
-        !f || typeof f.label !== 'string' || f.label.length > 60 || typeof f.value !== 'string' || f.value.length > 1024
+        !f || typeof f.label !== 'string' || f.label.length > 60 || typeof f.value !== 'string' || f.value.length > 1024 || (f.type !== undefined && !['secret','text','url','date'].includes(f.type))
       )) throw new Error('Invalid encrypted custom fields.');
     }
   }
@@ -527,7 +527,7 @@ function validateVaultHistory(vault) {
       if (snapshot.kind !== undefined && !['login','note','card'].includes(snapshot.kind)) throw new Error('Invalid historical item kind.');
       if (snapshot.favorite !== undefined && typeof snapshot.favorite !== 'boolean') throw new Error('Invalid historical favorite.');
       if (snapshot.tags !== undefined && (!Array.isArray(snapshot.tags) || snapshot.tags.length > 10 || snapshot.tags.some(x => typeof x !== 'string' || x.length > 40))) throw new Error('Invalid historical tags.');
-      if (snapshot.customFields !== undefined && (!Array.isArray(snapshot.customFields) || snapshot.customFields.length > 10 || snapshot.customFields.some(x => !x || typeof x.label !== 'string' || x.label.length > 60 || typeof x.value !== 'string' || x.value.length > 1024))) throw new Error('Invalid historical custom fields.');
+      if (snapshot.customFields !== undefined && (!Array.isArray(snapshot.customFields) || snapshot.customFields.length > 10 || snapshot.customFields.some(x => !x || typeof x.label !== 'string' || x.label.length > 60 || typeof x.value !== 'string' || x.value.length > 1024 || (x.type !== undefined && !['secret','text','url','date'].includes(x.type))))) throw new Error('Invalid historical custom fields.');
     }
   }
 }
