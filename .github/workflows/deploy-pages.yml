@@ -35,6 +35,8 @@ jobs:
         run: npm run test:recovery
       - name: Test premium vault experience and custom-field compatibility
         run: npm run test:phase3
+      - name: Test online-only install and update safeguards
+        run: npm run test:pwa
       - name: Build local SDK and project-scoped CSP
         run: npm run build
       - name: Verify static build
