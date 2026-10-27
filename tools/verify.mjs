@@ -10,6 +10,8 @@ const csp = html.match(/http-equiv="Content-Security-Policy" content="([^"]+)"/)
 if (!csp) throw new Error('CSP missing');
 if (csp.includes('unsafe-inline') || csp.includes('cdn.jsdelivr.net') || html.includes('style=')) throw new Error('Relaxed CSP or inline styling detected');
 if (!csp.includes("script-src 'self' 'wasm-unsafe-eval'")) throw new Error('Script CSP mismatch');
+const connectSources = csp.match(/(?:^|;\s*)connect-src\s+([^;]+)/)?.[1]?.split(/\s+/) ?? [];
+if (!connectSources.includes("'self'")) throw new Error('PWA release requests blocked by connect-src CSP');
 if (!csp.includes('worker-src blob:')) throw new Error('Argon2id Blob worker is blocked');
 if (html.match(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)?.some(s => !s.includes('src='))) throw new Error('Inline executable script detected');
 const files = [...html.matchAll(/(?:src|href)="(\.\/src\/[^\"]+)"/g)].map(m => m[1]);

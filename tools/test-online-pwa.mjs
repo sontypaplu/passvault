@@ -28,6 +28,15 @@ for (const ico of manifest.icons) {
 assert(html.includes('rel="manifest" href="./manifest.webmanifest"'));
 assert(html.includes("manifest-src 'self'"));
 assert(html.includes('src="./src/js/pwa.js"'));
+// Same-origin fetch() calls are governed by connect-src, not script-src.
+// Without 'self', a GitHub Pages build cannot fetch its app-version.json and
+// incorrectly blocks the whole online-only login screen.
+const sourceCsp = html.match(/http-equiv="Content-Security-Policy" content="([^"]+)"/)?.[1];
+assert(sourceCsp, 'Missing source Content Security Policy');
+const connectionDirective = sourceCsp.match(/(?:^|;\s*)connect-src\s+([^;]+)/)?.[1] ?? '';
+assert(connectionDirective.split(/\s+/).includes("'self'"),
+  'CSP connect-src must allow same-origin PWA release checks');
+
 assert(!existsSync(join(root,'sw.js')),'No service worker is permitted for online-only mode');
 assert(!/serviceWorker\.register|caches\.open|cache\.put|addAll\(/.test(code),'Offline caching introduced');
 assert(build.includes('app-version.json'));
