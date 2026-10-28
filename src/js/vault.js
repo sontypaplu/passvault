@@ -206,7 +206,7 @@ function validateCredentialDraft() {
   if (!username) throw new Error("Username / Email is required.");
   if (!password) throw new Error("Password is required.");
   if (url) {
-    try { new URL(url); } catch { throw new Error("Website URL is not valid."); }
+    window.PassVaultURLSafety.validate(url);
   }
 
   if (title.length > 256 || username.length > 512 || password.length > 2048 || notes.length > 4096 || url.length > 2048) {
@@ -532,6 +532,7 @@ async function handleUnlockVault() {
     if (imported.type === "legacy-v1") {
       if (!master) throw new Error("Master password is required.");
       const vault = await decryptLegacyV1(imported.record, master);
+      if(cloud.importSource === 'file')window.PassVaultURLSafety.validateImportedVault(vault);
       if (idleSignOutPending || cloud.userId !== openingUser || cloud.selectedVaultId !== openingVaultId || cloud.epoch !== openingEpoch) throw new Error("Account changed or session expired while unlocking.");
 
       const salt = randomBytes(VAULT_SALT_BYTES);
@@ -570,6 +571,8 @@ async function handleUnlockVault() {
       }
       key = await deriveVaultKey(master, salt, record.pepperRequired ? pepper : "", record.parameters);
       const vault = await decryptVaultPayload(record, key);
+      // Imported encrypted backups are rejected before changing the active vault.
+      if(cloud.importSource === 'file')window.PassVaultURLSafety.validateImportedVault(vault);
       if (idleSignOutPending || cloud.userId !== openingUser || cloud.selectedVaultId !== openingVaultId || cloud.epoch !== openingEpoch) throw new Error("Account changed or session expired while unlocking.");
 
       if (cloud.importSource === 'file' && cloud.revision > 0) {

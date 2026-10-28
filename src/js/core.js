@@ -758,6 +758,23 @@ function generatorOptions() {
   };
 }
 
+const trustedArgon2BlobURL = (()=>{
+  let expected=null,policy=null;
+  return url=>{
+    if(!globalThis.trustedTypes)return url;
+    if(!policy){
+      policy=globalThis.trustedTypes.createPolicy('passvault-argon2-worker',{
+        createScriptURL(value){
+          if(value!==expected)throw new TypeError('Only the newly created Argon2 worker is allowed.');
+          return value;
+        }
+      });
+    }
+    expected=url;
+    try{return policy.createScriptURL(url);}
+    finally{expected=null;}
+  };
+})();
 function createArgon2Worker() {
   const source = `
 "use strict";
@@ -878,7 +895,7 @@ self.onmessage = async (event) => {
 
   const blob = new Blob([source], { type: "text/javascript" });
   const url = URL.createObjectURL(blob);
-  const worker = new Worker(url);
+  const worker = new Worker(trustedArgon2BlobURL(url));
 
   return {
     worker,

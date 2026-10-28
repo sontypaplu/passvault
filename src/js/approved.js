@@ -3,8 +3,30 @@
 'use strict';
 const paths={shield:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/>',layout:'<rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/>',key:'<circle cx="7.5" cy="15.5" r="5.5"/><path d="M12 12 21 3l-1 5-4 1-1 4"/>',star:'<path d="m12 2 3 6.4 7 .9-5 4.8 1.3 7-6.3-3.4-6.3 3.4 1.3-7-5-4.8 7-.9Z"/>',folder:'<path d="M3 7a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2v9H3Z"/>',settings:'<path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M19.3 13.5a8.5 8.5 0 0 0 0-3l2-1.5-2-3.4-2.4.9a8 8 0 0 0-2.5-1.5L14 2h-4l-.4 3A8 8 0 0 0 7.1 6.5l-2.4-.9-2 3.4 2 1.5a8.5 8.5 0 0 0 0 3l-2 1.5 2 3.4 2.4-.9A8 8 0 0 0 9.6 19l.4 3h4l.4-3a8 8 0 0 0 2.5-1.5l2.4.9 2-3.4Z"/>',sparkles:'<path d="m12 2 2.5 7.5L22 12l-7.5 2.5L12 22l-2.5-7.5L2 12l7.5-2.5Z"/>',search:'<circle cx="10.8" cy="10.8" r="7.3"/><path d="m16 16 5 5"/>',plus:'<path d="M12 5v14M5 12h14"/>',moon:'<path d="M20.9 13.2A9 9 0 0 1 10.8 3.1 9 9 0 1 0 20.9 13.2Z"/>',sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M19 5l-1.5 1.5m-11 11L5 19"/>',lock:'<rect x="5" y="11" width="14" height="11" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',menu:'<path d="M4 6h16M4 12h16M4 18h16"/>',more:'<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>',chevrons:'<path d="m8 10 4 4 4-4"/>',info:'<circle cx="12" cy="12" r="10"/><path d="M12 11v6m0-10h.01"/>',check:'<path d="m5 12 4 4L19 6"/>',copy:'<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/>',refresh:'<path d="M20 7v5h-5M4 17v-5h5"/><path d="M5.5 9A7 7 0 0 1 18 7l2 5M4 12l2 5a7 7 0 0 0 12.5-2"/>',download:'<path d="M12 3v13m-5-5 5 5 5-5M4 18v3h16v-3"/>',cloud:'<path d="M5 18a4 4 0 1 1 1-7.9 6.5 6.5 0 0 1 12.7 1.4A3.5 3.5 0 1 1 19 18Z"/>','shield-check':'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/>',trash:'<path d="M4 7h16M10 3h4m4 4-1 14H7L6 7m4 3v8m4-8v8"/>',edit:'<path d="m15 5 4 4M4 20l4.5-1 11-11a2.1 2.1 0 0 0-4-4l-11 11L4 20Z"/>',x:'<path d="M5 5l14 14M19 5 5 19"/>',user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>','user-plus':'<circle cx="10" cy="8" r="4"/><path d="M2 21a8 8 0 0 1 16 0M19 8v8m-4-4h8"/>',eye:'<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>',alert:'<path d="m12 3 10 18H2L12 3Z"/><path d="M12 9v5m0 4h.01"/>',arrow:'<path d="M5 12h14m-6-6 6 6-6 6"/>','wallet':'<rect x="3" y="6" width="18" height="15" rx="2"/><path d="M3 9V5a2 2 0 0 1 2-2h13m1 8h2v5h-5a2.5 2.5 0 1 1 0-5h3"/>','briefcase':'<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M8 7V4h8v3M2 13h20"/>','heart':'<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z"/>','book':'<path d="M3 4.5h7a3 3 0 0 1 3 3V21a3 3 0 0 0-3-3H3V4.5Zm10 3a3 3 0 0 1 3-3h5V18h-5a3 3 0 0 0-3 3"/>','globe':'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c-5 5-5 13 0 18M12 3c5 5 5 13 0 18"/>','shopping':'<path d="M4 9h16l-1 12H5L4 9Zm4 0V6a4 4 0 0 1 8 0v3"/>'};
 const icon=(id)=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths[id]||paths.info}</svg>`;
-const $=(id)=>document.getElementById(id);const safe=(x)=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-document.querySelectorAll('#approvedUI [data-icon]').forEach(x=>x.innerHTML=icon(x.dataset.icon));
+const $=(id)=>document.getElementById(id);
+// Build user-facing content with DOM APIs; user-provided text is never HTML.
+const el=(tag,css='',text)=>{const n=document.createElement(tag);if(css)n.className=css;if(text!==undefined)n.textContent=String(text);return n;};
+const svgNS='http://www.w3.org/2000/svg';
+function iconNode(id){
+ const svg=document.createElementNS(svgNS,'svg');
+ for(const [key,value] of Object.entries({viewBox:'0 0 24 24',fill:'none',stroke:'currentColor','stroke-width':'1.85','stroke-linecap':'round','stroke-linejoin':'round','aria-hidden':'true'}))svg.setAttribute(key,value);
+ // Only our closed, hard-coded icon dictionary can provide SVG attributes.
+ const staticIcon=paths[id]||paths.info;
+ for(const part of staticIcon.matchAll(/<([a-z]+)([^>]*)\/>/g)){
+  if(!['path','rect','circle'].includes(part[1]))continue;
+  const child=document.createElementNS(svgNS,part[1]);
+  for(const attr of part[2].matchAll(/([a-z][a-z0-9-]*)="([^"]*)"/g)){
+   if(['d','x','y','rx','width','height','cx','cy','r'].includes(attr[1]))child.setAttribute(attr[1],attr[2]);
+  }
+  svg.append(child);
+ }
+ return svg;
+}
+function iconInto(target,id){target.replaceChildren(iconNode(id));}
+function actionButton(css,attrs,iconId){const b=el('button',css);b.type='button';for(const [key,value] of Object.entries(attrs||{})){
+ if(key.startsWith('data-'))b.setAttribute(key,String(value));else b.setAttribute(key,String(value));
+ }if(iconId)b.append(iconNode(iconId));return b;}
+document.querySelectorAll('#approvedUI [data-icon]').forEach(x=>iconInto(x,x.dataset.icon));
 // This is a presentation adapter. No crypto, cloud schema, auth flow, or storage implementation changes.
 const pageTitles={overview:'Overview',items:'All items',favorites:'Favorites',vaults:'My vaults',security:'Security center',generator:'Password generator',profile:'My profile',settings:'Settings'};
 const kindLabel={login:'Login',note:'Secure note',card:'Payment card'};
@@ -29,7 +51,7 @@ function computeHealth(){
 }
 function tip(message){$('toastText').textContent=message;$('toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.remove('show'),3100);}
 function info(title,message){$('infoTitle').textContent=title;$('infoMessage').textContent=message;$('infoDialog').showModal();}
-function theme(dark){window.PassVaultTheme.set(dark?'dark':'light');$('themeToggle').innerHTML=icon(dark?'sun':'moon');$('darkSwitch').classList.toggle('on',dark);$('darkSwitch').setAttribute('aria-checked',String(dark));}
+function theme(dark){window.PassVaultTheme.set(dark?'dark':'light');iconInto($('themeToggle'),dark?'sun':'moon');$('darkSwitch').classList.toggle('on',dark);$('darkSwitch').setAttribute('aria-checked',String(dark));}
 function updateMobileSidebarFocus(){
  const mobile=window.matchMedia('(max-width:760px)').matches;
  $('approvedSidebar').inert=mobile&&!$('approvedSidebar').classList.contains('open');
@@ -63,7 +85,7 @@ function openSettingsSection(key){
  $('pvSettingsHome').hidden=true;$('pvSettingsDetail').hidden=false;
  document.querySelectorAll('#approvedUI [data-settings-panel]').forEach(panel=>panel.hidden=panel.dataset.settingsPanel!==key);
  $('pvSettingsDetailTitle').textContent=meta[0];$('pvSettingsDetailDescription').textContent=meta[1];$('pvSettingsDetailDescription').hidden=!meta[1];
- $('pvSettingsDetailIcon').innerHTML=icon(meta[2]);
+ iconInto($('pvSettingsDetailIcon'),meta[2]);
  if(key==='recycle')window.PassVaultPhase1?.refresh();
  $('pvSettingsDetailTitle').focus({preventScroll:true});
  document.getElementById('page-settings').scrollIntoView({block:'start',behavior:'instant'});
@@ -96,16 +118,38 @@ function filtered(items){
  return out;
 }
 function buildTable(items,empty='No items found.',headers=true){
- if(!items.length)return `<div class="empty">${icon('search')}<h3>${safe(empty)}</h3><p>Try a different filter or add a new item.</p>${basketCapacityReached()?'':`<button class="btn btn-primary" data-new>${icon('plus')}New item</button>`}</div>`;
- const local=getItems();const pwCount=new Map();for(const x of local.filter(x=>itemKind(x)==='login'))pwCount.set(x.password,(pwCount.get(x.password)||0)+1);
- return `<div class="table-wrap"><table class="item-table"><thead>${headers?'<tr><th>ITEM</th><th>TYPE</th><th class="hide-mobile">USERNAME / DETAILS</th><th>STATUS</th><th aria-label="Actions"></th></tr>':''}</thead><tbody>${items.map(x=>{
-  const k=itemKind(x);const weak=k==='login'&&basicWeak(x.password);const reused=k==='login'&&pwCount.get(x.password)>1;
-  const label=k!=='login'?'Stored':weak?'Weak':reused?'Reused':'No flags';
-  const issue=k==='login'&&(weak||reused);
-  return `<tr><td><div class="itemnamebox"><span class="service-icon ${serviceColor(k)}">${safe((x.title||'•').slice(0,1).toUpperCase())}</span><span><button class="name-button" data-open="${safe(x.id)}">${safe(x.title)}</button><small>${safe(x.updatedAt?new Date(x.updatedAt).toLocaleDateString():'Recently added')}</small></span></div></td><td><span class="tag">${kindLabel[k]}</span></td><td class="hide-mobile approved-muted">${safe(k==='login'?x.username:k==='card'?'Payment card':'Private note')}</td><td><span class="tag ${k!=='login'?'':issue?'warn':'good'}">${label}</span></td><td><button class="rowbtn ${x.favorite?'star-on':''}" aria-label="${x.favorite?'Remove favorite':'Add favorite'} for ${safe(x.title)}" data-fav="${safe(x.id)}">${icon('star')}</button><button class="rowbtn" aria-label="Open ${safe(x.title)}" data-open="${safe(x.id)}">${icon('arrow')}</button></td></tr>`;
- }).join('')}</tbody></table></div>`;
+ if(!items.length){
+  const box=el('div','empty');box.append(iconNode('search'),el('h3','',empty),el('p','','Try a different filter or add a new item.'));
+  if(!basketCapacityReached()){const add=actionButton('btn btn-primary',{'data-new':''},'plus');add.append(document.createTextNode('New item'));box.append(add);}
+  return box;
+ }
+ const pwCount=new Map();for(const item of getItems().filter(x=>itemKind(x)==='login'))pwCount.set(item.password,(pwCount.get(item.password)||0)+1);
+ const wrap=el('div','table-wrap'),table=el('table','item-table'),thead=el('thead'),tbody=el('tbody');
+ if(headers){const header=el('tr');for(const [label,css] of [['ITEM',''],['TYPE',''],['USERNAME / DETAILS','hide-mobile'],['STATUS',''],['','']]){
+  const th=el('th',css,label);if(!label)th.setAttribute('aria-label','Actions');header.append(th);
+ }thead.append(header);}
+ for(const x of items){
+  const k=itemKind(x),weak=k==='login'&&basicWeak(x.password),reused=k==='login'&&pwCount.get(x.password)>1;
+  const issue=k==='login'&&(weak||reused),label=k!=='login'?'Stored':weak?'Weak':reused?'Reused':'No flags';
+  const tr=el('tr'),nameCell=el('td'),namebox=el('div','itemnamebox'),badge=el('span','service-icon '+serviceColor(k),(x.title||'•').slice(0,1).toUpperCase());
+  const names=el('span'),title=actionButton('name-button',{'data-open':x.id});title.textContent=x.title;
+  const stamp=x.updatedAt?new Date(x.updatedAt):null;
+  names.append(title,el('small','',stamp&&!Number.isNaN(stamp.getTime())?stamp.toLocaleDateString():'Recently added'));
+  namebox.append(badge,names);nameCell.append(namebox);
+  const type=el('td');type.append(el('span','tag',kindLabel[k]));
+  const secondary=el('td','hide-mobile approved-muted',k==='login'?x.username:k==='card'?'Payment card':'Private note');
+  const status=el('td');status.append(el('span','tag '+(k!=='login'?'':issue?'warn':'good'),label));
+  const controls=el('td');controls.append(actionButton('rowbtn '+(x.favorite?'star-on':''),{'aria-label':(x.favorite?'Remove favorite':'Add favorite')+' for '+x.title,'data-fav':x.id},'star'),actionButton('rowbtn',{'aria-label':'Open '+x.title,'data-open':x.id},'arrow'));
+  tr.append(nameCell,type,secondary,status,controls);tbody.append(tr);
+ }
+ table.append(thead,tbody);wrap.append(table);return wrap;
 }
-function vaultTile(v){const active=v.id===activeVault();return `<button class="vault-tile ${!active?'teal':''}" data-selectvault="${safe(v.id)}"><span class="tile-icon">${icon(active?'shield-check':'lock')}</span><strong>${safe(v.name)}</strong><small>${active?'Currently unlocked · '+getItems().length+' items':'Locked · Needs master password'}</small><span class="tile-go">${icon('arrow')}</span></button>`;}
+function vaultTile(v){
+ const active=v.id===activeVault();const tile=actionButton('vault-tile '+(!active?'teal':''),{'data-selectvault':v.id});
+ const emblem=el('span','tile-icon');emblem.append(iconNode(active?'shield-check':'lock'));
+ tile.append(emblem,el('strong','',v.name),el('small','',active?'Currently unlocked · '+getItems().length+' items':'Locked · Needs master password'));
+ const arrow=el('span','tile-go');arrow.append(iconNode('arrow'));tile.append(arrow);return tile;
+}
 // Overview-only basket metadata lives INSIDE the already encrypted vault payload.
 // No separate browser storage, cloud tables, crypto changes, or credential migrations.
 const baseBasketDefs=[
@@ -145,7 +189,7 @@ function drawBasketPicker(dialogId,appearance,update){
   const button=document.createElement('button');button.type='button';button.className='pvb-icon-choice';
   button.dataset.basketIcon=key;button.setAttribute('aria-label',name+' icon');
   button.setAttribute('aria-pressed',String(appearance.icon===key));
-  button.title=name;button.innerHTML=icon(key);icons.append(button);
+  button.title=name;button.append(iconNode(key));icons.append(button);
   button.addEventListener('click',()=>{update('icon',key);drawBasketPicker(dialogId,appearance,update);});
  }
  for(const [key,name] of BASKET_COLORS){
@@ -268,15 +312,34 @@ function renderBaskets(){
  $('pvbBasketCount').textContent=basketDefs().length+' of '+BASKET_MAX+' baskets';
  $('pvbCreateButton').disabled=basketDefs().length>=BASKET_MAX;
  $('pvbCreateButton').title=$('pvbCreateButton').disabled?'Maximum 8 baskets per vault':'';
- grid.innerHTML=basketDefs().map(b=>{
+ grid.replaceChildren();
+ for(const b of basketDefs()){
   const these=items.filter(x=>itemBasket(x.id)===b.id);
-  const tiles=these.map(x=>{
-   const letter=safe((x.title||'•').slice(0,1).toUpperCase());
-   return `<div class="pvb-tile" draggable="true" data-basket-drag="${safe(x.id)}"><button type="button" class="pvb-tile-open" data-open="${safe(x.id)}" aria-label="Open ${safe(x.title)}"><span class="pvb-appicon pvb-${itemKind(x)}">${letter}</span><span class="pvb-appname">${safe(x.title)}</span></button><button class="pvb-tile-move" type="button" data-basket-move="${safe(x.id)}" aria-label="Move ${safe(x.title)} to another basket" title="Move item">Move</button></div>`;
-  }).join('');
   const appearance=basketAppearance(b.id);
-  return `<article class="pvb-basket pvb-theme-${appearance.color}" data-basket-drop="${safe(b.id)}"><div class="pvb-basket-top" data-basket-reorder="${safe(b.id)}" draggable="true" title="Drag the colored header to reorder"><span class="pvb-folder" aria-hidden="true">${icon(appearance.icon)}</span><span class="pvb-grip" tabindex="0" role="button" data-basket-keyboard="${b.id}" aria-label="Move ${safe(basketName(b.id))} basket. Press arrow keys to reorder." title="Arrow keys to reorder">⋮⋮</span><button type="button" class="pvb-rename" data-basket-rename="${b.id}" aria-label="Rename ${safe(basketName(b.id))} basket" title="Rename basket">${icon('more')}</button></div><h3>${safe(basketName(b.id))}</h3><p class="pvb-num">${these.length} ${these.length===1?'item':'items'}</p><div class="pvb-apps">${tiles}${!basketCapacityReached()?`<button type="button" class="pvb-add-tile" data-basket-add="${b.id}" aria-label="Add item to ${safe(basketName(b.id))}"><span>+</span><small>Add item</small></button>`:''}</div><div class="pvb-basket-foot"><span>Drag to organize</span>${basketDefs().length>1?`<button type="button" data-basket-delete="${b.id}" aria-label="Delete ${safe(basketName(b.id))} basket">Delete basket</button>`:'<span class="pvb-last-basket">Required basket</span>'}</div></article>`;
- }).join('');
+  const card=el('article','pvb-basket pvb-theme-'+appearance.color);card.dataset.basketDrop=b.id;
+  const top=el('div','pvb-basket-top');top.dataset.basketReorder=b.id;top.draggable=true;top.title='Drag the colored header to reorder';
+  const folder=el('span','pvb-folder');folder.setAttribute('aria-hidden','true');folder.append(iconNode(appearance.icon));
+  const grip=el('span','pvb-grip','⋮⋮');grip.tabIndex=0;grip.setAttribute('role','button');grip.dataset.basketKeyboard=b.id;
+  grip.setAttribute('aria-label','Move '+basketName(b.id)+' basket. Press arrow keys to reorder.');grip.title='Arrow keys to reorder';
+  const rename=actionButton('pvb-rename',{'data-basket-rename':b.id,'aria-label':'Rename '+basketName(b.id)+' basket',title:'Rename basket'},'more');
+  top.append(folder,grip,rename);
+  const apps=el('div','pvb-apps');
+  for(const x of these){
+   const tile=el('div','pvb-tile');tile.draggable=true;tile.dataset.basketDrag=x.id;
+   const open=actionButton('pvb-tile-open',{'data-open':x.id,'aria-label':'Open '+x.title});
+   open.append(el('span','pvb-appicon pvb-'+itemKind(x),(x.title||'•').slice(0,1).toUpperCase()),el('span','pvb-appname',x.title));
+   const move=actionButton('pvb-tile-move',{'data-basket-move':x.id,'aria-label':'Move '+x.title+' to another basket',title:'Move item'});move.textContent='Move';
+   tile.append(open,move);apps.append(tile);
+  }
+  if(!basketCapacityReached()){
+   const add=actionButton('pvb-add-tile',{'data-basket-add':b.id,'aria-label':'Add item to '+basketName(b.id)});
+   add.append(el('span','', '+'),el('small','','Add item'));apps.append(add);
+  }
+  const foot=el('div','pvb-basket-foot');foot.append(el('span','','Drag to organize'));
+  if(basketDefs().length>1){const del=actionButton('',{'data-basket-delete':b.id,'aria-label':'Delete '+basketName(b.id)+' basket'});del.textContent='Delete basket';foot.append(del);}
+  else foot.append(el('span','pvb-last-basket','Required basket'));
+  card.append(top,el('h3','',basketName(b.id)),el('p','pvb-num',these.length+' '+(these.length===1?'item':'items')),apps,foot);grid.append(card);
+ }
  const cards=mobileBasketCards();
  $('pvbCarouselDots').replaceChildren();
  cards.forEach((card,i)=>{const dot=document.createElement('button');dot.type='button';dot.className='pvb-carousel-dot';dot.dataset.carouselIndex=String(i);dot.setAttribute('aria-label','Go to basket '+(i+1));$('pvbCarouselDots').append(dot);});
@@ -423,23 +486,32 @@ function render(){
  // Update only CSS custom property; the approved dashboard's SVG/CSS ring is unchanged.
  document.querySelector('#approvedUI .ring').style.setProperty('--healthy-percent',String(Math.round(100*h.good/Math.max(1,h.loginCount)))+'%');
  $('healthGood').textContent=h.good;$('healthReused').textContent=h.reused;$('healthWeak').textContent=h.weak;
- $('overviewVaults').innerHTML=vs.map(vaultTile).join('');
- $('recentTable').innerHTML=buildTable([...items].sort((a,b)=>(b.updatedAt||'').localeCompare(a.updatedAt||'')).slice(0,4),'Nothing here yet.',false);
- $('fullTable').innerHTML=buildTable(filtered(items).filter(x=>filter==='all'||itemKind(x)===filter),'No items match these filters.');
- $('favoritesTable').innerHTML=buildTable(filtered(items.filter(x=>x.favorite)),'No favorite items yet.');
+ $('overviewVaults').replaceChildren(...vs.map(vaultTile));
+ $('recentTable').replaceChildren(buildTable([...items].sort((a,b)=>(b.updatedAt||'').localeCompare(a.updatedAt||'')).slice(0,4),'Nothing here yet.',false));
+ $('fullTable').replaceChildren(buildTable(filtered(items).filter(x=>filter==='all'||itemKind(x)===filter),'No items match these filters.'));
+ $('favoritesTable').replaceChildren(buildTable(filtered(items.filter(x=>x.favorite)),'No favorite items yet.'));
  $('vaultUsed').textContent=vs.length;$('capacityBar').style.width=(vs.length/2*100)+'%';
  $('capLabel').textContent=vs.length>=2?'Limit reached':`${2-vs.length} slot${2-vs.length===1?'':'s'} left`;
  $('quickCreateVault').disabled=vs.length>=2;$('newVaultButton').disabled=vs.length>=2;$('topNew').disabled=vs.length>=2;$('topNew').title=vs.length>=2?'Two-vault limit reached':'Create new vault';
- $('vaultCountTag').textContent=vs.length+' of 2 used';$('manageVaults').innerHTML=vs.map(vaultTile).join('');
+ $('vaultCountTag').textContent=vs.length+' of 2 used';$('manageVaults').replaceChildren(...vs.map(vaultTile));
  const checks=[{title:'Weak passwords',body:'Short, patterned, or common-prefix login passwords',count:h.weak,icon:'alert',good:h.weak===0},{title:'Reused passwords',body:'Logins sharing an identical password',count:h.reused,icon:'refresh',good:h.reused===0},{title:'Logins without local warnings',body:'No issues found by these basic local checks',count:h.good,icon:'shield-check',good:true}];
- $('securityIssues').innerHTML=checks.map(c=>`<div class="issue-row"><span class="issue-dot ${c.good?'good':''}">${icon(c.icon)}</span><div><h3>${c.title}</h3><p>${c.body}</p></div><strong>${c.count}</strong></div>`).join('')+(h.issues.length?`<div class="section-subhead"><h3>Items worth reviewing</h3></div>${h.issues.map(x=>`<div class="issue-row"><div><h3>${safe(x.title)}</h3><p>Weak or reused login password</p></div><button class="linkbtn" data-open="${safe(x.id)}">Review →</button></div>`).join('')}`:'');
+ const issueArea=$('securityIssues');issueArea.replaceChildren();
+ for(const c of checks){
+  const row=el('div','issue-row'),dot=el('span','issue-dot '+(c.good?'good':''));dot.append(iconNode(c.icon));
+  const body=el('div');body.append(el('h3','',c.title),el('p','',c.body));row.append(dot,body,el('strong','',c.count));issueArea.append(row);
+ }
+ if(h.issues.length){const heading=el('div','section-subhead');heading.append(el('h3','','Items worth reviewing'));issueArea.append(heading);
+  for(const x of h.issues){const row=el('div','issue-row'),content=el('div');content.append(el('h3','',x.title),el('p','','Weak or reused login password'));
+   const review=actionButton('linkbtn',{'data-open':x.id});review.textContent='Review →';row.append(content,review);issueArea.append(row);
+  }
+ }
  const syncLabel=cloud.conflict?'Sync conflict':state.dirty?'Unsaved changes':cloud.saveInProgress?'Syncing…':'Unlocked';
  const failure=cloud.lastSaveError || (cloud.conflict?'Another device saved a newer version. Download a backup and reconcile before continuing.':cloud.autoLockDeferred?'Automatic lock deferred while changes are unsaved. Retry sync or download an encrypted backup.':'');
  $('approvedSyncNotice').hidden=!failure;
  $('approvedSyncMessage').textContent=failure;
  $('approvedSyncRetry').disabled=!!cloud.conflict || cloud.saveInProgress;
  $('approvedVaultStatus').title=failure||syncLabel;
- $('approvedVaultStatus').innerHTML=`<span class="dot"></span> ${safe(cloud.vaultLabel||state.vault.name||'Your vault')} · ${syncLabel}`;
+ $('approvedVaultStatus').replaceChildren(el('span','dot'),document.createTextNode(' '+(cloud.vaultLabel||state.vault.name||'Your vault')+' · '+syncLabel));
  renderAccountIdentity();
 }
 window.pvRenderApprovedStatus=()=>{if(ready())render();};
@@ -562,10 +634,8 @@ function saveItem(event){
   const title=$('itemTitle').value.trim();if(!title)throw new Error('Title is required.');
   let url=kind==='login'?$('itemUrl').value.trim():'';
   if(url){
-   if(!/^[a-zA-Z][a-zA-Z\d+.-]*:\/\//.test(url))url='https://'+url;
-   let parsed;try{parsed=new URL(url);}catch{throw new Error('Enter a valid website address.');}
-   if(!['http:','https:'].includes(parsed.protocol)||!parsed.hostname.includes('.')||parsed.username||parsed.password)throw new Error('Enter a valid http or https website address.');
-   if(url.length>2048)throw new Error('Website address is too long.');
+   url=window.PassVaultURLSafety.validate(url,{allowBareHost:true});
+   if(!new URL(url).hostname.includes('.'))throw new Error('Enter a valid website hostname.');
   }
   const username=kind==='login'?$('itemUsername').value.trim():kind==='card'?$('itemCardholder').value.trim():'Secure note';
   const password=kind==='login'?$('itemPassword').value:kind==='note'?$('itemContent').value:$('itemCardnumber').value.replace(/[\s-]/g,'');
@@ -578,7 +648,7 @@ function saveItem(event){
    if(!name.value.trim()){if(value.value.trim())throw new Error('Give every custom field a name.');continue;}
    const val=value.value;
    if(fieldType==='date'&&val){const date=new Date(val+'T00:00:00Z');if(!/^\d{4}-\d{2}-\d{2}$/.test(val)||!Number.isFinite(date.getTime())||date.toISOString().slice(0,10)!==val)throw new Error('Custom dates must be valid YYYY-MM-DD dates.');}
-   if(fieldType==='url'&&val){let parsed;try{parsed=new URL(val);}catch{throw new Error('Custom URLs must include https:// and a valid domain.');}if(!['https:','http:'].includes(parsed.protocol)||!parsed.hostname||parsed.username||parsed.password)throw new Error('Invalid custom URL.');}
+   if(fieldType==='url'&&val)window.PassVaultURLSafety.validate(val);
    customFields.push({label:name.value.trim(),value:val,type:fieldType});
   }
   if(new Set(customFields.map(f=>f.label.toLowerCase())).size!==customFields.length)throw new Error('Custom field names must be unique.');
@@ -610,18 +680,27 @@ function saveItem(event){
 function openDetail(id){
  if(!ready())return;const x=findItem(id);if(!x)return;selected=id;
  const detail=(label,value,copy=false,secret=false,key=label)=>{
-  const id='approved-detail-'+key.replace(/\W/g,'');
-  return `<div class="detail-row"><small>${safe(label)}</small><div class="detail-value"><span id="${id}">${secret?'••••••••••••':safe(value||'—')}</span><span class="detail-actions">${secret?`<button class="rowbtn" data-reveal="${safe(key)}" aria-label="Reveal ${safe(label)}" title="Reveal secret">${icon('eye')}</button>`:''}${copy?`<button class="rowbtn" data-copy="${safe(key)}" aria-label="Copy ${safe(label)}">${icon('copy')}</button>`:''}</span></div></div>`;
+  const row=el('div','detail-row'),content=el('div','detail-value'),display=el('span','',secret?'••••••••••••':value||'—');
+  display.id='approved-detail-'+key.replace(/\W/g,'');
+  const actions=el('span','detail-actions');
+  if(secret)actions.append(actionButton('rowbtn',{'data-reveal':key,'aria-label':'Reveal '+label,title:'Reveal secret'},'eye'));
+  if(copy)actions.append(actionButton('rowbtn',{'data-copy':key,'aria-label':'Copy '+label},'copy'));
+  content.append(display,actions);row.append(el('small','',label),content);return row;
  };
+ const noteRow=(label,field,copy=false)=>{const row=el('div','detail-row'),content=el('div','detail-value');
+  const open=actionButton('pv-note-open',{'data-detail-note':field});open.textContent='Read full note →';content.append(open);
+  if(copy)content.append(actionButton('rowbtn',{'data-copy':'Content','aria-label':'Copy secure note',title:'Copy note'},'copy'));
+  row.append(el('small','',label),content);return row;};
  $('detailTitle').textContent=x.title;
  const k=itemKind(x),fields=[detail('Type',kindLabel[k])];
  if(k==='login')fields.push(detail('Username',x.username,true),detail('Password',x.password,true,true),detail('Website',x.url));
- else if(k==='note')fields.push(`<div class="detail-row"><small>Secure note</small><div class="detail-value"><button type="button" class="pv-note-open" data-detail-note="content">Read full note →</button><button type="button" class="rowbtn" data-copy="Content" aria-label="Copy secure note" title="Copy note">${icon('copy')}</button></div></div>`);
+ else if(k==='note')fields.push(noteRow('Secure note','content',true));
  else{fields.push(detail('Cardholder',x.username),detail('Card number',x.password,true,true));if(x.expiry)fields.push(detail('Expiry',x.expiry));if(x.cvv)fields.push(detail('Security code',x.cvv,true,true));}
- if(x.notes)fields.push(`<div class="detail-row"><small>Additional notes</small><div class="detail-value"><button type="button" class="pv-note-open" data-detail-note="notes">Read full note →</button></div></div>`);
+ if(x.notes)fields.push(noteRow('Additional notes','notes'));
  if(x.tags?.length)fields.push(detail('Tags',x.tags.join(', ')));
  for(const [i,f] of (x.customFields||[]).entries())fields.push(detail(f.label,f.value,false,!f.type||f.type==='secret','custom-'+i));
- $('detailBody').innerHTML=fields.join('');$('favoriteDetail').innerHTML=icon('star')+(x.favorite?'Unfavorite':'Favorite');$('detailDialog').showModal();
+ $('detailBody').replaceChildren(...fields);$('favoriteDetail').replaceChildren(iconNode('star'),document.createTextNode(x.favorite?'Unfavorite':'Favorite'));
+$('detailDialog').showModal();
 }
 function currentValue(label,x){if(/^custom-\d+$/.test(label))return x.customFields?.[Number(label.slice(7))]?.value||'';if(label==='Username')return x.username;if(label==='Password'||label==='Content'||label==='Card number')return x.password;if(label==='Security code')return x.cvv||'';return '';}
 function toggleFavorite(id){
