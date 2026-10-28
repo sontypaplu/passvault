@@ -949,3 +949,81 @@ html[data-theme="dark"] #pvPwaOffline{background:#0c1020;color:#f0f3fb}
 html[data-theme="dark"] #pvPwaOffline .pv-pwa-offline-card{background:#151b2e;border-color:#303950}
 html[data-theme="dark"] #pvPwaOffline p{color:#a1acc6}
 @media(max-width:600px){#approvedUI .pv-pwa-settings .pv-pwa-row{flex-wrap:wrap;align-items:flex-start;gap:12px}#approvedUI .pv-pwa-row button{width:100%}#pvPwaUpdateNotice{bottom:12px;left:12px;right:12px;max-width:none;justify-content:space-between}#pvPwaUpdateNotice span{flex:1}}
+
+/* PassVault mobile interaction corrections: keep the search input visible and tappable. */
+#approvedUI .pv-mobile-search-button{display:grid;place-items:center;flex:0 0 18px;width:20px;height:32px;padding:0;border:0;background:transparent;color:var(--muted);cursor:text}
+#approvedUI .pv-mobile-search-button svg{width:17px;height:17px;pointer-events:none}
+#approvedUI .top-search input{flex:1 1 0;min-width:0}
+#approvedUI .topbar button:focus-visible,#approvedUI .top-search:focus-within{outline:2px solid var(--primary);outline-offset:2px}
+#approvedUI .linkbtn{white-space:normal;line-height:1.4;text-align:left;overflow-wrap:anywhere}
+#approvedUI .text-action,#approvedUI .section-subhead button,#approvedUI .setting-row button{min-width:0}
+#approvedUI .btn svg,#approvedUI .linkbtn svg,#approvedUI .rowbtn svg{flex-shrink:0}
+#approvedUI .pv-inline-sync{margin:10px 0 15px}
+#approvedUI .pv-privacy-note{line-height:1.6;font-size:12px}
+#approvedUI .pv-settings-sync{margin:14px 0}
+#approvedUI .pvb-drag-ghost-placeholder{opacity:.5}
+.pvb-drag-ghost{position:fixed;top:0;left:0;transform:translate(-50%,-120%);max-width:210px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:11px 15px;border-radius:12px;background:#39356d;color:#fff;border:1px solid #b6aaff;box-shadow:0 13px 30px #14132a55;font:700 13px system-ui,sans-serif;pointer-events:none;z-index:5000}
+@media(max-width:760px){
+ #approvedUI .topbar #openMenu{display:none}
+ #approvedUI .topbar .crumb{display:none}
+ #approvedUI .topbar #themeToggle{display:grid;min-width:40px;min-height:40px;color:var(--primary);background:var(--primary-wash)}
+ #approvedUI .topbar #lockShortcut{display:none}
+ #approvedUI .topbar #searchWrap,
+ #approvedUI .topbar #searchWrap:focus-within{
+  position:relative;inset:auto;top:auto;left:auto;right:auto;
+  display:flex;align-items:center;flex:1 1 auto;min-width:72px;width:auto;
+  max-width:none;margin:0;padding:0 9px;height:41px;
+  background:var(--surface-2);border:1px solid var(--border);
+  box-shadow:none;border-radius:12px;z-index:auto;
+ }
+ #approvedUI .topbar #searchWrap:focus-within{border-color:var(--primary);outline:2px solid color-mix(in srgb,var(--primary) 25%,transparent);outline-offset:0}
+ #approvedUI .topbar #searchWrap input,
+ #approvedUI .topbar #searchWrap:focus-within input{flex:1 1 0;width:100%;min-width:0;height:100%;padding:0;font-size:13px;opacity:1}
+ #approvedUI .topbar #searchWrap .kbd{display:none}
+ #approvedUI .pvb-grid.pvb-mobile-drag-active{scroll-snap-type:none;scroll-behavior:auto;overscroll-behavior:contain}
+ #approvedUI .pvb-grid.pvb-mobile-drag-active .pvb-basket{transition:none;transform:none;opacity:1}
+ #approvedUI .pvb-basket.pvb-reorder-target,#approvedUI .pvb-basket.pvb-drop-target{outline:3px dashed var(--primary);outline-offset:-5px}
+ #approvedUI .pvb-tile-open,#approvedUI .pvb-basket-top{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+ #approvedUI .pvb-basket h3{min-width:0;overflow-wrap:anywhere}
+ #approvedUI .pvb-heading-actions{min-width:0}
+ #approvedUI .linkbtn{min-height:36px}
+ #approvedUI .pvb-basket-foot{gap:9px;flex-wrap:wrap}
+ #approvedUI .pvb-basket-foot button{white-space:normal;text-align:right}
+}
+@media(max-width:390px){
+ #approvedUI .topbar .preview-flows{display:none}
+ #approvedUI .topbar #themeToggle,#approvedUI .topbar .newbtn{width:38px;min-width:38px}
+ #approvedUI .pvb-carousel-controls{gap:10px}
+}
+
+
+/* Signed-in cloud/device-only vault chooser */
+#approvedGateOfflineChoice[hidden]{display:none!important}
+#approvedVaultGate .pv-offline-choices{display:grid;gap:12px;min-width:0}
+#approvedVaultGate .pv-device-note{margin:0 0 4px;padding:15px 16px;border-radius:12px;background:var(--surface-2,#f6f5fb);border:1px solid var(--border,#dedde5);font-size:13px;line-height:1.55;color:var(--text,#24212c)}
+#approvedVaultGate .pv-offline-choice{width:100%;text-align:left;border:1px solid var(--border,#dedde5);border-radius:13px;padding:17px;background:var(--surface,#fff);color:var(--text,#24212c);display:flex;flex-direction:column;gap:6px;min-height:82px;white-space:normal}
+#approvedVaultGate .pv-offline-choice:hover,#approvedVaultGate .pv-offline-choice:focus-visible{border-color:var(--primary,#6759dc);background:var(--surface-2,#f9f8ff)}
+#approvedVaultGate .pv-offline-choice strong{font-weight:750;font-size:15px}
+#approvedVaultGate .pv-offline-choice span{color:var(--muted,#646178);font-size:12px;line-height:1.55}
+#approvedVaultGate .pv-offline-back{align-self:flex-start;color:var(--primary,#6759dc);border:none;background:none;min-height:40px;font-weight:700;padding:8px}
+#approvedVaultGate .approved-gate-foot{display:flex;flex-wrap:wrap;gap:8px}
+#approvedGateOffline[hidden]{display:none!important}
+.pv-offline-exit-dialog{width:min(94vw,520px);max-width:520px;border-radius:17px;padding:24px;box-sizing:border-box}
+.pv-offline-exit-dialog h2{margin:0 0 12px;font-size:21px}
+.pv-offline-exit-dialog p{line-height:1.55}
+.pv-offline-exit-dialog .pv-offline-download{display:inline-block;padding:12px 14px;margin-top:12px;border-radius:9px;background:#5546d8;color:white;font-weight:700;text-decoration:none}
+.pv-offline-exit-dialog .pv-offline-download[hidden]{display:none!important}
+.pv-offline-exit-dialog .pv-offline-ack{display:flex;align-items:flex-start;gap:12px;padding:16px 0;line-height:1.45}
+.pv-offline-exit-dialog .pv-offline-ack input{width:20px;height:20px;flex:none;margin-top:2px}
+.pv-offline-exit-dialog .button-row{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap}
+.pv-offline-exit-dialog button{min-height:44px}
+@media(max-width:600px){#approvedVaultGate .pv-offline-choice{padding:14px}#approvedVaultGate .approved-gate-foot button{flex:1 1 auto}.pv-offline-exit-dialog{padding:18px}}
+
+#approvedVaultGate .pv-offline-file-label{font-size:12px;font-weight:700;color:var(--muted);margin-top:3px}
+#approvedVaultGate .pv-offline-file{display:block;max-width:100%;font-size:12px;color:var(--text);padding:10px;border:1px dashed var(--border);border-radius:10px;background:var(--surface)}
+
+#approvedVaultGate{max-height:calc(100dvh - 28px);overflow-y:auto;overscroll-behavior:contain}
+@media(max-width:600px){#approvedVaultGate{max-width:calc(100vw - 24px)}#approvedVaultGate .dialog-body{min-width:0}}
+
+/* Never show simulated or stale dashboard cards behind the locked vault gate. */
+body.approved-gate-active #approvedUI > #app{visibility:hidden}

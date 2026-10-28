@@ -1,3 +1,40 @@
+/* Vault sync preference affects encrypted vault uploads only; account authentication still uses Supabase. */
+function syncPreferenceKey(userId) { return 'passvault-vault-sync-v1:' + userId; }
+function initializeSyncPreference(userId) {
+  try { cloud.syncEnabled = localStorage.getItem(syncPreferenceKey(userId)) !== 'off'; }
+  catch {
+    // Fail closed if preference storage is unavailable: never assume upload consent.
+    cloud.syncEnabled = false;
+  }
+  cloud.deviceOnly = false;
+  cloud.lastBackup = null;
+  window.dispatchEvent(new Event('passvault-sync-change'));
+}
+function isCloudSyncAllowed() { return cloud.syncEnabled && !cloud.deviceOnly && !String(cloud.selectedVaultId || '').startsWith('device-'); }
+function setCloudSyncEnabled(enabled) {
+  if (!cloud.userId) return false;
+  if (enabled && cloud.deviceOnly) {
+    setGlobalStatus('This imported vault is device-only. Export an encrypted backup and lock it before switching to a cloud vault.', 'warning');
+    window.dispatchEvent(new Event('passvault-sync-change'));
+    return false;
+  }
+  const hadInFlightSave = Boolean(cloud.savePromise);
+  cloud.syncEnabled = Boolean(enabled);
+  clearTimeout(cloud.saveTimer); cloud.saveTimer = null;
+  clearTimeout(cloud.retryTimer); cloud.retryTimer = null;
+  try { localStorage.setItem(syncPreferenceKey(cloud.userId), enabled ? 'on' : 'off'); }
+  catch {
+    setGlobalStatus('Cloud sync preference could not be saved in this browser. Sync is set for this session only; check it again after restarting before editing.', 'error');
+  }
+  window.dispatchEvent(new Event('passvault-sync-change'));
+  if (enabled && state.dirty && !cloud.deviceOnly) scheduleCloudSave();
+  setGlobalStatus(enabled
+    ? 'Cloud sync enabled for cloud vaults. Pending cloud-vault edits may be uploaded.'
+    : hadInFlightSave ? 'Cloud sync paused for future saves. A previously started upload may still finish. Export an encrypted backup.' : 'Cloud sync paused. Previously uploaded data stays in the cloud. Export an encrypted backup to preserve new changes.', 'warning');
+  return true;
+}
+window.PassVaultSync = Object.freeze({ setEnabled: setCloudSyncEnabled, allowed: isCloudSyncAllowed });
+
 function isCloudConfigured() {
   return /^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/i.test(SUPABASE_URL) &&
     SUPABASE_PUBLISHABLE_KEY.startsWith("sb_publishable_") &&
@@ -32,6 +69,7 @@ async function handleAccountLogin(event) {
 
 
 async function resetCloudUserState() {
+  if ($('pvOfflineExitDialog')?.open) $('pvExitCancel').click(); // A timed-out session must not leave a stale backup dialog.
   // An auth event can arrive during an unsynced edit. Preserve the same
   // encrypted-only recovery rule before clearing account/vault state.
   if (!state.locked) await secureLockWithCheckpoint('Account session ended.');
@@ -49,7 +87,7 @@ async function resetCloudUserState() {
   cloud.userId = null; cloud.email = ''; cloud.loaded = false;
   cloud.vaults = []; cloud.selectedVaultId = null; cloud.vaultLabel = '';
   cloud.revision = 0; cloud.conflict = false; cloud.encryptedEnvelope = null;
-  cloud.importSource = 'cloud'; state.pendingImport = null;
+  cloud.importSource = 'cloud'; cloud.deviceOnly = false; cloud.lastBackup = null; state.pendingImport = null;
   clearSensitiveFieldsEverywhere(); uiState.accessGranted = false;
   cloudStatus('CLOUD'); setActiveView();
 }
@@ -62,6 +100,7 @@ async function loadAccountVault(session) {
   if (cloud.userId) await resetCloudUserState();
   const requestEpoch = ++cloud.epoch;
   cloud.userId = userId; cloud.email = session.user.email || 'Account';
+  initializeSyncPreference(userId);
   // A fresh login begins the 15-minute account idle clock. A restored tab
   // retains its previous clock rather than gaining another 15 minutes.
   try { if(!sessionStorage.getItem('passvault-account-last-active'))markActivity(); } catch { markActivity(); }
@@ -74,7 +113,7 @@ async function loadAccountVault(session) {
     await reloadVaultList();
     if (requestEpoch !== cloud.epoch || cloud.userId !== userId) return;
     cloud.loaded = true;
-    setActiveView(); renderVaultDashboard(); cloudStatus('SYNC READY');
+    setActiveView(); renderVaultDashboard(); cloudStatus(cloud.syncEnabled ? 'SYNC READY' : 'SYNC PAUSED');
     setGlobalStatus('Your encrypted vaults are ready.', 'success');
   } catch(error) {
     if (requestEpoch !== cloud.epoch) return;
@@ -108,8 +147,70 @@ async function updateAccountInactivity() {
       'Session timed out. Sign in again. Remote refresh-token revocation could not be confirmed.', 'warning');
   } finally { idleSignOutPending = false; }
 }
+let signOutBackupPrompt = null;
+function currentEncryptedBackupReady() {
+  return !!cloud.lastBackup && cloud.lastBackup.userId === cloud.userId &&
+    cloud.lastBackup.vaultId === cloud.selectedVaultId &&
+    cloud.lastBackup.mutation === cloud.mutation &&
+    !!els.downloadVaultLink.dataset.objectUrl;
+}
+function confirmBackupBeforeSignOut() {
+  if (state.locked || !state.dirty) return Promise.resolve(true);
+  if (signOutBackupPrompt) return signOutBackupPrompt;
+  const dialog = $('pvOfflineExitDialog');
+  const link = $('pvExitBackupDownloadLink');
+  const ack = $('pvExitBackupAcknowledged');
+  const confirmButton = $('pvExitConfirm');
+  const status = $('pvExitBackupStatus');
+  ack.checked = false;
+  let preparing = false;
+  const refresh = () => {
+    const ready = currentEncryptedBackupReady();
+    link.hidden = !ready;
+    if (ready) { link.href = els.downloadVaultLink.href; link.download = els.downloadVaultLink.download; }
+    else { link.removeAttribute('href'); link.removeAttribute('download'); }
+    ack.disabled = !ready;
+    confirmButton.disabled = !ready || !ack.checked;
+    status.textContent = ready
+      ? 'Encrypted backup prepared. Save the file, verify that it is accessible, then confirm below. Preparing a backup does not guarantee the browser saved it.'
+      : 'Prepare and download an encrypted backup of your latest changes before signing out.';
+  };
+  refresh();
+  signOutBackupPrompt = new Promise(resolve => {
+    const finish = approved => {
+      dialog.removeEventListener('cancel', onCancel);
+      $('pvExitPrepareBackup').removeEventListener('click', onPrepare);
+      $('pvExitCancel').removeEventListener('click', onCancelClick);
+      $('pvExitConfirm').removeEventListener('click', onConfirm);
+      ack.removeEventListener('change', refresh);
+      if (dialog.open) dialog.close();
+      signOutBackupPrompt = null;
+      resolve(approved);
+    };
+    const onCancel = event => { event.preventDefault(); finish(false); };
+    const onCancelClick = () => finish(false);
+    const onConfirm = () => {
+      if (!preparing && currentEncryptedBackupReady() && ack.checked) finish(true);
+    };
+    const onPrepare = async () => {
+      if (preparing) return;
+      preparing = true;
+      $('pvExitPrepareBackup').disabled = true;
+      try { await handleExportVault(); }
+      finally { preparing = false; $('pvExitPrepareBackup').disabled = false; refresh(); }
+    };
+    dialog.addEventListener('cancel', onCancel);
+    $('pvExitPrepareBackup').addEventListener('click', onPrepare);
+    $('pvExitCancel').addEventListener('click', onCancelClick);
+    $('pvExitConfirm').addEventListener('click', onConfirm);
+    ack.addEventListener('change', refresh);
+    dialog.showModal();
+  });
+  return signOutBackupPrompt;
+}
 async function handleSignOut() {
   if (!cloud.client) return;
+  if (!await confirmBackupBeforeSignOut()) return;
   // Signing out always locks immediately. Unsaved changes are encrypted into
   // an on-device recovery snapshot first, rather than abandoned.
   await secureLockWithCheckpoint('Vault locked before account sign-out.');
@@ -123,7 +224,7 @@ async function handleSignOut() {
 }
 
 function scheduleCloudRetry() {
-  if (cloud.retryTimer || cloud.conflict || state.locked || !state.dirty || !cloud.userId) return;
+  if (!isCloudSyncAllowed() || cloud.retryTimer || cloud.conflict || state.locked || !state.dirty || !cloud.userId) return;
   const delay = Math.min(60000, 5000 * (2 ** Math.min(4, cloud.retryAttempt++)));
   cloud.retryTimer = setTimeout(() => {
     cloud.retryTimer = null;
@@ -133,20 +234,24 @@ function scheduleCloudRetry() {
   }, delay);
 }
 function retryUnsavedVaultOnReturn() {
-  if (!state.dirty || state.locked || cloud.conflict || !cloud.lastSaveError || !navigator.onLine || document.hidden) return;
+  if (!isCloudSyncAllowed() || !state.dirty || state.locked || cloud.conflict || !cloud.lastSaveError || !navigator.onLine || document.hidden) return;
   clearTimeout(cloud.retryTimer);cloud.retryTimer=null;
   void saveCloudVault();
 }
 window.addEventListener('online', retryUnsavedVaultOnReturn);
 document.addEventListener('visibilitychange', retryUnsavedVaultOnReturn);
 function scheduleCloudSave() {
-  if (!cloud.client || !cloud.userId || !cloud.selectedVaultId || !cloud.loaded || cloud.conflict || !state.vault || !state.vaultKey) return;
+  if (!isCloudSyncAllowed() || !cloud.client || !cloud.userId || !cloud.selectedVaultId || !cloud.loaded || cloud.conflict || !state.vault || !state.vaultKey) return;
   clearTimeout(cloud.saveTimer);
   clearTimeout(cloud.retryTimer);cloud.retryTimer=null;
   cloud.saveTimer = setTimeout(() => { void saveCloudVault(); }, 1100);
 }
 
 async function saveCloudVault(manual = false) {
+  if (!isCloudSyncAllowed()) {
+    if (manual) setGlobalStatus('Cloud sync is off for this vault. Download an encrypted backup to keep changes.', 'warning');
+    return false;
+  }
   if (!cloud.client || !cloud.userId || !cloud.selectedVaultId || !cloud.loaded || state.locked || !state.vaultKey || !state.vault) {
     if (manual) setGlobalStatus("Sign in and unlock your vault first.", "error");
     return false;
@@ -168,7 +273,7 @@ async function saveCloudVault(manual = false) {
     try {
       state.vault.updatedAt = new Date().toISOString();
       const envelope = await encryptAndBuildEnvelope();
-      if (saveUser !== cloud.userId || saveEpoch !== cloud.epoch || saveVaultId !== cloud.selectedVaultId) return false;
+      if (!isCloudSyncAllowed() || saveUser !== cloud.userId || saveEpoch !== cloud.epoch || saveVaultId !== cloud.selectedVaultId) return false;
       const { data: nextRevision, error } = await cloud.client.rpc("save_multi_vault", {
         p_vault_id: saveVaultId,
         p_label: cloud.vaultLabel,
@@ -219,7 +324,7 @@ async function saveCloudVault(manual = false) {
   try { return await cloud.savePromise; }
   finally {
     cloud.savePromise = null;
-    if (state.dirty && !cloud.conflict && cloud.mutation > 0 && cloud.loaded && !state.locked && cloud.userId) {
+    if (isCloudSyncAllowed() && state.dirty && !cloud.conflict && cloud.mutation > 0 && cloud.loaded && !state.locked && cloud.userId) {
       // Auto-resave ONLY when edits arrived while a successful save was in flight.
       // A failed network save must be retried explicitly, not in an infinite loop.
       if (els.cloudSyncStatus.textContent === "SAVED") scheduleCloudSave();

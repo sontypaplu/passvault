@@ -626,3 +626,57 @@ html[data-theme="dark"] .entry-view { background: radial-gradient(ellipse 55% 55
 
 /* Confidentiality while encrypting an inactivity recovery checkpoint. */
 html.pv-secure-lock-pending #unlockedView { visibility: hidden !important; pointer-events: none !important; }
+
+/* Installed-app entry and locally encrypted backup workflow. */
+.entry-install{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:20px 0 0;padding:15px;border:1px solid var(--border);border-radius:13px;background:var(--surface-subtle)}
+.entry-install>div{min-width:0}
+.entry-install strong,.pv-install-lock strong{display:block;color:var(--text-strong);font-size:13px}
+.entry-install small,.pv-install-lock small{display:block;margin-top:5px;color:var(--muted);font-size:11px;line-height:1.5}
+.entry-install button{flex:none;min-height:41px;padding:8px 12px}
+.entry-install-status{min-height:0;margin:6px 0 0;font-size:11px;color:var(--muted)}
+.entry-install-status:empty{display:none}
+.pv-local-choice{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:16px;margin-bottom:16px;border:1px solid var(--border);border-radius:14px;background:var(--surface-subtle)}
+.pv-local-choice>div{min-width:0}
+.pv-local-choice strong{display:block;font-size:13px;color:var(--text-strong)}
+.pv-local-choice p{margin:6px 0 0;color:var(--muted);font-size:12px;line-height:1.5}
+.pv-switch-label{display:inline-flex;align-items:center;justify-content:center;gap:8px;flex-shrink:0;min-height:44px;padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:12px;color:var(--text-strong);font-size:12px;font-weight:700;cursor:pointer}
+.pv-switch-label input{appearance:auto;accent-color:var(--primary,var(--accent,#6c5ce7));width:18px;height:18px;margin:0}
+.pv-switch-label:has(input:focus-visible){outline:2px solid var(--primary,var(--accent,#6c5ce7));outline-offset:2px}
+.pv-switch-label:has(input:disabled){opacity:.6;cursor:not-allowed}
+.pv-install-lock{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:14px 0;border-top:1px solid var(--border);font-size:11px}
+.pv-install-lock button{min-height:42px}
+.pv-install-lock span{flex-basis:100%;color:var(--muted)}
+#unlockVaultScreen .access-screen-head{margin-bottom:24px}
+#unlockVaultScreen .access-card.primary-access{padding:clamp(22px,4vw,35px);border-radius:22px;border:1px solid var(--accent-border);box-shadow:0 16px 50px rgba(71,68,122,.10)}
+#unlockVaultScreen .card-title-row{padding-bottom:19px;border-bottom:1px solid var(--border);margin-bottom:22px}
+#unlockVaultScreen .card-title-row .screen-icon{display:grid;place-items:center;width:48px;height:48px;margin-bottom:12px;border-radius:14px;background:var(--surface-subtle);color:var(--accent,var(--primary,#6759e8))}
+#unlockVaultScreen .card-title-row .screen-icon svg{height:25px;width:25px}
+#unlockVaultScreen .file-selection{padding:12px;gap:9px;border-style:dashed;min-height:65px}
+#unlockVaultScreen .file-selection .file-meta strong{line-height:1.4}
+#unlockVaultScreen .file-selection .file-meta span{white-space:normal;overflow-wrap:anywhere;line-height:1.4}
+.pv-import-option{display:flex;align-items:flex-start;gap:11px;margin:10px 0 23px;padding:14px;border-radius:13px;border:1px solid var(--border);background:var(--surface-subtle);cursor:pointer}
+.pv-import-option input{flex:0 0 auto;margin:2px 0 0;width:18px;height:18px;accent-color:var(--primary,var(--accent,#6759e8))}
+.pv-import-option span{min-width:0;display:block}
+.pv-import-option strong{display:block;color:var(--text-strong);font-size:12px}
+.pv-import-option small{display:block;color:var(--muted);font-size:11px;line-height:1.55;margin-top:5px}
+.pv-unlock-help{margin:14px 0 0;font-size:11px;line-height:1.6;color:var(--muted)}
+#unlockVaultScreen .field input{min-height:46px}
+#unlockVaultScreen .button-row .grow{width:100%;font-weight:750}
+#unlockVaultScreen .access-switch .text-action{display:inline-flex;align-items:center;gap:5px;line-height:1.5;text-align:left}
+#unlockVaultScreen .access-switch .text-action svg{flex:none;width:16px;height:16px}
+@media(max-width:560px){
+ .entry-install,.pv-local-choice{flex-direction:column;align-items:stretch}
+ .entry-install button,.pv-local-choice .pv-switch-label{align-self:flex-start}
+ #unlockVaultScreen .file-selection{align-items:flex-start;flex-wrap:wrap}
+ #unlockVaultScreen .file-selection button{min-height:42px}
+ #unlockVaultScreen .access-switch{margin-top:16px}
+}
+
+/* Native signed-in fallback: use the same safe device-only import handler. */
+.pv-native-offline-choices[hidden]{display:none!important}
+.pv-native-offline-choices{background:var(--surface,#fff);border:1px solid var(--border,#dce1ed);border-radius:13px;padding:16px;margin:16px 0;line-height:1.55}
+.pv-native-offline-choices strong{display:block;margin-bottom:5px}
+.pv-native-offline-choices p{font-size:13px;margin:0 0 12px}
+.pv-native-offline-choices .button-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.pv-native-offline-choices label{font-weight:700;font-size:12px}
+.pv-native-offline-choices input[type="file"]{min-width:0;max-width:100%}

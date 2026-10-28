@@ -50,7 +50,8 @@ function listUnsyncedNewVaultRecoveries(userId = cloud.userId) {
       const key = localStorage.key(i);
       if (!key?.startsWith(prefix)) continue;
       const parts = key.slice(prefix.length).split(':');
-      if (parts.length !== 2 || !/^[0-9a-f-]{36}$/i.test(parts[0])) continue;
+      // Keep legacy UUID recoveries readable while allowing new reserved device- IDs.
+      if (parts.length !== 2 || !/^(?:device-)?[0-9a-f-]{36}$/i.test(parts[0])) continue;
       const draft = readEncryptedRecovery(userId, parts[0]);
       if (!draft || draft.revision !== 0) continue;
       const previous = seen.get(draft.vaultId);
@@ -108,7 +109,7 @@ async function secureLockWithCheckpoint(reason = 'Vault locked for security.') {
         // confidentiality still wins over keeping the unlocked vault alive.
         if (state.dirty) {
           localStorage.setItem(recoveryStorageKey(userId, vaultId), JSON.stringify({
-            version: 1, userId, vaultId, revision, savedAt: Date.now(), envelope
+            version: 1, userId, vaultId, revision, deviceOnly: Boolean(cloud.deviceOnly), savedAt: Date.now(), envelope
           }));
         }
         stored = true;
@@ -176,7 +177,7 @@ function setDirty(value) {
   if (state.dirty) {
     cloudStatus("UNSAVED", "warning");
     ++cloud.mutation;
-    scheduleCloudSave();
+    if (isCloudSyncAllowed()) scheduleCloudSave();
   }
 }
 
@@ -437,8 +438,10 @@ function scheduleClipboardClear() {
 async function handleCreateVault(event) {
   event.preventDefault();
   if (!cloud.userId || !cloud.loaded || !cloud.selectedVaultId) return setStatus(els.createStatus, "Select Create new vault from My vaults first.", "error");
+  if (!cloud.deviceOnly && !isCloudSyncAllowed()) return setStatus(els.createStatus, "Cloud sync is off. Choose Work offline to create a device-only vault, or enable sync for a cloud vault.", "error");
+  if (cloud.deviceOnly && (!String(cloud.selectedVaultId).startsWith('device-') || cloud.importSource !== 'device-new')) return setStatus(els.createStatus, "Invalid device-only vault state; start again from Work offline.", "error");
   if (cloud.revision > 0) return setStatus(els.createStatus, "Selected vault already exists. Open it or create another from My vaults.", "error");
-  if (cloud.vaults.length >= 2) return setStatus(els.createStatus, 'Vault limit reached: only two vaults are permitted.','error');
+  if (!cloud.deviceOnly && cloud.vaults.length >= 2) return setStatus(els.createStatus, 'Cloud vault limit reached: only two cloud vaults are permitted.','error');
   const initialUserId = cloud.userId;
   const initialVaultId = cloud.selectedVaultId;
   const initialEpoch = cloud.epoch;
@@ -484,8 +487,13 @@ async function handleCreateVault(event) {
     renderVault();
     resetCredentialEditor();
     clearCreateSensitiveFields();
-    setStatus(els.createStatus, "Vault created. Uploading encrypted vault to Supabase…", "success");
-    await saveCloudVault(true);
+    if (cloud.deviceOnly) {
+      setStatus(els.createStatus, 'Device-only vault created. Nothing was uploaded. Download an encrypted backup to preserve it.', 'success');
+      setGlobalStatus('Device-only vault active: download and verify an encrypted backup before signing out or leaving this browser.', 'warning');
+    } else {
+      setStatus(els.createStatus, 'Vault created. Uploading encrypted vault to Supabase…', 'success');
+      await saveCloudVault(true);
+    }
   } catch (error) {
     setStatus(els.createStatus, error instanceof Error ? error.message : "Vault creation failed.", "error");
   } finally {
@@ -532,7 +540,7 @@ async function handleUnlockVault() {
     if (imported.type === "legacy-v1") {
       if (!master) throw new Error("Master password is required.");
       const vault = await decryptLegacyV1(imported.record, master);
-      if(cloud.importSource === 'file')window.PassVaultURLSafety.validateImportedVault(vault);
+      if(cloud.importSource === 'file' || cloud.importSource === 'device-file')window.PassVaultURLSafety.validateImportedVault(vault);
       if (idleSignOutPending || cloud.userId !== openingUser || cloud.selectedVaultId !== openingVaultId || cloud.epoch !== openingEpoch) throw new Error("Account changed or session expired while unlocking.");
 
       const salt = randomBytes(VAULT_SALT_BYTES);
@@ -572,7 +580,7 @@ async function handleUnlockVault() {
       key = await deriveVaultKey(master, salt, record.pepperRequired ? pepper : "", record.parameters);
       const vault = await decryptVaultPayload(record, key);
       // Imported encrypted backups are rejected before changing the active vault.
-      if(cloud.importSource === 'file')window.PassVaultURLSafety.validateImportedVault(vault);
+      if(cloud.importSource === 'file' || cloud.importSource === 'device-file')window.PassVaultURLSafety.validateImportedVault(vault);
       if (idleSignOutPending || cloud.userId !== openingUser || cloud.selectedVaultId !== openingVaultId || cloud.epoch !== openingEpoch) throw new Error("Account changed or session expired while unlocking.");
 
       if (cloud.importSource === 'file' && cloud.revision > 0) {
@@ -593,18 +601,20 @@ async function handleUnlockVault() {
       key = null;
       state.pendingImport = null;
       const importingLocalBackup = cloud.importSource === "file";
+      const importingDeviceBackup = cloud.importSource === "device-file";
+      if (importingDeviceBackup) cloud.vaultLabel = vault.name || 'Device-only vault';
       const importingLocalRecovery = cloud.importSource === "local-recovery";
       if (importingLocalRecovery) cloud.vaultLabel = vault.name || 'Recovered vault';
       state.locked = false;
       state.failedAttempts = 0;
       setDirty(importingLocalBackup || importingLocalRecovery);
-      const hadRecovery = !importingLocalRecovery && !!readEncryptedRecovery(openingUser, openingVaultId);
+      const hadRecovery = !importingLocalRecovery && !importingDeviceBackup && !!readEncryptedRecovery(openingUser, openingVaultId);
       const restoredRecovery = importingLocalRecovery ? true
-        : await offerEncryptedRecovery(record, state.vaultKey, openingUser, openingVaultId);
+        : importingDeviceBackup ? false : await offerEncryptedRecovery(record, state.vaultKey, openingUser, openingVaultId);
       cloud.importSource = "cloud";
       setActiveView();
       renderVault();
-      setStatus(els.unlockStatus, importingLocalBackup ? "Backup unlocked; saving encrypted vault to cloud…" : "Vault unlocked successfully.", "success");
+      setStatus(els.unlockStatus, importingDeviceBackup ? "Device-only vault unlocked. Download an encrypted backup after editing." : importingLocalBackup ? "Backup unlocked; encrypted cloud save scheduled." : "Vault unlocked successfully.", "success");
       if (!hadRecovery && !restoredRecovery) setGlobalStatus("Vault unlocked in memory.", "success");
     } catch (error) {
       state.failedAttempts += 1;
@@ -659,8 +669,8 @@ function updateAccessLockoutStatus() {
   }
 }
 
-async function handleFileChoose() {
-  const file = els.vaultFile.files?.[0];
+async function handleFileChoose(selectedFile = null) {
+  const file = selectedFile && typeof selectedFile.text === "function" ? selectedFile : els.vaultFile.files?.[0];
   if (!file) return;
   try {
     if (file.size > MAX_VAULT_TEXT_BYTES) throw new Error("Vault file is too large.");
@@ -673,8 +683,20 @@ async function handleFileChoose() {
     }
 
     if (!cloud.userId || !cloud.loaded) throw new Error("Sign in and load the account before importing.");
-    if (cloud.revision > 0 && !window.confirm("This backup will REPLACE your current cloud vault after you unlock it. Continue?")) return;
-    cloud.importSource = "file";
+    const deviceOnly = $('vaultImportDeviceOnly').checked || !cloud.syncEnabled;
+    if (!deviceOnly && (!cloud.selectedVaultId || !cloud.vaults.some(v=>v.vault_id===cloud.selectedVaultId)))
+      throw new Error('Choose a cloud vault from My vaults before importing with cloud replacement enabled.');
+    if (!deviceOnly && cloud.revision > 0 && !window.confirm("This backup will REPLACE your current cloud vault after you unlock it. Continue?")) return;
+    if (deviceOnly) {
+      // A fresh, never-uploaded vault identifier. The cloud revision is not reused.
+      cloud.selectedVaultId = 'device-' + crypto.randomUUID();
+      cloud.revision = 0;
+      cloud.encryptedEnvelope = null;
+      cloud.vaultLabel = 'Device-only backup';
+      cloud.deviceOnly = true;
+      cloud.lastBackup = null; // Per-vault isolation, without changing the account-wide sync preference.
+    }
+    cloud.importSource = deviceOnly ? "device-file" : "file";
     state.pendingImport = parsed;
     uiState.accessScreen = "unlock";
     showAccessScreen("unlock");
@@ -684,11 +706,13 @@ async function handleFileChoose() {
       : "Leave empty unless the vault was created with a pepper.";
 
     clearStatus(els.unlockStatus);
-    setGlobalStatus("Encrypted backup selected. After unlocking it, the encrypted contents will replace your cloud vault.", "warning");
+    setGlobalStatus(deviceOnly ? "Device-only backup selected. It will never be uploaded; download a new encrypted backup after edits." : "Encrypted backup selected. After unlocking, it will replace the selected cloud vault.", "warning");
+    window.dispatchEvent(new Event('passvault-access-change'));
   } catch (error) {
     state.pendingImport = null;
     els.selectedFileName.textContent = "No usable vault selected.";
     setStatus(els.unlockStatus, error instanceof Error ? error.message : "Vault import failed.", "error");
+    window.dispatchEvent(new Event('passvault-access-change'));
   } finally {
     els.vaultFile.value = "";
   }
@@ -701,6 +725,8 @@ async function handleExportVault() {
     state.exportInProgress = true;
     els.exportVaultButton.disabled = true;
 
+    const exportingMutation = cloud.mutation;
+    const exportingVaultId = cloud.selectedVaultId;
     state.vault.updatedAt = new Date().toISOString();
     const envelope = await encryptAndBuildEnvelope();
     const json = JSON.stringify(envelope, null, 2);
@@ -722,12 +748,23 @@ async function handleExportVault() {
     els.downloadVaultLink.dataset.objectUrl = url;
     els.downloadVaultLink.textContent = "Download Encrypted Vault";
     els.downloadVaultLink.classList.remove("hidden");
+    // Mobile Safari sometimes needs a second explicit user gesture for saving.
+    // These links reference the exact same in-memory encrypted Blob, not plaintext.
+    for (const id of ['pvOverviewBackupLink','pvSettingsBackupLink']) {
+      const link=$(id); if(!link) continue;
+      link.href=url; link.download=fileName; link.classList.remove('hidden');
+    }
 
     try {
       els.downloadVaultLink.click();
     } catch {}
 
-    setGlobalStatus("Encrypted backup prepared. If the download did not start, select the Download Encrypted Vault link in Settings. Cloud sync status is unchanged.", "warning");
+    cloud.lastBackup = exportingMutation === cloud.mutation && exportingVaultId === cloud.selectedVaultId
+      ? { userId: cloud.userId, vaultId: exportingVaultId, mutation: exportingMutation }
+      : null;
+    setGlobalStatus(cloud.lastBackup
+      ? 'Encrypted backup prepared. Verify that the download exists and can be opened. Cloud sync status is unchanged.'
+      : 'Edits changed while exporting. Prepare another backup to include the latest changes.', 'warning');
     renderVaultHeader();
   } catch (error) {
     setGlobalStatus(error instanceof Error ? error.message : "Vault export failed.", "error");
@@ -815,6 +852,10 @@ function clearUnlockedDom() {
 
 function lockVault(reason = "Vault locked.") {
   if (state.locked) return;
+  if (cloud.deviceOnly && state.dirty && reason === 'Manual lock' && !cloud.secureLockPromise) {
+    void secureLockWithCheckpoint('Device-only vault locked; encrypted local recovery saved when supported.');
+    return;
+  }
   if (state.dirty && reason === "Manual lock" && !window.confirm("There are unsaved changes. Locking now will discard them. Continue?")) return;
 
   /*
@@ -833,6 +874,10 @@ function lockVault(reason = "Vault locked.") {
   els.downloadVaultLink.removeAttribute("href");
   els.downloadVaultLink.removeAttribute("download");
   els.downloadVaultLink.classList.add("hidden");
+  for (const id of ['pvOverviewBackupLink','pvSettingsBackupLink']) {
+    const link=$(id);if(!link)continue;
+    link.removeAttribute('href');link.removeAttribute('download');link.classList.add('hidden');
+  }
 
   if (state.vault?.credentials) {
     for (const credential of state.vault.credentials) {
@@ -889,6 +934,7 @@ function lockVault(reason = "Vault locked.") {
   state.vaultMeta = null;
   state.pendingImport = null;
   state.editingId = null;
+  cloud.lastBackup = null;
   setDirty(false);
   state.locked = true;
   clearSensitiveFieldsEverywhere();

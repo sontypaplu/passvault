@@ -19,7 +19,7 @@ function renderVaultDashboard() {
     .filter(draft => !cloud.vaults.some(v => v.vault_id === draft.vaultId));
   const atLimit = cloud.vaults.length >= 2;
   $('dashboardCreateVault').disabled = atLimit;
-  $('dashboardCreateVault').textContent = atLimit ? 'Vault limit reached (2/2)' : '+ Create new vault';
+  $('dashboardCreateVault').textContent = atLimit ? 'Cloud vault limit (2/2)' : '+ Create cloud vault';
   if (!list) return;
   list.replaceChildren();
   if (!cloud.loaded) {
@@ -38,7 +38,7 @@ function renderVaultDashboard() {
     const text = document.createElement('div'); text.className = 'vault-tile-text';
     const name = document.createElement('strong'); name.textContent = 'Unsynced local vault';
     const sub = document.createElement('small');
-    sub.textContent = 'Encrypted on this device only. Unlock to restore and sync to cloud.';
+    sub.textContent = draft.deviceOnly ? 'Encrypted device-only recovery · never uploaded; export a fresh backup after unlocking.' : 'Encrypted unsynced recovery · check cloud revision before uploading.';
     text.append(name, sub);
     const restore = document.createElement('button'); restore.type = 'button';
     restore.textContent = 'Restore';
@@ -72,7 +72,9 @@ function openUnsyncedNewVaultRecovery(vaultId) {
     const parsed = parseVaultFileText(JSON.stringify(draft.envelope));
     if (parsed.type !== 'v2') throw new Error('Recovery format is unsupported');
     cloud.selectedVaultId = vaultId; cloud.revision = 0;
-    cloud.vaultLabel = 'Recovered vault'; cloud.encryptedEnvelope = draft.envelope;
+    cloud.vaultLabel = draft.deviceOnly ? 'Device-only recovery' : 'Recovered vault'; cloud.encryptedEnvelope = draft.envelope;
+    cloud.deviceOnly = Boolean(draft.deviceOnly);
+    // Restoring device-only encrypted recovery must not change account-wide cloud settings.
     cloud.importSource = 'local-recovery'; cloud.conflict = false;
     state.pendingImport = parsed;
     els.selectedFileName.textContent = 'Encrypted local recovery loaded';
@@ -96,7 +98,7 @@ function displayVaultDashboard() {
   cloud.encryptedEnvelope = null;
   state.pendingImport = null;
   cloud.conflict = false;
-  cloud.importSource = 'cloud';
+  cloud.importSource = 'cloud'; cloud.deviceOnly = false; cloud.lastBackup = null;
   clearSensitiveFieldsEverywhere();
   uiState.accessScreen='dashboard';
   setActiveView(); renderVaultDashboard();
@@ -118,7 +120,7 @@ async function openVaultById(vaultId) {
     if (parsed.type !== 'v2') throw new Error('Unsupported encrypted vault format');
     cloud.selectedVaultId=vaultId; cloud.revision=Number(data.revision);
     cloud.vaultLabel=data.label || 'Vault'; cloud.encryptedEnvelope=parsed.record;
-    cloud.importSource='cloud'; cloud.conflict=false; state.pendingImport=parsed;
+    cloud.importSource='cloud'; cloud.deviceOnly=false; cloud.lastBackup=null; cloud.conflict=false; state.pendingImport=parsed;
     els.selectedFileName.textContent='Encrypted cloud vault loaded';
     els.unlockPepperHint.textContent=parsed.record.pepperRequired ? 'This vault requires its secret pepper.' : 'Leave blank unless your vault uses a secret pepper.';
     showAccessScreen('unlock');
@@ -128,12 +130,39 @@ async function openVaultById(vaultId) {
 
 function prepareNewVault() {
   if (!cloud.loaded || !cloud.userId || !state.locked) return;
+  if (!isCloudSyncAllowed()) return setStatus($('dashboardStatus'),'Turn on cloud sync before creating a cloud vault. To stay device-only, open an encrypted backup instead.','warning');
   if (!crypto.randomUUID) return setStatus($('dashboardStatus'),'Your browser does not support secure UUID generation','error');
   if (cloud.vaults.length >= 2) return setStatus($('dashboardStatus'),'Vault limit reached: maximum 2 vaults per account. Delete a vault (after backup) to create another.','error');
   cloud.selectedVaultId=crypto.randomUUID(); cloud.revision=0;
-  cloud.encryptedEnvelope=null; cloud.conflict=false; cloud.importSource='cloud';
+  cloud.encryptedEnvelope=null; cloud.conflict=false; cloud.importSource='cloud'; cloud.deviceOnly=false; cloud.lastBackup=null;
   cloud.vaultLabel='Vault'; state.pendingImport=null;
+  setCreateVaultMode(false);
   els.newVaultName.value='';
+  showAccessScreen('create');
+}
+
+function setCreateVaultMode(deviceOnly) {
+  $('createVaultModeBadge').textContent = deviceOnly ? 'Device-only · no cloud uploads' : 'New cloud vault';
+  $('createVaultModeDescription').textContent = deviceOnly
+    ? 'Start a new encrypted vault on this device. No vault contents will be sent to the server. You must download encrypted backups to keep changes.'
+    : 'Create an encrypted vault connected to your signed-in account.';
+  els.createVaultButton.textContent = deviceOnly ? 'Create device-only vault' : 'Create cloud vault';
+}
+function prepareDeviceOnlyVault() {
+  if (!cloud.loaded || !cloud.userId || !state.locked) return;
+  if (!crypto.randomUUID) return setStatus($('dashboardStatus'), 'This browser does not support secure UUID generation.', 'error');
+  // A reserved local prefix is extra protection beyond the cloud.deviceOnly guard.
+  cloud.selectedVaultId = 'device-' + crypto.randomUUID();
+  cloud.revision = 0;
+  cloud.encryptedEnvelope = null;
+  cloud.conflict = false;
+  cloud.deviceOnly = true;
+  cloud.importSource = 'device-new';
+  cloud.vaultLabel = 'Device-only vault';
+  cloud.lastBackup = null;
+  state.pendingImport = null;
+  els.newVaultName.value = '';
+  setCreateVaultMode(true);
   showAccessScreen('create');
 }
 
@@ -249,9 +278,16 @@ function initializeMultiVaultEvents() {
   for(const id of ['unlockBackButton','createBackButton','allVaultsButton','settingsAllVaultsButton']) {
     $(id).addEventListener('click',displayVaultDashboard);
   }
+  $('dashboardOfflineVault').addEventListener('click',()=>{ if(state.locked) $('dashboardOfflineChoices').hidden=!$('dashboardOfflineChoices').hidden; });
+  $('dashboardCreateOfflineVault').addEventListener('click',prepareDeviceOnlyVault);
+  $('dashboardImportOfflineFile').addEventListener('change',async event=>{
+    const file=event.target.files?.[0];if(!file)return;
+    $('vaultImportDeviceOnly').checked=true;
+    try{await handleFileChoose(file);}finally{event.target.value='';}
+  });
   $('dashboardDeleteAccount').addEventListener('click',()=>requestDeletion('account'));
   $('settingsDeleteAccount').addEventListener('click',()=>requestDeletion('account'));
-  $('settingsDeleteCurrentVault').addEventListener('click',()=>requestDeletion('vault',cloud.selectedVaultId,cloud.vaultLabel));
+  $('settingsDeleteCurrentVault').addEventListener('click',()=>cloud.deviceOnly?setGlobalStatus('A device-only vault is not stored in the cloud. Lock it to close it; keep an encrypted backup.', 'warning'):requestDeletion('vault',cloud.selectedVaultId,cloud.vaultLabel));
   $('changeAccountPasswordForm').addEventListener('submit',changeAccountPassword);
   $('deleteConfirmForm').addEventListener('submit',confirmDeletion);
   $('cancelDeleteButton').addEventListener('click',closeDeletionDialog);
