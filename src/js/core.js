@@ -79,6 +79,8 @@ const cloud = {
   conflict: false,
   epoch: 0,
   importSource: "cloud",
+  syncEnabled: true,
+  deviceOnly: false,
   encryptedEnvelope: null,
   selectedVaultId: null,
   vaultLabel: "",

@@ -18,9 +18,10 @@
   // Hold the visible app behind a connection gate until the deployed release responds.
   let networkUnavailable = navigator.onLine === false || isDeployment;
 
-  const message = (text) => { const target = byId('pvPwaStatus'); if (target) target.textContent = text; };
+  const message = (text) => { for (const id of ['pvPwaStatus','pvPwaStatusLogin','pvPwaStatusLocked']) { const target=byId(id); if (target) target.textContent=text; } };
   const setOffline = (offline) => {
     networkUnavailable = offline;
+    const localSession = typeof cloud !== 'undefined' && cloud.userId && (!cloud.syncEnabled || cloud.deviceOnly) && typeof state !== 'undefined' && !state.locked;
     if (offline) {
       const heading = byId('pvPwaOfflineTitle');
       const detail = byId('pvPwaOfflineDescription');
@@ -28,9 +29,9 @@
       if (detail) detail.textContent = 'PassVault is online only. Connect to the internet, then retry.';
     }
     const overlay = byId('pvPwaOffline');
-    if (overlay) overlay.hidden = !offline;
+    if (overlay) overlay.hidden = !offline || !!localSession;
     // Hide the entire decrypted workspace synchronously on connection loss.
-    if (offline && typeof state !== 'undefined' && !state.locked) {
+    if (offline && !localSession && typeof state !== 'undefined' && !state.locked) {
       try { connectionLocked = Promise.resolve(secureLockWithCheckpoint('Connection lost. Vault locked.')); }
       catch { connectionLocked = Promise.resolve(); }
     }
@@ -45,10 +46,11 @@
   const render = () => {
     const help = byId('pvPwaInstallHelp');
     if (help) help.textContent = installInstructions();
-    const install = byId('pvPwaInstall');
-    if (install) {
-      install.hidden = installed();
-      install.textContent = installPrompt ? 'Install app' : 'How to install';
+    for(const id of ['pvPwaInstallHelpLogin','pvPwaInstallHelpLocked']) { const target=byId(id);if(target)target.textContent=installInstructions(); }
+    for (const id of ['pvPwaInstall','pvPwaInstallLogin','pvPwaInstallLocked']) {
+      const install=byId(id); if (!install) continue;
+      install.hidden=installed();
+      install.textContent=installPrompt?'Install app':'How to install';
     }
     const version = byId('pvPwaVersion');
     if (version) version.textContent = isDeployment ? `Build ${currentBuild.slice(0, 8)}` : 'Development preview';
@@ -172,6 +174,7 @@
   });
   window.addEventListener('appinstalled', () => { installPrompt = null; render(); });
   window.addEventListener('offline', () => { setOffline(true); render(); });
+  window.addEventListener('passvault-sync-change', () => { setOffline(networkUnavailable); render(); });
   window.addEventListener('online', () => { void checkNow(); });
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden && Date.now() - lastChecked > 300000) void checkNow();
@@ -179,7 +182,8 @@
   window.addEventListener('focus', () => {
     if (Date.now() - lastChecked > 300000) void checkNow();
   });
-  byId('pvPwaInstall')?.addEventListener('click', () => { void installApp(); });
+  for (const id of ['pvPwaInstall','pvPwaInstallLogin','pvPwaInstallLocked'])
+    byId(id)?.addEventListener('click', () => { void installApp(); });
   byId('pvPwaCheck')?.addEventListener('click', () => { void checkNow(); });
   byId('pvPwaApply')?.addEventListener('click', updateNow);
   byId('pvPwaNoticeAction')?.addEventListener('click', updateNow);
