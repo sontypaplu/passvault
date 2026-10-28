@@ -10,14 +10,16 @@
     "verify:source": "node tools/verify-source.mjs",
     "verify:upgrade": "node tools/verify-upgrade.mjs",
     "test:security": "node tools/test-security-hardening.mjs",
+    "test:device-only": "node tools/test-device-only-sync.mjs",
     "test:history": "node tools/test-edit-history.mjs",
     "test:recovery": "node tools/test-phase1-recovery.mjs",
     "test:phase3": "node tools/test-phase3-experience.mjs",
     "test:pwa": "node tools/test-online-pwa.mjs",
-    "test:xss": "node tools/test-xss-hardening.mjs"
+    "test:xss": "node tools/test-xss-hardening.mjs",
+    "test:offline-flow": "node tools/test-offline-vault-flow.mjs"
   },
   "dependencies": {
-    "@supabase/supabase-js": "2.117.3"
+    "@supabase/supabase-js": "2.118.0"
   },
   "engines": {
     "node": ">=20"

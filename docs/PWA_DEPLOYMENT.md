@@ -1,5 +1,7 @@
 # PassVault — Online-only PWA installation and updates
 
+**Scope:** This page describes PWA installation/updates. For the separate device-only vault workflow and cloud-sync controls, see `docs/OFFLINE_VAULT_WORKFLOW.md`. Device-only storage does not change online-only startup or network-loss protection.
+
 This change does **not** add a service worker, offline vault, browser CacheStorage, push notifications, or background sync. It does not change encryption, Supabase authentication, cloud save operations, vault metadata, or theme definitions.
 
 ## Deployment

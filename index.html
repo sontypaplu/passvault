@@ -48,6 +48,7 @@
           <button id="registerAccountButton" class="secondary account-register-button" type="button">Create an account</button>
           <button type="button" class="auth-link" data-auth-target="forgot">Forgot account password?</button>
         </form>
+        <div class="entry-install"><div><strong>Install PassVault</strong><small id="pvPwaInstallHelpLogin">Add PassVault to your phone or computer. A network connection is required to open the app.</small></div><button type="button" id="pvPwaInstallLogin" class="secondary">Install app</button></div><p class="entry-install-status" id="pvPwaStatusLogin" role="status" aria-live="polite"></p>
         <div class="entry-disclaimer">Your account password signs you in. A separate master password encrypts and unlocks your vault locally.</div>
       </div>
       <div class="entry-card hidden" id="signUpPanel" data-auth-panel="signup">
@@ -82,7 +83,7 @@
         <button type="button" class="auth-link" data-auth-target="signin">Back to sign in</button>
       </div>
     </main>
-    <footer class="entry-footer">PassVault <span aria-hidden="true">·</span> Encrypted cloud password manager · Security review required before real use</footer>
+    <footer class="entry-footer">PassVault <span aria-hidden="true">·</span> Encrypted password manager · Security review required before real use</footer>
   </section>
 
   <section id="lockedView" class="locked-view hidden" aria-label="Vault access">
@@ -94,12 +95,15 @@
         <section id="vaultDashboardScreen" class="access-screen hidden" aria-labelledby="vaultDashboardTitle">
           <div class="access-screen-head"><span class="page-kicker">ACCOUNT WORKSPACE</span>
             <h1 id="vaultDashboardTitle">My vaults</h1>
-            <p>Choose a vault to unlock, or create another encrypted vault. Vault labels are visible to the cloud service.</p></div>
+            <p>Unlock an existing cloud vault, or work in a separate device-only vault. Offline mode keeps vault contents out of cloud storage.</p></div>
           <div class="access-card dashboard-panel">
-            <div id="vaultDashboardList" class="vault-tiles" aria-live="polite"></div>
-            <div class="button-row dashboard-actions"><button type="button" id="dashboardCreateVault">+ Create new vault</button><button type="button" class="secondary" id="dashboardRefresh">Refresh vault list</button></div>
-            <div class="status-line" id="dashboardStatus" role="status"></div>
-            <div class="dashboard-danger"><button id="dashboardDeleteAccount" type="button" class="danger">Delete account…</button></div>
+            <div class="pv-local-choice"><div><strong>Your storage preference</strong><p id="vaultSyncDescription">Cloud sync is on. You can pause uploads before changing any vault data.</p></div><label class="pv-switch-label" for="vaultSyncToggle"><input id="vaultSyncToggle" type="checkbox" checked><span>Cloud sync</span></label></div><div id="vaultDashboardList" class="vault-tiles" aria-live="polite"></div>
+            <div class="button-row dashboard-actions"><button type="button" id="dashboardCreateVault">+ Create cloud vault</button><button type="button" class="secondary" id="dashboardRefresh">Refresh cloud vaults</button><button type="button" class="secondary" id="dashboardOfflineVault">Work offline: Create or import</button></div>
+            <section id="dashboardOfflineChoices" class="pv-native-offline-choices" aria-label="Device-only vault options" hidden>
+              <strong>Device-only vault</strong><p>Create a new encrypted vault or import an encrypted backup. Nothing in this vault is uploaded to cloud storage; download encrypted backups after edits.</p>
+              <div class="button-row"><button id="dashboardCreateOfflineVault" type="button">Create offline vault</button><label for="dashboardImportOfflineFile">Import encrypted backup</label><input id="dashboardImportOfflineFile" type="file" accept=".json,.pvault,.pvault.json,application/json,text/json"></div>
+            </section><div class="status-line" id="dashboardStatus" role="status"></div>
+            <div class="pv-install-lock"><button class="secondary" type="button" id="pvPwaInstallLocked">Install app</button><small id="pvPwaInstallHelpLocked">Use your browser menu to install PassVault.</small><span id="pvPwaStatusLocked" role="status" aria-live="polite"></span></div><div class="dashboard-danger"><button id="dashboardDeleteAccount" type="button" class="danger">Delete account…</button></div>
           </div>
         </section>
 
@@ -107,22 +111,23 @@
           <div class="access-screen-head">
             <span class="page-kicker"><span class="small-dot"></span> YOUR WORKSPACE</span>
             <h1>Unlock your vault</h1>
-            <p>Enter your master password to open your encrypted cloud vault.</p>
+            <p>Unlock your encrypted vault locally. Choose whether an imported backup stays on this device or replaces the selected cloud vault.</p>
           </div>
           <form id="unlockVaultForm" aria-labelledby="openVaultTitle" autocomplete="off" class="access-card access-form primary-access">
 <div class="card-title-row"><span class="screen-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 2.8h7l4 4V21H7a2 2 0 0 1-2-2V4.8a2 2 0 0 1 2-2Z"/><path d="M14 3v5h5M9 13h6m-6 4h6"/></svg></span>
 <div class="card-kicker">Existing vault</div>
 <h2 id="openVaultTitle">Unlock vault</h2>
-<p>Your vault is loaded from the cloud. Enter its master password to decrypt it locally.</p>
+<p id="unlockVaultDescription">Enter the master password. Decryption happens on this device, not on the server.</p>
 </div>
 <div class="field">
-<span class="form-label">Import existing encrypted file (optional)</span>
+<span class="form-label">Encrypted backup file (optional)</span>
 <input accept=".json,.pvault,.pvault.json,application/json,text/json" class="file-picker" id="vaultFile" type="file"/>
 <div class="file-selection">
-<div class="file-meta"><strong>Local backup import</strong><span id="selectedFileName">Cloud vault loads automatically</span></div>
+<div class="file-meta"><strong>Choose an encrypted .pvault.json backup</strong><span id="selectedFileName">No backup selected · current cloud vault loads automatically</span></div>
 <button class="secondary" id="chooseVaultFile" type="button">Browse</button>
 </div>
 </div>
+<label class="pv-import-option" for="vaultImportDeviceOnly"><input id="vaultImportDeviceOnly" type="checkbox" checked><span><strong>Open backup as device-only</strong><small>Never upload this imported vault. Edits remain in this browser session until you export a fresh encrypted backup. Turn cloud sync off automatically.</small></span></label>
 <div class="field">
 <label for="unlockMaster">Master password</label>
 <input autocomplete="off" id="unlockMaster" maxlength="256" placeholder="Master password" spellcheck="false" type="password"/>
@@ -132,7 +137,7 @@
 <input autocomplete="off" id="unlockPepper" maxlength="256" placeholder="Optional" spellcheck="false" type="password"/>
 <span class="hint" id="unlockPepperHint">Leave blank unless your vault uses a secret pepper.</span>
 </div>
-<div class="button-row"><button class="grow" id="unlockVaultButton" type="submit">Unlock vault</button></div>
+<div class="button-row"><button class="grow" id="unlockVaultButton" type="submit">Unlock vault securely</button></div><p class="pv-unlock-help">Your master password and secret pepper never leave this browser. Keep a separate encrypted backup before switching devices.</p>
 <div aria-live="polite" class="status-line" id="unlockStatus" role="status"></div>
 </form>
           <div class="access-switch"><button class="text-action" id="unlockBackButton" type="button">← My vaults</button></div><div class="access-switch">Create another? <button class="text-action" type="button" data-access-target="create">Create a new vault <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button></div>
@@ -141,11 +146,11 @@
           <div class="access-screen-head">
             <span class="page-kicker"><span class="small-dot"></span> GET STARTED</span>
             <h1>Create a new vault</h1>
-            <p>Create an encrypted vault connected to your signed-in account.</p>
+            <p id="createVaultModeDescription">Create an encrypted vault connected to your signed-in account.</p>
           </div>
           <form autocomplete="off" class="access-card access-form" id="createVaultForm">
 <div class="card-title-row"><span class="screen-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2.6"/><path d="M3.5 10h17M9 10v10"/></svg></span>
-<div class="card-kicker">New vault</div>
+<div class="card-kicker" id="createVaultModeBadge">New cloud vault</div>
 <h2>Create your vault</h2>
 <p>Choose a name and a master password. This password is never uploaded.</p>
 </div>
@@ -188,11 +193,11 @@
 <div class="button-row"><button class="grow" id="createVaultButton" type="submit">Create vault</button></div>
 <div aria-live="polite" class="status-line" id="createStatus" role="status"></div>
 </form>
-          <div class="access-switch"><button class="text-action" id="createBackButton" type="button">← My vaults</button></div><div class="access-switch">Already have a vault? <button class="text-action" type="button" data-access-target="unlock">Unlock your vault <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button></div>
+          <div class="access-switch"><button class="text-action" id="createBackButton" type="button">← My vaults / offline options</button></div>
         </section>
       </div>
     </main>
-    <footer class="lock-page-footer">Local encryption · Encrypted cloud sync · Keep a separate backup</footer>
+    <footer class="lock-page-footer">Local encryption · Optional cloud sync · Keep a separate encrypted backup</footer>
   </section>
 
   <section id="unlockedView" class="hidden">
@@ -464,7 +469,7 @@
 </aside>
 <button aria-label="Close navigation" class="mobile-backdrop" id="approvedMobileBackdrop"></button>
 <div class="main">
-<header class="topbar"><button aria-label="Pin navigation open" aria-expanded="false" aria-controls="approvedSidebar" class="iconbtn mobile-menu" data-icon="menu" id="openMenu" title="Pin navigation open"></button><div class="crumb"><span>Workspace /</span><span class="preview-inline-2" id="crumb">Overview</span></div><div class="top-search" id="searchWrap"><span data-icon="search"></span><input aria-label="Search unlocked vault items" autocomplete="off" id="search" placeholder="Search your vault..." type="search"/><button id="pvCommandTrigger" type="button" class="kbd pv-command-trigger" title="Quick search (Ctrl/⌘ K)" aria-label="Open quick search">⌘ K</button></div><button aria-label="Toggle light or dark appearance" class="iconbtn" data-icon="moon" id="themeToggle" title="Toggle theme"></button><button aria-label="Lock current vault" class="iconbtn" data-icon="lock" id="lockShortcut" title="Lock current vault"></button><button class="btn btn-primary newbtn" id="topNew" type="button" title="Create new vault" aria-label="Create new vault"><span data-icon="plus"></span><span class="buttonlabel">New vault</span></button><div class="preview-flows"><button aria-expanded="false" aria-label="Vault actions" class="iconbtn" data-icon="more" id="flowsToggle" title="Vault actions"></button><div class="flow-menu hidden" id="flowsMenu"><button data-flow="vaults" type="button"><span data-icon="folder"></span> My vaults</button><button data-flow="lock" type="button"><span data-icon="lock"></span> Lock vault</button><button data-flow="signout" type="button"><span data-icon="user"></span> Sign out</button></div></div></header>
+<header class="topbar"><button aria-label="Pin navigation open" aria-expanded="false" aria-controls="approvedSidebar" class="iconbtn mobile-menu" data-icon="menu" id="openMenu" title="Pin navigation open"></button><div class="crumb"><span>Workspace /</span><span class="preview-inline-2" id="crumb">Overview</span></div><div class="top-search" id="searchWrap"><button type="button" id="pvMobileSearchButton" class="pv-mobile-search-button" aria-label="Focus search" title="Search vault"><span data-icon="search"></span></button><input aria-label="Search unlocked vault items" autocomplete="off" id="search" placeholder="Search your vault..." type="search"/><button id="pvCommandTrigger" type="button" class="kbd pv-command-trigger" title="Quick search (Ctrl/⌘ K)" aria-label="Open quick search">⌘ K</button></div><button aria-label="Toggle light or dark appearance" class="iconbtn" data-icon="moon" id="themeToggle" title="Toggle theme"></button><button aria-label="Lock current vault" class="iconbtn" data-icon="lock" id="lockShortcut" title="Lock current vault"></button><button class="btn btn-primary newbtn" id="topNew" type="button" title="Create new vault" aria-label="Create new vault"><span data-icon="plus"></span><span class="buttonlabel">New vault</span></button><div class="preview-flows"><button aria-expanded="false" aria-label="Vault actions" class="iconbtn" data-icon="more" id="flowsToggle" title="Vault actions"></button><div class="flow-menu hidden" id="flowsMenu"><button data-flow="vaults" type="button"><span data-icon="folder"></span> My vaults</button><button data-flow="lock" type="button"><span data-icon="lock"></span> Lock vault</button><button data-flow="signout" type="button"><span data-icon="user"></span> Sign out</button></div></div></header>
 <div class="preview-strip"><span data-icon="info"></span><b>Encrypted vault</b> — Local encryption · Signed-in vault</div>
 <div class="container" id="workspace"><div id="approvedSyncNotice" class="sync-notice" role="alert" hidden><span id="approvedSyncMessage"></span><div class="sync-actions"><button type="button" class="btn btn-light" id="approvedSyncRetry">Retry sync</button><button type="button" class="btn btn-light" id="approvedSyncBackup">Download backup</button><a id="approvedBackupFallback" class="btn btn-light hidden" download>Save prepared backup file</a></div></div>
 <section class="page active" id="page-overview"><div class="heading"><div><div class="eyebrow">YOUR WORKSPACE</div><h1><span class="pv-desktop-heading">Welcome back to your vault <span class="preview-inline-3">✦</span></span><span class="pv-mobile-heading">Overview</span></h1><p>Here's a clear view of your digital essentials and what needs attention.</p></div><div class="heading-actions"><span class="status" id="approvedVaultStatus"><span class="dot"></span> Your vault · Unlocked</span></div></div><section class="pvb-capacity card" aria-label="Current vault item capacity">
@@ -473,7 +478,7 @@
   <div class="pvb-usage"><div class="pvb-usage-label"><strong id="pvbUsed">0 of 10 items used</strong><span id="pvbFree">10 spaces available</span></div><div class="pvb-track" role="progressbar" aria-label="Items used in current vault" aria-valuemin="0" aria-valuemax="10" aria-valuenow="0" id="pvbProgress"><span id="pvbFill"></span></div></div>
   <div class="pvb-vault-count"><strong id="pvbVaultCount">0 / 2</strong><span>Vaults created</span></div>
 </section>
-<section class="pvb-section" aria-label="Vault baskets"><div class="pvb-heading"><div><h2>Your baskets</h2><p><span id="pvbBasketCount">4 of 8 baskets</span><span class="pvb-basket-help"> · Organize items in your own folders.</span></p></div><div class="pvb-heading-actions"><span class="pvb-hint">Drag basket headers to reorder · Drag items to move</span><button type="button" class="btn btn-light" id="pvbCreateButton" aria-label="Create new basket"><span aria-hidden="true">+</span> New basket</button></div></div><div class="pvb-grid" id="pvbGrid" aria-label="Swipe to browse baskets"></div><div class="pvb-carousel-controls" aria-label="Basket carousel controls"><button type="button" class="pvb-carousel-arrow" id="pvbCarouselPrev" aria-label="Previous basket">&#8249;</button><div class="pvb-carousel-center"><span id="pvbCarouselStatus" class="pvb-carousel-count" aria-live="polite">1 / 4</span><div id="pvbCarouselDots" class="pvb-carousel-dots" aria-label="Basket positions"></div></div><button type="button" class="pvb-carousel-arrow" id="pvbCarouselNext" aria-label="Next basket">&#8250;</button></div></section><div class="dashgrid"><div class="stack"><div class="card security-panel"><div class="card-head"><div><h2>Your security, simplified</h2><p>Basic local password checks for this unlocked vault.</p></div><button class="linkbtn" data-page="security">Review security →</button></div><div class="health-layout"><div class="ring"><div class="ring-inner"><strong id="healthNumber">—</strong><small>Local flags</small></div></div><div class="health-lines"><div class="health-row"><span class="mini-dot"></span><span>Logins without local warnings</span><strong id="healthGood">0</strong></div><div class="health-row"><span class="mini-dot orange"></span><span>Reused passwords</span><strong id="healthReused">0</strong></div><div class="health-row"><span class="mini-dot purple"></span><span>Weak passwords</span><strong id="healthWeak">0</strong></div></div></div></div><div><div class="section-subhead"><h2>My vaults</h2><button class="linkbtn" data-page="vaults">Manage vaults →</button></div><div class="vault-grid" id="overviewVaults"></div></div><div class="card recent-card"><div class="recent-pad card-head"><h2>Recently updated</h2><button class="linkbtn" data-page="items">View all →</button></div><div id="recentTable"></div></div></div><div class="stack"><div class="card side-card"><div class="capacity-top"><h2>Vault capacity</h2><span class="tag good" id="capLabel">1 slot left</span></div><p>Up to two separate encrypted vaults per account, as supported by your current project.</p><div class="capacity-big"><span id="vaultUsed">1</span> <span>/ 2 vaults</span></div><div class="bar"><i id="capacityBar"></i></div><button class="btn btn-light fullbtn" id="quickCreateVault"><span data-icon="plus"></span>Create another vault</button></div><div class="card side-card"><h2>Quick password generator</h2><p>Create a unique random password locally in your browser.</p><div class="quick-value"><code id="quickPassword">••••••••••••••••••••</code><button aria-label="Copy generated password" class="rowbtn" data-icon="copy" id="quickCopy" title="Copy generated password"></button></div><div class="quick-footer"><small>Generated, never saved</small><button class="btn btn-light" id="quickGenerate"><span data-icon="refresh"></span>Generate</button></div></div><div class="card side-card"><h2>Backup &amp; cloud sync</h2><p>Your vault is encrypted in this browser before its data is synchronized.</p><button class="btn btn-light fullbtn" data-unwired="Encrypted backup export"><span data-icon="download"></span>Download backup</button><div class="preview-inline-4"></div><button class="btn btn-light fullbtn" data-unwired="Encrypted cloud sync"><span data-icon="cloud"></span>Sync encrypted vault</button></div></div></div></section>
+<section class="pvb-section" aria-label="Vault baskets"><div class="pvb-heading"><div><h2>Your baskets</h2><p><span id="pvbBasketCount">4 of 8 baskets</span><span class="pvb-basket-help"> · Organize items in your own folders.</span></p></div><div class="pvb-heading-actions"><span class="pvb-hint">Drag basket headers to reorder · Drag items to move</span><button type="button" class="btn btn-light" id="pvbCreateButton" aria-label="Create new basket"><span aria-hidden="true">+</span> New basket</button></div></div><div class="pvb-grid" id="pvbGrid" aria-label="Swipe to browse baskets"></div><div class="pvb-carousel-controls" aria-label="Basket carousel controls"><button type="button" class="pvb-carousel-arrow" id="pvbCarouselPrev" aria-label="Previous basket">&#8249;</button><div class="pvb-carousel-center"><span id="pvbCarouselStatus" class="pvb-carousel-count" aria-live="polite">1 / 4</span><div id="pvbCarouselDots" class="pvb-carousel-dots" aria-label="Basket positions"></div></div><button type="button" class="pvb-carousel-arrow" id="pvbCarouselNext" aria-label="Next basket">&#8250;</button></div></section><div class="dashgrid"><div class="stack"><div class="card security-panel"><div class="card-head"><div><h2>Your security, simplified</h2><p>Basic local password checks for this unlocked vault.</p></div><button class="linkbtn" data-page="security">Review security →</button></div><div class="health-layout"><div class="ring"><div class="ring-inner"><strong id="healthNumber">—</strong><small>Local flags</small></div></div><div class="health-lines"><div class="health-row"><span class="mini-dot"></span><span>Logins without local warnings</span><strong id="healthGood">0</strong></div><div class="health-row"><span class="mini-dot orange"></span><span>Reused passwords</span><strong id="healthReused">0</strong></div><div class="health-row"><span class="mini-dot purple"></span><span>Weak passwords</span><strong id="healthWeak">0</strong></div></div></div></div><div><div class="section-subhead"><h2>My vaults</h2><button class="linkbtn" data-page="vaults">Manage vaults →</button></div><div class="vault-grid" id="overviewVaults"></div></div><div class="card recent-card"><div class="recent-pad card-head"><h2>Recently updated</h2><button class="linkbtn" data-page="items">View all →</button></div><div id="recentTable"></div></div></div><div class="stack"><div class="card side-card"><div class="capacity-top"><h2>Vault capacity</h2><span class="tag good" id="capLabel">1 slot left</span></div><p>Up to two separate encrypted vaults per account, as supported by your current project.</p><div class="capacity-big"><span id="vaultUsed">1</span> <span>/ 2 vaults</span></div><div class="bar"><i id="capacityBar"></i></div><button class="btn btn-light fullbtn" id="quickCreateVault"><span data-icon="plus"></span>Create another vault</button></div><div class="card side-card"><h2>Quick password generator</h2><p>Create a unique random password locally in your browser.</p><div class="quick-value"><code id="quickPassword">••••••••••••••••••••</code><button aria-label="Copy generated password" class="rowbtn" data-icon="copy" id="quickCopy" title="Copy generated password"></button></div><div class="quick-footer"><small>Generated, never saved</small><button class="btn btn-light" id="quickGenerate"><span data-icon="refresh"></span>Generate</button></div></div><div class="card side-card"><h2>Backup &amp; cloud sync</h2><p id="pvBackupSyncSummary">Your vault is encrypted in this browser before its data is synchronized.</p><label class="pv-switch-label pv-inline-sync" for="pvOverviewSyncToggle"><input id="pvOverviewSyncToggle" type="checkbox" checked><span>Cloud sync enabled</span></label><button class="btn btn-light fullbtn" data-unwired="Encrypted backup export"><span data-icon="download"></span>Download encrypted backup</button><a id="pvOverviewBackupLink" class="btn btn-light fullbtn hidden" download>Save prepared encrypted backup file</a><div class="preview-inline-4"></div><button class="btn btn-light fullbtn" data-unwired="Encrypted cloud sync"><span data-icon="cloud"></span>Sync encrypted vault</button></div></div></div></section>
 <section class="page" id="page-items"><div class="heading"><div><div class="eyebrow">YOUR COLLECTION</div><h1>All items</h1><p>Find, organize, and manage logins, secure notes, and cards in your unlocked vault.</p></div><button class="btn btn-primary" data-new=""><span data-icon="plus"></span>New item</button></div><div class="toolbar"><div class="filters" id="filters"><button class="filter selected" data-filter="all">All items</button><button class="filter" data-filter="login">Logins</button><button class="filter" data-filter="note">Secure notes</button><button class="filter" data-filter="card">Payment cards</button></div><select aria-label="Sort items" class="select" id="sort"><option value="recent">Recently updated</option><option value="name">Name A–Z</option><option value="type">Item type</option></select></div><div class="card item-card" id="fullTable"></div></section>
 <section class="page" id="page-favorites"><div class="heading"><div><div class="eyebrow">QUICK ACCESS</div><h1>Favorites</h1><p>Your favorite encrypted items, one click away.</p></div></div><div class="card item-card" id="favoritesTable"></div></section>
 <section class="page" id="page-vaults"><div class="heading"><div><div class="eyebrow">VAULT MANAGEMENT</div><h1>My vaults</h1><p>Each real vault remains separately encrypted and requires its own master password.</p></div><button class="btn btn-primary" id="newVaultButton"><span data-icon="plus"></span>Create vault</button></div><div class="card info-card"><div class="card-head"><h2>Your collections</h2><span class="tag" id="vaultCountTag">1 of 2</span></div><div class="vault-grid preview-inline-5" id="manageVaults"></div><div class="note">Vault names are visible to your cloud provider in the current architecture. Only the selected vault's items are shown after it is unlocked. Switching vaults locks the current vault and requires the selected vault master password.</div></div></section>
@@ -557,7 +562,7 @@
   <div class="pv-settings-detail-body"><div class="pv-settings-panel" data-settings-panel="application" hidden>
  <div class="card setting-card pv-pwa-settings">
   <h2>Install PassVault</h2>
-  <p>Open PassVault as an app on your phone or computer. Internet is required; vaults are not cached for offline use.</p>
+  <p>Install PassVault on a phone or computer. A network connection is needed to launch the app; device-only vaults can be used in the current open session after the app has loaded. No offline service worker or vault cache is installed.</p>
   <div class="pv-pwa-row"><div><strong>App installation</strong><small id="pvPwaInstallHelp">Use your browser's Install app option.</small></div><button class="btn btn-light" type="button" id="pvPwaInstall">Install app</button></div>
   <div class="pv-pwa-divider"></div>
   <h2>Application updates</h2>
@@ -566,7 +571,7 @@
   <button class="btn btn-primary" type="button" id="pvPwaApply" hidden>Lock &amp; update</button>
   <p class="pv-pwa-footnote">Updates are never applied while the vault is unlocked. Save and sync edits before updating.</p>
  </div>
-</div><div class="pv-settings-panel" data-settings-panel="appearance" hidden><div class="card setting-card"><h2>Appearance</h2><p>Choose the experience that suits you.</p><div class="setting-row"><div><strong>Dark appearance</strong><small>Switch between light and dark modes.</small></div><button aria-checked="false" aria-label="Dark appearance" class="switch" id="darkSwitch" role="switch"></button></div></div></div><div class="pv-settings-panel" data-settings-panel="session" hidden><div class="card setting-card"><h2>Session &amp; clipboard</h2><p>Control how long sensitive data remains accessible.</p><div class="setting-row"><div><strong>Auto-lock after</strong><small>On inactivity · Account signs out after 15 minutes</small></div><select class="select" id="autoLock"><option value="5">5 minutes</option><option value="10">10 minutes</option><option selected="" value="15">15 minutes</option><option value="30">30 minutes</option></select></div><div class="setting-row"><div><strong>Clipboard clearing</strong><small>After password copy</small></div><select class="select" id="clipboardTime"><option value="15">15 seconds</option><option selected="" value="30">30 seconds</option><option value="60">60 seconds</option></select></div></div></div><div class="pv-settings-panel" data-settings-panel="backups" hidden><div class="card setting-card"><h2>Encrypted backups</h2><p>Export an encrypted copy of the currently open vault.</p><button class="btn btn-light" data-unwired="Backup export"><span data-icon="download"></span>Download encrypted backup</button>
+</div><div class="pv-settings-panel" data-settings-panel="appearance" hidden><div class="card setting-card"><h2>Appearance</h2><p>Choose the experience that suits you.</p><div class="setting-row"><div><strong>Dark appearance</strong><small>Switch between light and dark modes.</small></div><button aria-checked="false" aria-label="Dark appearance" class="switch" id="darkSwitch" role="switch"></button></div></div></div><div class="pv-settings-panel" data-settings-panel="session" hidden><div class="card setting-card"><h2>Session &amp; clipboard</h2><p>Control how long sensitive data remains accessible.</p><div class="setting-row"><div><strong>Auto-lock after</strong><small>On inactivity · Account signs out after 15 minutes</small></div><select class="select" id="autoLock"><option value="5">5 minutes</option><option value="10">10 minutes</option><option selected="" value="15">15 minutes</option><option value="30">30 minutes</option></select></div><div class="setting-row"><div><strong>Clipboard clearing</strong><small>After password copy</small></div><select class="select" id="clipboardTime"><option value="15">15 seconds</option><option selected="" value="30">30 seconds</option><option value="60">60 seconds</option></select></div></div></div><div class="pv-settings-panel" data-settings-panel="backups" hidden><div class="card setting-card"><h2>Encrypted backups &amp; sync</h2><p>Export an encrypted copy of the currently open vault. Choose whether vault changes are uploaded to the signed-in cloud account.</p><div class="pv-local-choice pv-settings-sync"><div><strong>Cloud synchronization</strong><p id="pvSettingsSyncDescription">Cloud sync is enabled.</p></div><label class="pv-switch-label" for="pvSettingsSyncToggle"><input id="pvSettingsSyncToggle" type="checkbox" checked><span>Sync on</span></label></div><p class="pv-privacy-note">Turning sync off stops new uploads; an upload already underway may complete. Signing in and listing cloud vaults still contacts Supabase. It does not delete previously uploaded data. While off, download an encrypted backup after every change. Turning it back on for a cloud vault can upload pending edits.</p><button class="btn btn-light" data-unwired="Backup export"><span data-icon="download"></span>Download encrypted backup</button><a id="pvSettingsBackupLink" class="btn btn-light hidden" download>Save prepared encrypted backup file</a>
 <div class="pv-recovery-divider"></div><h3>Verify a backup file</h3><p>Check AES-GCM authenticity and whether this backup can be decrypted. Verification never imports or overwrites your current vault.</p>
 <form id="pvBackupVerifyForm" class="pv-recovery-verify-form" autocomplete="off">
 <label for="pvBackupVerifyFile">Encrypted backup (.pvault.json)</label><input type="file" id="pvBackupVerifyFile" accept=".json,.pvault" required>
@@ -640,6 +645,13 @@
   </div>
   <div class="dialog-body">
     <div id="approvedGateVaultList" class="approved-gate-vaults"></div>
+    <section id="approvedGateOfflineChoice" class="pv-offline-choices" aria-label="Device-only vault options" hidden>
+      <p class="pv-device-note"><strong>Device-only workspace.</strong> Your account login still uses the internet, but this vault will not upload its contents. No continuous file autosave: download a new encrypted backup after changes and before sign-out.</p>
+      <button class="pv-offline-choice" id="approvedOfflineCreate" type="button"><strong>Create new offline vault</strong><span>Choose a master password and start with an empty vault. No vault is created in the cloud.</span></button>
+      <button class="pv-offline-choice" id="approvedOfflineImport" type="button"><strong>Import encrypted offline vault</strong><span>Open your existing .pvault.json backup using its master password. Cloud vaults remain unchanged.</span></button>
+      <label class="pv-offline-file-label" for="approvedOfflineFile">Select an encrypted backup file</label><input class="pv-offline-file" id="approvedOfflineFile" type="file" accept=".json,.pvault,.pvault.json,application/json,text/json">
+      <button class="pv-offline-back" id="approvedOfflineBack" type="button">← Back to cloud vaults</button>
+    </section>
     <div id="approvedGateSecureForm" class="approved-gate-form"></div>
     <p class="approved-gate-helper" id="approvedGateHelper">Your master password stays on this device.</p>
   </div>
@@ -647,6 +659,7 @@
     <button class="btn btn-light" id="approvedGateBack" type="button" hidden>← My vaults</button>
     <button class="btn btn-light" id="approvedGateRefresh" type="button" hidden>Refresh vaults</button>
     <button class="btn btn-light" id="approvedGateSignOut" type="button">Sign out</button>
+    <button class="btn btn-primary" id="approvedGateOffline" type="button">Work offline</button>
     <button class="btn btn-primary" id="approvedGateCreate" type="button" hidden>Create new vault</button>
   </div>
 </dialog>
@@ -665,6 +678,16 @@
 </div>
   </section>
 
+
+  <dialog id="pvOfflineExitDialog" class="confirm-dialog pv-offline-exit-dialog" aria-labelledby="pvOfflineExitTitle" aria-describedby="pvOfflineExitText">
+    <h2 id="pvOfflineExitTitle">Back up changes before signing out</h2>
+    <p id="pvOfflineExitText">Your changes have not been uploaded. Sign-out clears the unlocked vault. Download and verify the latest encrypted backup before proceeding.</p>
+    <button id="pvExitPrepareBackup" type="button" class="secondary">Prepare encrypted backup</button>
+    <a id="pvExitBackupDownloadLink" class="pv-offline-download" hidden>Download latest encrypted backup</a>
+    <p class="status-line" id="pvExitBackupStatus" role="status" aria-live="polite">No current encrypted backup has been prepared.</p>
+    <label class="pv-offline-ack"><input id="pvExitBackupAcknowledged" type="checkbox" disabled><span>I have saved and verified the current encrypted backup file.</span></label>
+    <div class="button-row"><button id="pvExitCancel" class="secondary" type="button">Keep working</button><button id="pvExitConfirm" type="button" disabled>Sign out</button></div>
+  </dialog>
 
   <dialog id="deleteDialog" class="confirm-dialog" aria-labelledby="deleteDialogTitle">
     <form id="deleteConfirmForm" method="dialog" autocomplete="off">

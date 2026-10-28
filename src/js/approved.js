@@ -349,6 +349,7 @@ function renderBaskets(){
  }else updateMobileBasketCarousel();
 }
 function clearBaskets(){
+ stopMobileDrag(false);
  $('pvbGrid')?.replaceChildren();
  mobileBasketSelectedId=null;$('pvbCarouselDots').replaceChildren();$('pvbCarouselStatus').textContent='0 / 0';
  $('pvbVaultName').textContent='Locked vault';
@@ -505,12 +506,13 @@ function render(){
    const review=actionButton('linkbtn',{'data-open':x.id});review.textContent='Review →';row.append(content,review);issueArea.append(row);
   }
  }
- const syncLabel=cloud.conflict?'Sync conflict':state.dirty?'Unsaved changes':cloud.saveInProgress?'Syncing…':'Unlocked';
- const failure=cloud.lastSaveError || (cloud.conflict?'Another device saved a newer version. Download a backup and reconcile before continuing.':cloud.autoLockDeferred?'Automatic lock deferred while changes are unsaved. Retry sync or download an encrypted backup.':'');
+ const syncLabel=cloud.deviceOnly?'Device-only':!cloud.syncEnabled?'Sync off':cloud.conflict?'Sync conflict':state.dirty?'Unsaved changes':cloud.saveInProgress?'Syncing…':'Unlocked';
+ const failure=(!isCloudSyncAllowed() ? (state.dirty ? 'Changes are not syncing. Download an encrypted backup before closing or locking this vault.' : '') : cloud.lastSaveError) || (cloud.conflict?'Another device saved a newer version. Download a backup and reconcile before continuing.':cloud.autoLockDeferred?'Automatic lock deferred while changes are unsaved. Retry sync or download an encrypted backup.':'');
  $('approvedSyncNotice').hidden=!failure;
  $('approvedSyncMessage').textContent=failure;
- $('approvedSyncRetry').disabled=!!cloud.conflict || cloud.saveInProgress;
+ $('approvedSyncRetry').disabled=!isCloudSyncAllowed() || !!cloud.conflict || cloud.saveInProgress;
  $('approvedVaultStatus').title=failure||syncLabel;
+ renderSyncControls();
  $('approvedVaultStatus').replaceChildren(el('span','dot'),document.createTextNode(' '+(cloud.vaultLabel||state.vault.name||'Your vault')+' · '+syncLabel));
  renderAccountIdentity();
 }
@@ -738,6 +740,7 @@ function createVault(){
 }
 function createVaultModal(){
  if(!cloud.loaded)return tip('Vault list is not ready.');
+ if(!isCloudSyncAllowed())return tip('Cloud sync is off. Use Work offline to create or import a device-only vault, or enable sync for a cloud vault.');
  if(vaults().length>=2)return tip('Maximum two encrypted vaults per account.');
  $('vaultName').value='';$('vaultDialog').showModal();$('vaultName').focus();
 }
@@ -770,6 +773,8 @@ const nativeUnlockCard=$('unlockVaultScreen').querySelector('.access-card');
 const nativeUnlockParent=nativeUnlockCard.parentNode;
 const nativeUnlockNext=nativeUnlockCard.nextSibling;
 let gateFetchingVault=false;
+let gateStorageChoice='cloud';
+let gateLastUserId=null;
 function restoreNativeUnlockCard(){
  if(nativeUnlockCard.parentNode!==nativeUnlockParent)
   nativeUnlockParent.insertBefore(nativeUnlockCard,nativeUnlockNext);
@@ -781,26 +786,35 @@ function closeVaultGate(){
  document.body.classList.remove('approved-gate-active');
 }
 function showVaultGate(){
+ if (gateLastUserId !== cloud.userId) { gateStorageChoice='cloud'; gateLastUserId=cloud.userId; }
  $('app').inert=true; // The dashboard behind the password gate cannot be operated.
  document.body.classList.add('approved-gate-active');
  const unlocking=uiState.accessScreen==='unlock' && !!cloud.selectedVaultId && !!state.pendingImport;
  $('approvedGateBack').hidden=!unlocking;
  $('approvedGateRefresh').hidden=unlocking;
- $('approvedGateCreate').hidden=unlocking;
- gateVaultList.hidden=unlocking;
+ $('approvedGateCreate').hidden=unlocking || gateStorageChoice==='offline';
+ $('approvedGateOffline').hidden=unlocking || gateStorageChoice==='offline';
+ gateVaultList.hidden=unlocking || gateStorageChoice==='offline';
+ $('approvedGateOfflineChoice').hidden=unlocking || gateStorageChoice!=='offline';
  gateSecureForm.hidden=!unlocking;
  if(unlocking){
   $('approvedGateEyebrow').textContent='UNLOCK ENCRYPTED VAULT';
   $('approvedGateTitle').textContent=cloud.vaultLabel||'Unlock vault';
   $('approvedGateDescription').textContent="Enter this vault's master password to decrypt it on your device.";
-  $('approvedGateHelper').textContent='Your master password is never sent to the cloud.';
+  $('approvedGateHelper').textContent=cloud.deviceOnly
+    ? 'Device-only vault. No encrypted vault uploads; export a fresh backup after edits.'
+    : !cloud.syncEnabled ? 'Cloud sync is off. Your new edits will not be uploaded.' : 'Your master password is never sent to the cloud.';
   if(nativeUnlockCard.parentNode!==gateSecureForm)gateSecureForm.append(nativeUnlockCard);
  }else{
   restoreNativeUnlockCard();
   $('approvedGateEyebrow').textContent='YOUR PRIVATE WORKSPACE';
-  $('approvedGateTitle').textContent='Choose a vault to unlock';
-  $('approvedGateDescription').textContent='Select a vault to continue to your workspace.';
-  $('approvedGateCreate').disabled=!cloud.loaded || cloud.vaults.length>=2;
+  $('approvedGateTitle').textContent=gateStorageChoice==='offline' ? 'Work with an offline vault' : 'Choose how to open PassVault';
+  $('approvedGateDescription').textContent=gateStorageChoice==='offline'
+    ? 'Create an empty device-only vault or import an encrypted backup. No vault data is uploaded.'
+    : 'Unlock a cloud vault normally, or choose Work offline for a completely separate device-only vault.';
+  $('approvedGateCreate').disabled=!cloud.loaded || cloud.vaults.length>=2 || !cloud.syncEnabled;
+  $('approvedOfflineCreate').disabled=!cloud.loaded;
+  $('approvedOfflineImport').disabled=!cloud.loaded;
   $('approvedGateRefresh').disabled=gateFetchingVault;
   gateVaultList.replaceChildren();
   if(!cloud.loaded){
@@ -833,14 +847,34 @@ function showVaultGate(){
     gateVaultList.append(button);
    }
   }
-  const error=$('dashboardStatus').textContent.trim();
-  $('approvedGateHelper').textContent=error||'Vault contents remain hidden until unlocked.';
+  const error=(gateStorageChoice==='offline' ? $('unlockStatus').textContent : $('dashboardStatus').textContent).trim();
+  $('approvedGateHelper').textContent=error || (gateStorageChoice==='offline'
+    ? 'No cloud vault data will be uploaded. Download encrypted backups after edits.'
+    : 'Vault contents remain hidden until unlocked.');
  }
  if(!gate.open)gate.showModal();
 }
-$('approvedGateBack').addEventListener('click',displayVaultDashboard);
+$('approvedGateBack').addEventListener('click',()=>{gateStorageChoice='cloud';displayVaultDashboard();});
+$('approvedGateOffline').addEventListener('click',()=>{clearStatus(els.unlockStatus);gateStorageChoice='offline';showVaultGate();});
+$('approvedOfflineBack').addEventListener('click',()=>{gateStorageChoice='cloud';showVaultGate();});
+$('approvedOfflineCreate').addEventListener('click',()=>{prepareDeviceOnlyVault();syncVisible();});
+$('approvedOfflineImport').addEventListener('click',()=>{
+ if(!state.locked || !cloud.loaded)return;
+ $('vaultImportDeviceOnly').checked=true;
+ clearStatus(els.unlockStatus);
+ $('approvedOfflineFile').click();
+});
+$('approvedOfflineFile').addEventListener('change',async event=>{
+ const file=event.target.files?.[0];
+ if(!file)return;
+ $('vaultImportDeviceOnly').checked=true;
+ try { await handleFileChoose(file); }
+ finally {event.target.value='';}
+});
+window.addEventListener('passvault-access-change',()=>syncVisible());
 $('approvedGateSignOut').addEventListener('click',()=>void handleSignOut());
 $('approvedGateCreate').addEventListener('click',()=>{
+ gateStorageChoice='cloud';
  prepareNewVault();
  syncVisible(); // Keep the existing, already-working new-vault creation screen.
 });
@@ -853,6 +887,7 @@ $('approvedGateRefresh').addEventListener('click',async()=>{
 });
 gate.addEventListener('cancel',e=>{e.preventDefault();if(uiState.accessScreen==='unlock')displayVaultDashboard();});
 function syncVisible(){
+ renderSyncControls();
  if(ready()){
   closeVaultGate();
   $('approvedUI').hidden=false;
@@ -888,6 +923,37 @@ $('editItem').addEventListener('click',()=>{const id=selected;$('detailDialog').
 $('favoriteDetail').addEventListener('click',()=>{const id=selected;$('detailDialog').close();toggleFavorite(id);});
 $('editorReveal').addEventListener('click',()=>{const input=$('itemPassword');input.type=input.type==='password'?'text':'password';$('editorReveal').textContent=input.type==='password'?'Show':'Hide';});
 $('approvedAddCustom').addEventListener('click',()=>addCustom());
+function renderSyncControls(){
+ const enabled=isCloudSyncAllowed();
+ const create=$('dashboardCreateVault');if(create){create.disabled=!enabled;create.title=enabled?'Create an encrypted cloud vault':'Cloud sync is off · use Work offline to create or import a device-only vault';}
+ for(const id of ['vaultSyncToggle','pvOverviewSyncToggle','pvSettingsSyncToggle']){
+  const input=$(id);if(input){input.checked=enabled;input.disabled=cloud.deviceOnly && !state.locked;
+  const label=input.closest('label')?.querySelector('span');
+  if(label) label.textContent=cloud.deviceOnly?'Device-only · no sync':enabled?'Cloud sync on':'Cloud sync off';
+ }
+ }
+ const text=cloud.deviceOnly?'Device-only vault · never uploaded. Export a new encrypted backup after edits.'
+  :enabled?'Cloud sync is enabled. Edits to a cloud vault are encrypted locally, then uploaded.'
+  :'Cloud sync paused · new edits will not be uploaded. Existing cloud copies are not deleted.';
+ for(const id of ['vaultSyncDescription','pvSettingsSyncDescription','pvBackupSyncSummary']){const node=$(id);if(node)node.textContent=text;}
+}
+for(const id of ['vaultSyncToggle','pvOverviewSyncToggle','pvSettingsSyncToggle']){
+ $(id).addEventListener('change',event=>{
+  if(event.target.checked && state.dirty && !cloud.deviceOnly && !window.confirm('Turn cloud sync on? Pending local edits can be uploaded to the selected cloud vault.')){
+    renderSyncControls();return;
+  }
+  window.PassVaultSync.setEnabled(event.target.checked);renderSyncControls();
+ });
+}
+window.addEventListener('passvault-sync-change',renderSyncControls);
+// Device-only creation and import share the signed-in chooser; no cloud vault is required.
+// This is a real focusable search control on touch devices, not a passive icon.
+$('pvMobileSearchButton').addEventListener('click',()=>{$('search').focus();});
+$('searchWrap').addEventListener('click',event=>{
+ if(!event.target.closest('input,button'))$('search').focus();
+});
+$('search').addEventListener('focus',()=>{$('searchWrap').classList.add('pv-search-active');});
+$('search').addEventListener('blur',()=>{$('searchWrap').classList.remove('pv-search-active');});
 $('themeToggle').addEventListener('click',()=>theme(document.documentElement.dataset.theme!=='dark'));
 $('darkSwitch').addEventListener('click',()=>theme(document.documentElement.dataset.theme!=='dark'));
 function toggleSidebarPin(){
@@ -1045,6 +1111,101 @@ $('pvbGrid').addEventListener('drop',e=>{
  basketMove(id,box.dataset.basketDrop);
 });
 $('pvbGrid').addEventListener('dragend',()=>{basketDragging=null;basketReordering=null;clearReorderMarkers();document.querySelectorAll('#pvbGrid .pvb-basket').forEach(b=>b.classList.remove('pvb-drop-target'));});
+// Touch/pen: long-press to drag a tile or basket across the entire scrollable
+// carousel. Edge-hover auto-scroll does NOT mutate the vault until a valid drop.
+let mobileDrag=null, mobileDragSuppressClick=false;
+function mobileDragTarget(){
+ if(!mobileDrag)return null;
+ const track=$('pvbGrid'), rect=track.getBoundingClientRect(), x=mobileDrag.x;
+ const hit=document.elementFromPoint(Math.min(rect.right-2,Math.max(rect.left+2,x)),Math.min(rect.bottom-5,Math.max(rect.top+5,mobileDrag.y)));
+ const basket=hit?.closest('[data-basket-drop]');
+ if(basket && basket.parentElement===track)return basket;
+ // While the finger hovers over a carousel edge/gutter, select the nearest
+ // visible card. This is necessary after scrolling past the source card.
+ const cards=mobileBasketCards();
+ return cards.reduce((best,card)=>{
+  const bounds=card.getBoundingClientRect();
+  const d=Math.abs(bounds.left+bounds.width/2-x);
+  return !best||d<best.d?{card,d}:best;
+ },null)?.card||null;
+}
+function updateMobileDragTarget(){
+ if(!mobileDrag?.active)return;
+ const target=mobileDragTarget(),id=target?.dataset.basketDrop;
+ mobileDrag.target=id&&id!==mobileDrag.sourceBasket?id:null;
+ for(const card of mobileBasketCards()){
+  card.classList.toggle(mobileDrag.kind==='item'?'pvb-drop-target':'pvb-reorder-target',card.dataset.basketDrop===mobileDrag.target);
+ }
+ if(mobileDrag.ghost){mobileDrag.ghost.style.left=mobileDrag.x+'px';mobileDrag.ghost.style.top=mobileDrag.y+'px';}
+}
+function mobileDragFrame(){
+ const drag=mobileDrag;if(!drag||!drag.active)return;
+ const track=$('pvbGrid'),box=track.getBoundingClientRect(),edge=Math.min(76,box.width*.22),x=drag.x;
+ let speed=0;
+ if(x<box.left+edge)speed=-Math.max(3,(box.left+edge-x)/edge*18);
+ else if(x>box.right-edge)speed=Math.max(3,(x-(box.right-edge))/edge*18);
+ if(speed){
+  const old=track.scrollLeft;
+  track.scrollLeft=Math.max(0,Math.min(track.scrollWidth-track.clientWidth,old+speed));
+  if(old!==track.scrollLeft)updateMobileDragTarget();
+ }
+ drag.frame=requestAnimationFrame(mobileDragFrame);
+}
+function startMobileDrag(drag){
+ if(mobileDrag!==drag||!ready())return;
+ drag.active=true;
+ const track=$('pvbGrid');track.classList.add('pvb-mobile-drag-active');
+ const ghost=document.createElement('div');ghost.className='pvb-drag-ghost';ghost.setAttribute('aria-hidden','true');
+ ghost.textContent=drag.kind==='item'?findItem(drag.id)?.title||'Move item':basketName(drag.id);
+ document.body.append(ghost);drag.ghost=ghost;
+ updateMobileDragTarget();drag.frame=requestAnimationFrame(mobileDragFrame);
+ if(navigator.vibrate)try{navigator.vibrate(15);}catch{}
+}
+function stopMobileDrag(commit=false){
+ const drag=mobileDrag;if(!drag)return;
+ mobileDrag=null;clearTimeout(drag.timer);cancelAnimationFrame(drag.frame);
+ $('pvbGrid').classList.remove('pvb-mobile-drag-active');drag.ghost?.remove();
+ mobileDragSuppressClick=drag.active;
+ if(drag.active) setTimeout(()=>{mobileDragSuppressClick=false;},400);
+ for(const card of mobileBasketCards())card.classList.remove('pvb-drop-target','pvb-reorder-target');
+ if(commit&&drag.active&&drag.target&&ready()){
+  mobileBasketSelectedId=drag.target;
+  if(drag.kind==='item')basketMove(drag.id,drag.target);
+  else reorderBasket(drag.id,drag.target);
+ }
+ if(window.matchMedia('(max-width:760px)').matches)scheduleMobileBasketUpdate();
+}
+$('pvbGrid').addEventListener('touchstart',event=>{
+ if(!window.matchMedia('(max-width:760px)').matches||!ready()||event.touches.length!==1)return;
+ const origin=event.target;
+ // Long press the item tile's icon/name or the colored basket header.
+ const tile=origin.closest('[data-basket-drag]');
+ const header=origin.closest('[data-basket-reorder]');
+ if(!tile&&!header)return;
+ if(origin.closest('[data-basket-move],[data-basket-rename],[data-basket-keyboard],.pvb-tile-move'))return;
+ const touch=event.touches[0],kind=tile?'item':'basket';
+ stopMobileDrag(false);
+ const drag={kind,id:tile?tile.dataset.basketDrag:header.dataset.basketReorder,
+  sourceBasket:(tile||header).closest('[data-basket-drop]').dataset.basketDrop,
+  touchId:touch.identifier,x:touch.clientX,y:touch.clientY,startX:touch.clientX,startY:touch.clientY,
+  active:false,target:null,frame:0,ghost:null,timer:0};
+ mobileDrag=drag;drag.timer=setTimeout(()=>startMobileDrag(drag),330);
+},{passive:true});
+document.addEventListener('touchmove',event=>{
+ const drag=mobileDrag;if(!drag)return;
+ const t=[...event.changedTouches].find(t=>t.identifier===drag.touchId);if(!t)return;
+ drag.x=t.clientX;drag.y=t.clientY;
+ if(!drag.active){if(Math.hypot(drag.x-drag.startX,drag.y-drag.startY)>11)stopMobileDrag(false);return;}
+ event.preventDefault(); // Stop native carousel swiping only AFTER long-press activates.
+ updateMobileDragTarget();
+},{passive:false});
+document.addEventListener('touchend',event=>{
+ if(mobileDrag&&[...event.changedTouches].some(t=>t.identifier===mobileDrag.touchId))stopMobileDrag(true);
+},{passive:true});
+document.addEventListener('touchcancel',()=>stopMobileDrag(false),{passive:true});
+$('pvbGrid').addEventListener('click',event=>{
+ if(mobileDragSuppressClick){event.preventDefault();event.stopImmediatePropagation();mobileDragSuppressClick=false;}
+},true);
 // Keyboard-accessible rearranging, including for touch devices without native drag events.
 $('pvbGrid').addEventListener('keydown',e=>{
  const handle=e.target.closest('[data-basket-keyboard]');if(!handle||!ready()||e.target!==handle)return;
@@ -1055,6 +1216,7 @@ $('pvbGrid').addEventListener('keydown',e=>{
 });
 // Touch/pen long press on the colored header reorders baskets without changing item dragging.
 $('pvbGrid').addEventListener('pointerdown',e=>{
+ if(window.matchMedia('(max-width:760px)').matches)return; // Mobile drag is handled by long-press touch events.
  if(e.pointerType==='mouse'||!ready()||e.target.closest('button'))return;
  const handle=e.target.closest('[data-basket-reorder]');if(!handle)return;
  const hold={id:handle.dataset.basketReorder,pointerId:e.pointerId,x:e.clientX,y:e.clientY,active:false,target:null,timer:null};
