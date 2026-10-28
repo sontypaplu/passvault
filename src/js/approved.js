@@ -67,7 +67,7 @@ function closeMenu(){
 }
 // Settings are a drill-down workspace, not a page of exposed forms.
 const pvSettingsSectionMeta={
- appearance:['Appearance','Choose your preferred visual experience.','sun'],
+ appearance:['Appearance','Theme and text size.','sun'],
  session:['Sessions & clipboard','Control inactivity locking and clipboard clearing.','lock'],
  backups:['Encrypted backups','Export your encrypted vault securely.','download'],
  history:['Encrypted edit history','Browse changes recorded inside the encrypted vault.','refresh'],
@@ -790,7 +790,7 @@ function showVaultGate(){
  document.body.classList.add('approved-gate-active');
  const unlocking=uiState.accessScreen==='unlock' && !!cloud.selectedVaultId && !!state.pendingImport;
  $('approvedGateBack').hidden=!unlocking;
- $('approvedGateRefresh').hidden=unlocking;
+ $('approvedGateRefresh').hidden=unlocking || gateStorageChoice==='offline';
  $('approvedGateCreate').hidden=unlocking || gateStorageChoice==='offline';
  $('approvedGateOffline').hidden=unlocking || gateStorageChoice==='offline';
  gateVaultList.hidden=unlocking || gateStorageChoice==='offline';
@@ -808,11 +808,11 @@ function showVaultGate(){
   if(nativeUnlockCard.parentNode!==gateSecureForm)gateSecureForm.append(nativeUnlockCard);
  }else{
   restoreNativeUnlockCard();
-  $('approvedGateEyebrow').textContent='YOUR PRIVATE WORKSPACE';
-  $('approvedGateTitle').textContent=gateStorageChoice==='offline' ? 'Work with an offline vault' : 'Choose how to open PassVault';
+  $('approvedGateEyebrow').textContent='VAULT ACCESS';
+  $('approvedGateTitle').textContent=gateStorageChoice==='offline' ? 'Work offline' : 'Your vaults';
   $('approvedGateDescription').textContent=gateStorageChoice==='offline'
-    ? 'Create an empty device-only vault or import an encrypted backup. No vault data is uploaded.'
-    : 'Unlock a cloud vault normally, or choose Work offline for a completely separate device-only vault.';
+    ? 'Create a vault or open a backup.'
+    : 'Choose a cloud vault or work offline.';
   $('approvedGateCreate').disabled=!cloud.loaded || cloud.vaults.length>=2;
   $('approvedOfflineCreate').disabled=!cloud.loaded;
   $('approvedOfflineImport').disabled=!cloud.loaded;
@@ -849,9 +849,7 @@ function showVaultGate(){
    }
   }
   const error=(gateStorageChoice==='offline' ? $('unlockStatus').textContent : $('dashboardStatus').textContent).trim();
-  $('approvedGateHelper').textContent=error || (gateStorageChoice==='offline'
-    ? 'No cloud vault data will be uploaded. Download encrypted backups after edits.'
-    : 'Vault contents remain hidden until unlocked.');
+  $('approvedGateHelper').textContent=error;
  }
  if(!gate.open)gate.showModal();
 }
@@ -934,10 +932,10 @@ function renderSyncControls(){
   if(label) label.textContent=cloud.deviceOnly?'Unavailable':enabled?'Enabled':'Paused';
  }
  const text=cloud.deviceOnly
-  ? 'Device-only vault: uploads are permanently disabled for this vault. Download an encrypted backup after editing. Cloud-vault preferences remain unchanged.'
+  ? 'Device-only · No uploads. Download a backup after edits.'
   :enabled
-    ? 'Cloud sync on: encrypted edits to this cloud vault are uploaded to your account.'
-    : 'Cloud sync paused: future edits are not uploaded. An upload already in progress may finish. Existing cloud copies remain. Export an encrypted backup before leaving.';
+    ? 'Cloud sync on · Encrypted changes upload to your account.'
+    : 'Cloud sync paused · New edits stay here. An in-progress upload may finish. Download a backup before leaving.';
  for(const id of ['pvSettingsSyncDescription','pvBackupSyncSummary']){const node=$(id);if(node)node.textContent=text;}
 }
 $('pvSettingsSyncToggle').addEventListener('change',event=>{
