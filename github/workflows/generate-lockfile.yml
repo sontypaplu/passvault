@@ -1,0 +1,28 @@
+# Manual one-time job. Read-only repository token; downloads a lockfile as an artifact.
+# Inspect and commit the generated package-lock.json to your hardening PR.
+name: Generate npm lockfile (manual)
+on:
+  workflow_dispatch:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  lockfile:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Resolve pinned SDK dependencies
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+      - name: Verify clean install from generated lock
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Upload generated lockfile
+        uses: actions/upload-artifact@v4
+        with:
+          name: passvault-package-lock
+          path: package-lock.json
+          retention-days: 7

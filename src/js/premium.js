@@ -239,7 +239,7 @@
       const kind=pv('pv3ItemType').value;
       const title=pv('pv3ItemTitle').value.trim(); if(!title)throw new Error('Title is required.');
       const url=kind==='login'?pv('pv3ItemURL').value.trim():'';
-      if(url) {const parsed=new URL(url);if(!['http:','https:'].includes(parsed.protocol))throw new Error('Website must use http or https.');}
+      if(url)window.PassVaultURLSafety.validate(url);
       const username=kind==='login'?pv('pv3ItemUsername').value.trim():(kind==='card'?pv('pv3Cardholder').value.trim():'Secure note');
       const password=kind==='login'?pv('pv3ItemPassword').value:(kind==='note'?pv('pv3NoteContent').value:pv('pv3CardNumber').value.replace(/\s/g,''));
       if(!username || !password)throw new Error(kind==='login'?'Username and password are required.':kind==='note'?'Enter a note.':'Enter cardholder and card number.');

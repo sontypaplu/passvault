@@ -13,7 +13,8 @@
     "test:history": "node tools/test-edit-history.mjs",
     "test:recovery": "node tools/test-phase1-recovery.mjs",
     "test:phase3": "node tools/test-phase3-experience.mjs",
-    "test:pwa": "node tools/test-online-pwa.mjs"
+    "test:pwa": "node tools/test-online-pwa.mjs",
+    "test:xss": "node tools/test-xss-hardening.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.117.3"
