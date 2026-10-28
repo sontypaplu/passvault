@@ -17,7 +17,7 @@
     "test:xss": "node tools/test-xss-hardening.mjs"
   },
   "dependencies": {
-    "@supabase/supabase-js": "2.117.3"
+    "@supabase/supabase-js": "2.118.0"
   },
   "engines": {
     "node": ">=20"
