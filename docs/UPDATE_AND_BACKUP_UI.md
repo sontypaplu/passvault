@@ -1,0 +1,8 @@
+# Vault access, sync, backups, and app updates
+
+- After account sign-in, select a **cloud vault** (existing or new), or **Work offline** and create/import a device-only vault.
+- The vault unlock screen asks only for the master password and any required secret pepper. Importing a backup is offered from Work offline, not from the unlock screen. Importing never replaces a cloud vault.
+- **Settings → Backups & cloud sync** is the only editable cloud-sync switch. Device-only vaults can never upload. A cloud vault can pause new encrypted uploads in Settings; in-flight uploads may finish, and earlier cloud copies remain.
+- **Download encrypted backup** prepares a local encrypted JSON file and requests a browser download. Confirm the file actually exists. If the browser blocks the automatic download, expand **Download didn't start?** for a manual download link to the same encrypted file. The fallback does not upload data or create another copy on the server.
+- The installed app is an online-only website in standalone mode (no service worker). It fetches a public release marker on startup and upon returning to the app after five minutes. On an updated release, the user sees an update notice, including on the login and vault chooser screens. Active unlocked vaults are **never silently reloaded**; the user must tap Update. Unsynced edits must be backed up and the vault signed out or safely locked first.
+- Browser downloads are not provably saved by JavaScript; verify a saved backup before sign-out or updating. Device-only vaults are not saved as permanent local browser data. No automatic cloud uploads occur from device-only mode.

@@ -48,7 +48,7 @@ cloud.syncEnabled=true;ctx.encryptAndBuildEnvelope=async()=>({encrypted:'opaque'
 assert.equal(await ctx.saveCloudVault(true),true);
 assert.equal(uploads,1,'explicit cloud save must still work when enabled');
 assert.equal(cloud.revision,2);
-for(const id of ['pvPwaInstallLogin','pvPwaInstallLocked','vaultImportDeviceOnly','vaultSyncToggle','pvOverviewSyncToggle','pvSettingsSyncToggle','pvMobileSearchButton','pvOverviewBackupLink','pvSettingsBackupLink'])
+for(const id of ['pvPwaInstallLogin','pvPwaInstallLocked','pvOverviewSyncSettings','pvSettingsSyncToggle','pvMobileSearchButton','pvOverviewBackupLink','pvSettingsBackupLink'])
   assert(html.includes(`id="${id}"`),`Missing UI control: ${id}`);
 assert(approved.includes('requestAnimationFrame(mobileDragFrame)'), 'edge auto scroll RAF missing');
 assert(approved.includes("document.addEventListener('touchmove'"),'touch move listener missing');
@@ -56,7 +56,12 @@ assert(approved.includes("drag.kind==='item'"),'item drop missing');
 assert(approved.includes('reorderBasket(drag.id,drag.target)'),'basket reorder missing');
 assert(css.includes('#approvedUI .topbar #openMenu{display:none}'),'duplicate mobile menu not hidden');
 assert(css.includes('#approvedUI .topbar #themeToggle{display:grid'),'mobile theme must be visible');
-assert(vaultCode.includes('cloud.importSource = deviceOnly ? "device-file" : "file"'),'device-only import is isolated');
+assert(vaultCode.includes('cloud.importSource = "device-file"'),'device-only import is isolated');
+assert(!html.includes('id="vaultImportDeviceOnly"'),'master password must not ask storage-mode question');
+assert(!html.includes('id="vaultSyncToggle"') && !html.includes('id="pvOverviewSyncToggle"'),'sync preference belongs only in Settings');
+assert(html.includes('id="pvSettingsSyncToggle"'),'cloud sync must be available in Settings');
+assert(html.includes('id="pvSettingsBackupHelp"') && html.includes('id="pvOverviewBackupHelp"'),'mobile manual-save fallback must be collapsed');
+assert(html.includes('id="pvExitBackupHelp"'),'signout manual save fallback must remain available');
 assert(vaultCode.includes("if (isCloudSyncAllowed()) scheduleCloudSave()"),'dirty-state upload scheduling must be gated');
 assert(vaultCode.includes('deviceOnly: Boolean(cloud.deviceOnly)'),'encrypted recovery must retain device-only marker');
 console.log('Device-only / cloud-sync checks passed: off, isolated, mid-flight stop, enabled upload, encrypted recovery, responsive hooks.');

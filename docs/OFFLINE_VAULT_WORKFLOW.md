@@ -15,7 +15,7 @@ You sign in **online** to your regular account. The signed-in vault chooser disp
 Your device-only vault or a cloud vault with sync switched off is **not autosaved into a file**. Edits are in unlocked browser memory until you export. A best-effort encrypted recovery checkpoint can be written on secure lock, but it depends on browser storage and is not a substitute for backups. To preserve your changes:
 
 1. Select **Download encrypted backup** from Overview or Settings.
-2. If the download does not start automatically (especially on iOS Safari), tap the newly shown **Save prepared encrypted backup file** link.
+2. If the download does not start automatically (especially on iOS Safari), expand **Download didn't start?** and tap the encrypted-file save link. The fallback appears only after a backup has been prepared.
 3. Confirm the file actually exists in your device's Files/Downloads. **Test re-import with a disposable vault before relying on the feature.** Store backups securely. Avoid sharing backups or master secrets.
 4. Before voluntary sign-out **with unsynced edits**, a dialog requires an up-to-date encrypted backup to be prepared and your acknowledgment that you saved and verified it. Decline to keep working. Browser JavaScript cannot independently prove a file was downloaded or stored safely.
 

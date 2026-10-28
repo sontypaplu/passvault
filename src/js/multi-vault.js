@@ -130,7 +130,6 @@ async function openVaultById(vaultId) {
 
 function prepareNewVault() {
   if (!cloud.loaded || !cloud.userId || !state.locked) return;
-  if (!isCloudSyncAllowed()) return setStatus($('dashboardStatus'),'Turn on cloud sync before creating a cloud vault. To stay device-only, open an encrypted backup instead.','warning');
   if (!crypto.randomUUID) return setStatus($('dashboardStatus'),'Your browser does not support secure UUID generation','error');
   if (cloud.vaults.length >= 2) return setStatus($('dashboardStatus'),'Vault limit reached: maximum 2 vaults per account. Delete a vault (after backup) to create another.','error');
   cloud.selectedVaultId=crypto.randomUUID(); cloud.revision=0;
@@ -282,7 +281,6 @@ function initializeMultiVaultEvents() {
   $('dashboardCreateOfflineVault').addEventListener('click',prepareDeviceOnlyVault);
   $('dashboardImportOfflineFile').addEventListener('change',async event=>{
     const file=event.target.files?.[0];if(!file)return;
-    $('vaultImportDeviceOnly').checked=true;
     try{await handleFileChoose(file);}finally{event.target.value='';}
   });
   $('dashboardDeleteAccount').addEventListener('click',()=>requestDeletion('account'));

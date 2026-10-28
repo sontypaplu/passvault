@@ -163,17 +163,19 @@ function confirmBackupBeforeSignOut() {
   const confirmButton = $('pvExitConfirm');
   const status = $('pvExitBackupStatus');
   ack.checked = false;
+  $('pvExitBackupHelp').open = false;
   let preparing = false;
   const refresh = () => {
     const ready = currentEncryptedBackupReady();
     link.hidden = !ready;
+    $('pvExitBackupHelp').hidden = !ready;
     if (ready) { link.href = els.downloadVaultLink.href; link.download = els.downloadVaultLink.download; }
     else { link.removeAttribute('href'); link.removeAttribute('download'); }
     ack.disabled = !ready;
     confirmButton.disabled = !ready || !ack.checked;
     status.textContent = ready
-      ? 'Encrypted backup prepared. Save the file, verify that it is accessible, then confirm below. Preparing a backup does not guarantee the browser saved it.'
-      : 'Prepare and download an encrypted backup of your latest changes before signing out.';
+      ? 'Backup download requested. Check your Downloads or Files app. If nothing downloaded, expand “Download didn\'t start?” to save it manually. Confirm only after checking the file.'
+      : 'Download the latest encrypted backup before signing out. Verify it is saved on your device.';
   };
   refresh();
   signOutBackupPrompt = new Promise(resolve => {

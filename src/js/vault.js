@@ -177,6 +177,21 @@ function setDirty(value) {
   if (state.dirty) {
     cloudStatus("UNSAVED", "warning");
     ++cloud.mutation;
+    // An earlier backup no longer represents the latest vault revision.
+    // Remove all manual-save fallbacks so nobody downloads an outdated blob.
+    cloud.lastBackup = null;
+    for (const [linkId, helpId] of [['pvOverviewBackupLink','pvOverviewBackupHelp'],['pvSettingsBackupLink','pvSettingsBackupHelp'],['approvedBackupFallback','approvedBackupHelp']]) {
+      const link=$(linkId), help=$(helpId);
+      if (link) { link.removeAttribute('href'); link.removeAttribute('download');link.classList.add('hidden'); }
+      if (help) { help.classList.add('hidden');help.open=false; }
+    }
+    if (els.downloadVaultLink.dataset.objectUrl) {
+      URL.revokeObjectURL(els.downloadVaultLink.dataset.objectUrl);
+      delete els.downloadVaultLink.dataset.objectUrl;
+      els.downloadVaultLink.removeAttribute('href');
+      els.downloadVaultLink.removeAttribute('download');
+      els.downloadVaultLink.classList.add('hidden');
+    }
     if (isCloudSyncAllowed()) scheduleCloudSave();
   }
 }
@@ -438,7 +453,6 @@ function scheduleClipboardClear() {
 async function handleCreateVault(event) {
   event.preventDefault();
   if (!cloud.userId || !cloud.loaded || !cloud.selectedVaultId) return setStatus(els.createStatus, "Select Create new vault from My vaults first.", "error");
-  if (!cloud.deviceOnly && !isCloudSyncAllowed()) return setStatus(els.createStatus, "Cloud sync is off. Choose Work offline to create a device-only vault, or enable sync for a cloud vault.", "error");
   if (cloud.deviceOnly && (!String(cloud.selectedVaultId).startsWith('device-') || cloud.importSource !== 'device-new')) return setStatus(els.createStatus, "Invalid device-only vault state; start again from Work offline.", "error");
   if (cloud.revision > 0) return setStatus(els.createStatus, "Selected vault already exists. Open it or create another from My vaults.", "error");
   if (!cloud.deviceOnly && cloud.vaults.length >= 2) return setStatus(els.createStatus, 'Cloud vault limit reached: only two cloud vaults are permitted.','error');
@@ -491,8 +505,13 @@ async function handleCreateVault(event) {
       setStatus(els.createStatus, 'Device-only vault created. Nothing was uploaded. Download an encrypted backup to preserve it.', 'success');
       setGlobalStatus('Device-only vault active: download and verify an encrypted backup before signing out or leaving this browser.', 'warning');
     } else {
-      setStatus(els.createStatus, 'Vault created. Uploading encrypted vault to Supabase…', 'success');
-      await saveCloudVault(true);
+      if (isCloudSyncAllowed()) {
+        setStatus(els.createStatus, 'Vault created. Uploading encrypted vault to Supabase…', 'success');
+        await saveCloudVault(true);
+      } else {
+        setStatus(els.createStatus, 'Cloud vault created with sync paused. It has not been uploaded. Download an encrypted backup before leaving, or enable sync in Settings.', 'warning');
+        setGlobalStatus('Your cloud vault is new but has NOT been uploaded. Export a backup or enable sync in Settings.', 'warning');
+      }
     }
   } catch (error) {
     setStatus(els.createStatus, error instanceof Error ? error.message : "Vault creation failed.", "error");
@@ -683,10 +702,8 @@ async function handleFileChoose(selectedFile = null) {
     }
 
     if (!cloud.userId || !cloud.loaded) throw new Error("Sign in and load the account before importing.");
-    const deviceOnly = $('vaultImportDeviceOnly').checked || !cloud.syncEnabled;
-    if (!deviceOnly && (!cloud.selectedVaultId || !cloud.vaults.some(v=>v.vault_id===cloud.selectedVaultId)))
-      throw new Error('Choose a cloud vault from My vaults before importing with cloud replacement enabled.');
-    if (!deviceOnly && cloud.revision > 0 && !window.confirm("This backup will REPLACE your current cloud vault after you unlock it. Continue?")) return;
+    // Import is only available from the explicitly selected Work offline path.
+    const deviceOnly = true;
     if (deviceOnly) {
       // A fresh, never-uploaded vault identifier. The cloud revision is not reused.
       cloud.selectedVaultId = 'device-' + crypto.randomUUID();
@@ -696,7 +713,7 @@ async function handleFileChoose(selectedFile = null) {
       cloud.deviceOnly = true;
       cloud.lastBackup = null; // Per-vault isolation, without changing the account-wide sync preference.
     }
-    cloud.importSource = deviceOnly ? "device-file" : "file";
+    cloud.importSource = "device-file";
     state.pendingImport = parsed;
     uiState.accessScreen = "unlock";
     showAccessScreen("unlock");
@@ -706,7 +723,7 @@ async function handleFileChoose(selectedFile = null) {
       : "Leave empty unless the vault was created with a pepper.";
 
     clearStatus(els.unlockStatus);
-    setGlobalStatus(deviceOnly ? "Device-only backup selected. It will never be uploaded; download a new encrypted backup after edits." : "Encrypted backup selected. After unlocking, it will replace the selected cloud vault.", "warning");
+    setGlobalStatus("Offline backup selected. Unlock with its master password; cloud vaults remain unchanged.", "warning");
     window.dispatchEvent(new Event('passvault-access-change'));
   } catch (error) {
     state.pendingImport = null;
@@ -748,11 +765,12 @@ async function handleExportVault() {
     els.downloadVaultLink.dataset.objectUrl = url;
     els.downloadVaultLink.textContent = "Download Encrypted Vault";
     els.downloadVaultLink.classList.remove("hidden");
-    // Mobile Safari sometimes needs a second explicit user gesture for saving.
-    // These links reference the exact same in-memory encrypted Blob, not plaintext.
-    for (const id of ['pvOverviewBackupLink','pvSettingsBackupLink']) {
-      const link=$(id); if(!link) continue;
+    // Manual save links are hidden inside a collapsed "Download didn't start?" helper.
+    // All links use the same encrypted Blob, never plaintext.
+    for (const [linkId, helpId] of [['pvOverviewBackupLink','pvOverviewBackupHelp'],['pvSettingsBackupLink','pvSettingsBackupHelp']]) {
+      const link=$(linkId), help=$(helpId); if(!link || !help) continue;
       link.href=url; link.download=fileName; link.classList.remove('hidden');
+      help.classList.remove('hidden'); help.open=false;
     }
 
     try {
@@ -763,7 +781,7 @@ async function handleExportVault() {
       ? { userId: cloud.userId, vaultId: exportingVaultId, mutation: exportingMutation }
       : null;
     setGlobalStatus(cloud.lastBackup
-      ? 'Encrypted backup prepared. Verify that the download exists and can be opened. Cloud sync status is unchanged.'
+      ? 'Encrypted backup download requested. Verify the file was saved. If it did not start, open “Download didn\'t start?” for a manual link. Cloud sync is unchanged.'
       : 'Edits changed while exporting. Prepare another backup to include the latest changes.', 'warning');
     renderVaultHeader();
   } catch (error) {
@@ -874,9 +892,10 @@ function lockVault(reason = "Vault locked.") {
   els.downloadVaultLink.removeAttribute("href");
   els.downloadVaultLink.removeAttribute("download");
   els.downloadVaultLink.classList.add("hidden");
-  for (const id of ['pvOverviewBackupLink','pvSettingsBackupLink']) {
-    const link=$(id);if(!link)continue;
+  for (const [linkId, helpId] of [['pvOverviewBackupLink','pvOverviewBackupHelp'],['pvSettingsBackupLink','pvSettingsBackupHelp']]) {
+    const link=$(linkId), help=$(helpId);if(!link || !help)continue;
     link.removeAttribute('href');link.removeAttribute('download');link.classList.add('hidden');
+    help.classList.add('hidden');help.open=false;
   }
 
   if (state.vault?.credentials) {

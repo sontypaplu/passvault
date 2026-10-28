@@ -61,7 +61,20 @@
       apply.textContent = typeof state !== 'undefined' && !state.locked ? 'Lock & update' : 'Update now';
     }
     const notice = byId('pvPwaUpdateNotice');
-    if (notice) notice.hidden = !available || dismissedBuild === latestBuild || networkUnavailable;
+    const visible = available && dismissedBuild !== latestBuild && !networkUnavailable;
+    if (notice) notice.hidden = !visible;
+    const dirty = typeof state !== 'undefined' && state.dirty;
+    const note = byId('pvPwaNoticeText');
+    if (note) note.textContent = dirty
+      ? 'Update ready. Export an encrypted backup and sign out before updating.'
+      : 'New PassVault version ready. Tap Update to lock and reload safely.';
+    // Standard fixed notices render beneath native <dialog> top-layer elements.
+    // Surface the same release status INSIDE the sign-in and vault chooser too.
+    for (const [id, actionId] of [['pvPwaLoginUpdate','pvPwaLoginUpdateAction'],['pvPwaGateUpdate','pvPwaGateUpdateAction']]) {
+      const item = byId(id), action = byId(actionId);
+      if (item) item.hidden = !visible;
+      if (action) action.textContent = dirty ? 'Back up first' : 'Update now';
+    }
   };
 
   async function fetchRelease() {
@@ -89,7 +102,7 @@
     checking = (async () => {
       if (navigator.onLine === false) {
         setOffline(true);
-        message('Offline — connect to the internet before using PassVault.');
+        message('Offline — reconnect to check for updates and sign in.');
         return false;
       }
       if (!isDeployment) {
@@ -106,7 +119,7 @@
         lastChecked = Date.now();
         latestBuild = release.build;
         if (latestBuild === currentBuild) message('PassVault is up to date.');
-        else message('Update available. Save changes before locking and updating.');
+        else message('New version available. Your installed app checks automatically; apply the update when your vault is safely locked.');
         render();
         return true;
       } catch {
@@ -133,7 +146,7 @@
     }
     if (typeof state === 'undefined' || typeof cloud === 'undefined' || state.kdfInProgress ||
         state.exportInProgress || cloud.saveInProgress || cloud.conflict || state.dirty) {
-      message('Save or export pending changes and resolve sync conflicts before updating.');
+      message('An update is ready, but this vault has pending changes or a save in progress. If working device-only or with sync paused, download and verify a backup, sign out, then update.');
       return false;
     }
     if (!window.confirm(state.locked
@@ -187,6 +200,8 @@
   byId('pvPwaCheck')?.addEventListener('click', () => { void checkNow(); });
   byId('pvPwaApply')?.addEventListener('click', updateNow);
   byId('pvPwaNoticeAction')?.addEventListener('click', updateNow);
+  byId('pvPwaLoginUpdateAction')?.addEventListener('click', updateNow);
+  byId('pvPwaGateUpdateAction')?.addEventListener('click', updateNow);
   byId('pvPwaNoticeClose')?.addEventListener('click', () => { dismissedBuild = latestBuild; render(); });
   byId('pvPwaRetry')?.addEventListener('click', () => { void checkNow(); });
 
