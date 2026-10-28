@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="referrer" content="no-referrer">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'; connect-src 'self' https://*.supabase.co wss://*.supabase.co; img-src 'self' blob:; media-src 'none'; frame-src 'none'; style-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src blob:; manifest-src 'self'; upgrade-insecure-requests">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'; connect-src 'self' https://*.supabase.co wss://*.supabase.co; img-src 'self' blob:; media-src 'none'; frame-src 'none'; style-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src blob:; manifest-src 'self'; require-trusted-types-for 'script'; trusted-types passvault-argon2-worker; upgrade-insecure-requests">
   <meta name="theme-color" content="#F5F7FB">
   <meta name="passvault-build" content="development">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -690,6 +690,7 @@
 <!-- Locally hosted, version-pinned Supabase SDK (generated at build time). -->
 <script defer src="./src/js/vendor/supabase.js"></script>
 <script defer src="./src/js/config.js"></script>
+<script defer src="./src/js/url-safety.js"></script>
 <script defer src="./src/js/core.js"></script>
 <script defer src="./src/js/cloud.js"></script>
 <script defer src="./src/js/vault.js"></script>
