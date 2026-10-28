@@ -12,7 +12,7 @@ function slice(src,start,end) {
 }
 const elements = Object.fromEntries([
   'createVaultModeBadge','createVaultModeDescription','createVaultButton','newVaultName',
-  'vaultImportDeviceOnly','dashboardStatus','pvOfflineExitDialog','pvExitCancel'
+  'dashboardStatus','pvOfflineExitDialog','pvExitCancel'
 ].map(key=>[key,{value:'',textContent:'',checked:true,open:false}]));
 const cloud={userId:'account-a',loaded:true,selectedVaultId:null,vaults:[{vault_id:'cloud-original',revision:5}],
   revision:0,syncEnabled:true,deviceOnly:false,importSource:'cloud',epoch:1,mutation:0,conflict:false,
@@ -39,7 +39,7 @@ const ctx={cloud,state,els,uiState:{accessScreen:'dashboard'},window:{dispatchEv
   navigator:{onLine:true},Date,console,clearTimeout,setTimeout};
 vm.createContext(ctx);
 vm.runInContext(slice(cloudCode,'function isCloudSyncAllowed()','function setCloudSyncEnabled('),ctx);
-vm.runInContext(slice(multi,'function setCreateVaultMode(deviceOnly)','async function changeAccountPassword('),ctx);
+vm.runInContext(slice(multi,'function prepareNewVault()','async function changeAccountPassword('),ctx);
 vm.runInContext(slice(js,'async function handleCreateVault(event)','function getPreferredKdfProfile()'),ctx);
 ctx.prepareDeviceOnlyVault();
 assert.equal(mode,'create');
@@ -73,6 +73,21 @@ assert.equal(ctx.isCloudSyncAllowed(),false);
 // Even if a future code path forgets the deviceOnly flag, the reserved local ID still blocks uploads.
 cloud.deviceOnly=false;
 assert.equal(ctx.isCloudSyncAllowed(),false,'local-only IDs must not be promotable into cloud uploads');
+// Paused sync must not strand the account at the locked chooser. A newly
+// created cloud vault remains local until the user enables sync in Settings.
+state.vault=null;state.dirty=false;state.locked=true;
+cloud.selectedVaultId=null;cloud.deviceOnly=false;cloud.syncEnabled=false;
+ctx.prepareNewVault();
+assert.equal(mode,'create','cloud vault creation remains available with sync paused');
+assert.equal(cloud.deviceOnly,false);
+assert.equal(ctx.isCloudSyncAllowed(),false);
+state.locked=false;
+await ctx.handleCreateVault({preventDefault(){}});
+assert.equal(cloudWrites,0,'paused-sync cloud creation must not call cloud save');
+assert.match(status,/not been uploaded/i);
+state.locked=true;state.vault=null;state.dirty=false;
+cloud.syncEnabled=true;
+
 // Check that the secure-lock checkpoint index can rediscover reserved device IDs.
 const recoveryData=new Map();
 const recoveryStorage={
@@ -103,6 +118,7 @@ exitCtx.confirmBackupBeforeSignOut=async()=>true;
 await exitCtx.handleSignOut();
 assert.equal(signedOut,1);assert.equal(locked,1);
 assert(html.includes('id="approvedGateOfflineChoice"'));
+assert(!html.includes('id="vaultImportDeviceOnly"'),'master password form must not ask storage-mode question');
 for(const id of ['approvedGateOffline','approvedOfflineCreate','approvedOfflineImport','approvedOfflineFile','pvOfflineExitDialog',
  'pvExitPrepareBackup','pvExitBackupDownloadLink','pvExitBackupAcknowledged','pvExitConfirm'])
  assert(html.includes(`id="${id}"`), `Missing accessible offline workflow element: ${id}`);

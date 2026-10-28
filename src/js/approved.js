@@ -740,7 +740,6 @@ function createVault(){
 }
 function createVaultModal(){
  if(!cloud.loaded)return tip('Vault list is not ready.');
- if(!isCloudSyncAllowed())return tip('Cloud sync is off. Use Work offline to create or import a device-only vault, or enable sync for a cloud vault.');
  if(vaults().length>=2)return tip('Maximum two encrypted vaults per account.');
  $('vaultName').value='';$('vaultDialog').showModal();$('vaultName').focus();
 }
@@ -760,7 +759,7 @@ function clearPrivateUI(){
  $('editorForm').reset();$('detailBody').replaceChildren();$('approvedCustomFields').replaceChildren();
  $('fullTable').replaceChildren();$('favoritesTable').replaceChildren();$('recentTable').replaceChildren();
  $('overviewVaults').replaceChildren();$('manageVaults').replaceChildren();$('quickPassword').textContent='';$('approvedGeneratedPassword').textContent='';
- clearBaskets();$('approvedBackupFallback').classList.add('hidden');$('approvedBackupFallback').removeAttribute('href');
+ clearBaskets();$('approvedBackupFallback').classList.add('hidden');$('approvedBackupFallback').removeAttribute('href');$('approvedBackupHelp').classList.add('hidden');$('approvedBackupHelp').open=false;
  closeMenu();$('flowsMenu').classList.add('hidden');
 }
 // The approved vault chooser originally had markup but no event handlers.
@@ -800,7 +799,9 @@ function showVaultGate(){
  if(unlocking){
   $('approvedGateEyebrow').textContent='UNLOCK ENCRYPTED VAULT';
   $('approvedGateTitle').textContent=cloud.vaultLabel||'Unlock vault';
-  $('approvedGateDescription').textContent="Enter this vault's master password to decrypt it on your device.";
+  $('approvedGateDescription').textContent=cloud.importSource==='device-file'
+    ? 'Offline backup selected. Enter its master password to unlock it. Your cloud vaults will not change.'
+    : "Enter this vault's master password to decrypt it on your device.";
   $('approvedGateHelper').textContent=cloud.deviceOnly
     ? 'Device-only vault. No encrypted vault uploads; export a fresh backup after edits.'
     : !cloud.syncEnabled ? 'Cloud sync is off. Your new edits will not be uploaded.' : 'Your master password is never sent to the cloud.';
@@ -812,7 +813,7 @@ function showVaultGate(){
   $('approvedGateDescription').textContent=gateStorageChoice==='offline'
     ? 'Create an empty device-only vault or import an encrypted backup. No vault data is uploaded.'
     : 'Unlock a cloud vault normally, or choose Work offline for a completely separate device-only vault.';
-  $('approvedGateCreate').disabled=!cloud.loaded || cloud.vaults.length>=2 || !cloud.syncEnabled;
+  $('approvedGateCreate').disabled=!cloud.loaded || cloud.vaults.length>=2;
   $('approvedOfflineCreate').disabled=!cloud.loaded;
   $('approvedOfflineImport').disabled=!cloud.loaded;
   $('approvedGateRefresh').disabled=gateFetchingVault;
@@ -860,14 +861,12 @@ $('approvedOfflineBack').addEventListener('click',()=>{gateStorageChoice='cloud'
 $('approvedOfflineCreate').addEventListener('click',()=>{prepareDeviceOnlyVault();syncVisible();});
 $('approvedOfflineImport').addEventListener('click',()=>{
  if(!state.locked || !cloud.loaded)return;
- $('vaultImportDeviceOnly').checked=true;
  clearStatus(els.unlockStatus);
  $('approvedOfflineFile').click();
 });
 $('approvedOfflineFile').addEventListener('change',async event=>{
  const file=event.target.files?.[0];
  if(!file)return;
- $('vaultImportDeviceOnly').checked=true;
  try { await handleFileChoose(file); }
  finally {event.target.value='';}
 });
@@ -925,26 +924,29 @@ $('editorReveal').addEventListener('click',()=>{const input=$('itemPassword');in
 $('approvedAddCustom').addEventListener('click',()=>addCustom());
 function renderSyncControls(){
  const enabled=isCloudSyncAllowed();
- const create=$('dashboardCreateVault');if(create){create.disabled=!enabled;create.title=enabled?'Create an encrypted cloud vault':'Cloud sync is off · use Work offline to create or import a device-only vault';}
- for(const id of ['vaultSyncToggle','pvOverviewSyncToggle','pvSettingsSyncToggle']){
-  const input=$(id);if(input){input.checked=enabled;input.disabled=cloud.deviceOnly && !state.locked;
-  const label=input.closest('label')?.querySelector('span');
-  if(label) label.textContent=cloud.deviceOnly?'Device-only · no sync':enabled?'Cloud sync on':'Cloud sync off';
+ const setting=$('pvSettingsSyncToggle');
+ if(setting){
+  setting.checked=enabled;
+  // Device-only vaults are never promoted via a sync setting. This preference
+  // applies to cloud vaults, and remains unchanged when working device-only.
+  setting.disabled=cloud.deviceOnly && !state.locked;
+  const label=setting.closest('label')?.querySelector('span');
+  if(label) label.textContent=cloud.deviceOnly?'Unavailable':enabled?'Enabled':'Paused';
  }
+ const text=cloud.deviceOnly
+  ? 'Device-only vault: uploads are permanently disabled for this vault. Download an encrypted backup after editing. Cloud-vault preferences remain unchanged.'
+  :enabled
+    ? 'Cloud sync on: encrypted edits to this cloud vault are uploaded to your account.'
+    : 'Cloud sync paused: future edits are not uploaded. An upload already in progress may finish. Existing cloud copies remain. Export an encrypted backup before leaving.';
+ for(const id of ['pvSettingsSyncDescription','pvBackupSyncSummary']){const node=$(id);if(node)node.textContent=text;}
+}
+$('pvSettingsSyncToggle').addEventListener('change',event=>{
+ if(event.target.checked && state.dirty && !cloud.deviceOnly && !window.confirm('Turn cloud sync on? Pending local edits may be uploaded to your selected cloud vault.')){
+  renderSyncControls();return;
  }
- const text=cloud.deviceOnly?'Device-only vault · never uploaded. Export a new encrypted backup after edits.'
-  :enabled?'Cloud sync is enabled. Edits to a cloud vault are encrypted locally, then uploaded.'
-  :'Cloud sync paused · new edits will not be uploaded. Existing cloud copies are not deleted.';
- for(const id of ['vaultSyncDescription','pvSettingsSyncDescription','pvBackupSyncSummary']){const node=$(id);if(node)node.textContent=text;}
-}
-for(const id of ['vaultSyncToggle','pvOverviewSyncToggle','pvSettingsSyncToggle']){
- $(id).addEventListener('change',event=>{
-  if(event.target.checked && state.dirty && !cloud.deviceOnly && !window.confirm('Turn cloud sync on? Pending local edits can be uploaded to the selected cloud vault.')){
-    renderSyncControls();return;
-  }
-  window.PassVaultSync.setEnabled(event.target.checked);renderSyncControls();
- });
-}
+ window.PassVaultSync.setEnabled(event.target.checked);renderSyncControls();
+});
+$('pvOverviewSyncSettings').addEventListener('click',()=>{navigate('settings');openSettingsSection('backups');});
 window.addEventListener('passvault-sync-change',renderSyncControls);
 // Device-only creation and import share the signed-in chooser; no cloud vault is required.
 // This is a real focusable search control on touch devices, not a passive icon.
@@ -980,6 +982,7 @@ $('approvedSyncBackup').addEventListener('click',async()=>{
   $('approvedBackupFallback').href=els.downloadVaultLink.href;
   $('approvedBackupFallback').download=els.downloadVaultLink.download;
   $('approvedBackupFallback').classList.remove('hidden');
+  $('approvedBackupHelp').classList.remove('hidden');$('approvedBackupHelp').open=false;
  }
 });
 $('quickCreateVault').addEventListener('click',createVaultModal);$('newVaultButton').addEventListener('click',createVaultModal);

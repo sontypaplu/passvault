@@ -21,7 +21,6 @@ function initializeEvents() {
       setStatus(els.createStatus, "Secret pepper cleared because pepper protection was disabled.", "success");
     }
   });
-  els.chooseVaultFile.addEventListener("click", () => els.vaultFile.click());
   els.vaultFile.addEventListener("change", handleFileChoose);
   // A real form lets Enter in the master-password or pepper field unlock the vault.
   // Clicking Unlock uses the same submit path, avoiding duplicate attempts.

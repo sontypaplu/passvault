@@ -1027,3 +1027,22 @@ html[data-theme="dark"] #pvPwaOffline p{color:#a1acc6}
 
 /* Never show simulated or stale dashboard cards behind the locked vault gate. */
 body.approved-gate-active #approvedUI > #app{visibility:hidden}
+
+/* Clear backup fallback: one primary action, with a collapsed mobile-browser rescue link. */
+.pv-backup-manual{display:block;margin-top:9px;padding:10px 12px;border:1px solid var(--border,#dde1eb);border-radius:12px;background:var(--surface-2,#f8f9fc);max-width:100%;box-sizing:border-box}
+.pv-backup-manual[hidden],.pv-backup-manual.hidden{display:none!important}
+.pv-backup-manual summary{cursor:pointer;font-weight:650;font-size:13px;line-height:1.5;min-height:25px}
+.pv-backup-manual p{font-size:12px;margin:8px 0 10px;line-height:1.6}
+.pv-backup-manual a{display:inline-flex;margin-top:8px;max-width:100%;white-space:normal;overflow-wrap:anywhere}
+.pv-visually-hidden{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+@media(max-width:600px){.pv-backup-manual{font-size:12px}.pv-backup-manual summary{padding:4px 0}}
+
+#approvedVaultGate .pv-offline-file[hidden]{display:none!important}
+/* Update availability inside login and native dialog top layers on installed phones. */
+.pv-pwa-inline-update[hidden]{display:none!important}
+.pv-pwa-inline-update{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:13px 14px;margin:12px 0;border:1px solid #cac5f3;border-radius:12px;background:#f8f7ff;color:#211957;font-size:12px;line-height:1.5;max-width:100%;box-sizing:border-box}
+.pv-pwa-inline-update strong{font-size:13px}
+.pv-pwa-inline-update span{flex:1 1 180px}
+.pv-pwa-inline-update button{min-height:38px;padding:8px 12px;border-radius:9px;border:0;background:#5e4bd4;color:#fff;font:inherit;font-weight:700;cursor:pointer}
+html[data-theme="dark"] .pv-pwa-inline-update{color:#eae5ff;background:#211e36;border-color:#494063}
+@media(max-width:520px){.pv-pwa-inline-update{align-items:stretch;flex-direction:column}.pv-pwa-inline-update button{width:100%}}
