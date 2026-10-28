@@ -133,8 +133,8 @@
     if(!ui.init || !canRead()) return;
     txt('pv3Email',cloud.email||'Signed in');
     txt('pv3VaultTitle',cloud.vaultLabel||state.vault.name||'Your vault');
-    txt('pv3Sync',cloud.conflict?'Sync conflict':state.dirty?'Unsaved changes':cloud.saveInProgress?'Saving…':'Encrypted cloud sync');
-    txt('pv3SaveText', cloud.conflict?'A newer cloud revision exists. Export a backup before making further changes.':state.dirty?'Changes are pending encrypted cloud save.':'Vault encryption is performed in your browser.');
+    txt('pv3Sync',!isCloudSyncAllowed()?'Device-only · no cloud sync':cloud.conflict?'Sync conflict':state.dirty?'Unsaved changes':cloud.saveInProgress?'Saving…':'Encrypted cloud sync');
+    txt('pv3SaveText', !isCloudSyncAllowed()?'Cloud uploads are paused. Download an encrypted backup after editing.':cloud.conflict?'A newer cloud revision exists. Export a backup before making further changes.':state.dirty?'Changes are pending encrypted cloud save.':'Vault encryption is performed in your browser.');
     renderVaults();renderItems();renderHealth();
   }
   function clean() {
