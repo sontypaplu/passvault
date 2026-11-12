@@ -16,7 +16,8 @@
   let connectionLocked = Promise.resolve();
   let dismissedBuild = null;
   // Hold the visible app behind a connection gate until the deployed release responds.
-  let networkUnavailable = navigator.onLine === false || isDeployment;
+  let networkUnavailable = navigator.onLine === false;
+  let updateCheckFailed = false;
 
   const message = (text) => { for (const id of ['pvPwaStatus','pvPwaStatusLogin','pvPwaStatusLocked']) { const target=byId(id); if (target) target.textContent=text; } };
   const setOffline = (offline) => {
@@ -114,8 +115,9 @@
       if (checkButton) checkButton.disabled = true;
       try {
         const release = await fetchRelease();
+        updateCheckFailed = false;
         await connectionLocked;
-        setOffline(false);
+        if (navigator.onLine !== false) setOffline(false);
         lastChecked = Date.now();
         latestBuild = release.build;
         if (latestBuild === currentBuild) message('PassVault is up to date.');
@@ -123,8 +125,11 @@
         render();
         return true;
       } catch {
-        setOffline(true);
-        message('Cannot reach PassVault updates. Connect to the internet and retry.');
+        // A failed *release marker* does not prove that authentication or cloud sync is offline.
+        // Never hide decrypted content or lock the vault on update-metadata errors.
+        updateCheckFailed = true;
+        lastChecked = Date.now();
+        message('Update status unavailable. Your vault session is unchanged; retry later.');
         render();
         return false;
       } finally {
@@ -188,7 +193,7 @@
   window.addEventListener('appinstalled', () => { installPrompt = null; render(); });
   window.addEventListener('offline', () => { setOffline(true); render(); });
   window.addEventListener('passvault-sync-change', () => { setOffline(networkUnavailable); render(); });
-  window.addEventListener('online', () => { void checkNow(); });
+  window.addEventListener('online', () => { setOffline(false); void checkNow(); });
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden && Date.now() - lastChecked > 300000) void checkNow();
   });
@@ -208,12 +213,6 @@
   // No service worker is registered or modified by this feature.
   window.PassVaultPWA = Object.freeze({ checkNow, updateNow });
   setOffline(networkUnavailable);
-  if (isDeployment && navigator.onLine !== false) {
-    const heading = byId('pvPwaOfflineTitle');
-    const detail = byId('pvPwaOfflineDescription');
-    if (heading) heading.textContent = 'Checking connection';
-    if (detail) detail.textContent = 'Confirming the latest secure PassVault release…';
-  }
   render();
   if (isDeployment) void checkNow();
 })();

@@ -185,3 +185,11 @@ html[data-theme="dark"] #approvedUI{--shadow:0 5px 15px rgba(0,0,0,.10)}
 #approvedUI .pv-settings-help summary{font-size:calc(12px * var(--pv-text-scale));font-weight:740;min-height:43px;display:list-item;padding:13px 3px;cursor:pointer;color:var(--primary);line-height:1.4}
 #approvedUI .pv-settings-help p{margin:0 0 15px;font-size:calc(12px * var(--pv-text-scale));line-height:1.6;color:var(--muted)}
 #approvedUI .pv-settings-help summary:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+
+/* Authenticator enrollment is deliberately minimal and does not embed remote QR content. */
+.pv-mfa-dialog {max-width:min(94vw,480px);padding:1.5rem;}
+.pv-mfa-dialog::backdrop {background:rgba(0,0,0,.78);}
+.pv-mfa-dialog form {display:grid;gap:.8rem;}
+.pv-mfa-dialog input {max-width:100%;}
+.pv-mfa-secret {display:block;margin:1rem 0;padding:1rem;word-break:break-all;user-select:text;
+  background:var(--surface-secondary, #eef2f6);color:var(--text-primary,#1b2636);border-radius:.6rem;}

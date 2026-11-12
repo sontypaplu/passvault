@@ -2,13 +2,17 @@
 // Account dashboard: vault IDs and labels only. Decrypted secrets never leave browser memory.
 let deleteTarget = null;
 let deletionBusy = false;
+let vaultListRequest = 0;
+let vaultOpenRequest = 0;
 
 async function reloadVaultList() {
   if (!cloud.client || !cloud.userId) throw new Error('Sign in required');
+  const userId=cloud.userId, epoch=cloud.epoch, request=++vaultListRequest;
   const {data,error} = await cloud.client.from('vault_items')
     .select('vault_id,label,revision,created_at,updated_at')
     .eq('user_id',cloud.userId).order('updated_at',{ascending:false});
   if (error) throw error;
+  if (request!==vaultListRequest || cloud.userId!==userId || cloud.epoch!==epoch) return cloud.vaults;
   cloud.vaults = data || [];
   return cloud.vaults;
 }
@@ -87,6 +91,7 @@ function openUnsyncedNewVaultRecovery(vaultId) {
 }
 
 function displayVaultDashboard() {
+  ++vaultOpenRequest;
   if (!cloud.userId) return;
   if (!state.locked) {
     lockVault('Manual lock');
@@ -109,13 +114,14 @@ async function openVaultById(vaultId) {
   if (!cloud.vaults.some(v=>v.vault_id === vaultId)) return;
   const epoch=cloud.epoch;
   const userId=cloud.userId;
+  const request=++vaultOpenRequest;
   setStatus($('dashboardStatus'),'Loading encrypted vault…','warning');
   try {
     const {data,error} = await cloud.client.from('vault_items')
       .select('encrypted_vault,revision,label')
       .eq('user_id',userId).eq('vault_id',vaultId).single();
     if (error) throw error;
-    if (epoch!==cloud.epoch || userId!==cloud.userId || !state.locked) return;
+    if (epoch!==cloud.epoch || userId!==cloud.userId || !state.locked || request!==vaultOpenRequest) return;
     const parsed = parseVaultFileText(JSON.stringify(data.encrypted_vault));
     if (parsed.type !== 'v2') throw new Error('Unsupported encrypted vault format');
     cloud.selectedVaultId=vaultId; cloud.revision=Number(data.revision);
@@ -125,10 +131,11 @@ async function openVaultById(vaultId) {
     els.unlockPepperHint.textContent=parsed.record.pepperRequired ? 'This vault requires its secret pepper.' : 'Leave blank unless your vault uses a secret pepper.';
     showAccessScreen('unlock');
     clearStatus($('dashboardStatus'));
-  } catch(err) { setStatus($('dashboardStatus'),err.message||'Unable to open vault','error'); }
+  } catch(err) { if (request===vaultOpenRequest && userId===cloud.userId) setStatus($('dashboardStatus'),err.message||'Unable to open vault','error'); }
 }
 
 function prepareNewVault() {
+  ++vaultOpenRequest;
   if (!cloud.loaded || !cloud.userId || !state.locked) return;
   if (!crypto.randomUUID) return setStatus($('dashboardStatus'),'Your browser does not support secure UUID generation','error');
   if (cloud.vaults.length >= 2) return setStatus($('dashboardStatus'),'Vault limit reached: maximum 2 vaults per account. Delete a vault (after backup) to create another.','error');
@@ -148,6 +155,7 @@ function setCreateVaultMode(deviceOnly) {
   els.createVaultButton.textContent = deviceOnly ? 'Create device-only vault' : 'Create cloud vault';
 }
 function prepareDeviceOnlyVault() {
+  ++vaultOpenRequest;
   if (!cloud.loaded || !cloud.userId || !state.locked) return;
   if (!crypto.randomUUID) return setStatus($('dashboardStatus'), 'This browser does not support secure UUID generation.', 'error');
   // A reserved local prefix is extra protection beyond the cloud.deviceOnly guard.
@@ -174,17 +182,15 @@ async function changeAccountPassword(event) {
   const next=$('newAccountPassword').value;
   const confirm=$('confirmNewAccountPassword').value;
   if (!cloud.client || !cloud.userId || !cloud.email) return setStatus(status,'Sign in first','error');
-  if (next.length<12 || next!==confirm || current===next) return setStatus(status,'Use a different 12+ character password and matching confirmation','error');
+  if (next.length<15 || next!==confirm || current===next) return setStatus(status,'Use a different 15+ character password and matching confirmation','error');
   const submit=form.querySelector('button[type="submit"]'); submit.disabled=true;
   try {
-    // Separate non-persistent client checks the current password without changing the signed-in session.
-    const verifier=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY,{
-      auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}
+    const {data:assurance,error:aalError}=await cloud.client.auth.mfa.getAuthenticatorAssuranceLevel();
+    if(aalError || assurance?.currentLevel!=='aal2')throw new Error('Verify two-factor authentication first.');
+    const {data:result,error}=await cloud.client.functions.invoke('change-account-password',{
+      body:{current_password:current,new_password:next}
     });
-    const {data: verified,error: verifyError}=await verifier.auth.signInWithPassword({email:cloud.email,password:current});
-    if (verifyError || verified.user?.id!==cloud.userId) throw new Error('Current account password is incorrect');
-    const {error}=await cloud.client.auth.updateUser({password:next});
-    if (error) throw error;
+    if(error||!result?.changed)throw new Error('Account password update was not confirmed.');
     form.reset();
     setStatus(status,'Account password changed. Signing out…','success');
     await handleSignOut();
