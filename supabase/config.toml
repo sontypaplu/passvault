@@ -1,0 +1,9 @@
+# Supabase CLI deployment configuration, pinned handlers.
+[functions.delete-vault]
+verify_jwt = true
+
+[functions.delete-account]
+verify_jwt = true
+
+[functions.change-account-password]
+verify_jwt = true

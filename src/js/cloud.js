@@ -84,6 +84,7 @@ async function resetCloudUserState() {
   cloud.restoredRecoveryKey = null;
   if (!state.locked) lockVault('Account signed out');
   try { sessionStorage.removeItem('passvault-account-last-active'); } catch {}
+  window.PassVaultMFA?.reset();
   cloud.userId = null; cloud.email = ''; cloud.loaded = false;
   cloud.vaults = []; cloud.selectedVaultId = null; cloud.vaultLabel = '';
   cloud.revision = 0; cloud.conflict = false; cloud.encryptedEnvelope = null;
@@ -96,6 +97,9 @@ async function loadAccountVault(session) {
   if (window.PassVaultAuth?.recoveryPending) return;
   if (!session?.user?.id) { await resetCloudUserState(); return; }
   const userId = session.user.id;
+  // Server-side SQL policies also require an AAL2 JWT. Do not display vault
+  // metadata or decrypted workspaces before the second factor is verified.
+  if (!await window.PassVaultMFA.requireSession(session)) return;
   if (cloud.userId === userId) return;
   if (cloud.userId) await resetCloudUserState();
   const requestEpoch = ++cloud.epoch;
@@ -275,6 +279,7 @@ async function saveCloudVault(manual = false) {
     try {
       state.vault.updatedAt = new Date().toISOString();
       const envelope = await encryptAndBuildEnvelope();
+      validateCloudEnvelopeSize(envelope);
       if (!isCloudSyncAllowed() || saveUser !== cloud.userId || saveEpoch !== cloud.epoch || saveVaultId !== cloud.selectedVaultId) return false;
       const { data: nextRevision, error } = await cloud.client.rpc("save_multi_vault", {
         p_vault_id: saveVaultId,
@@ -302,10 +307,11 @@ async function saveCloudVault(manual = false) {
       return true;
     } catch (error) {
       const message = String(error.message || "Cloud save failed.");
-      if (error.code === '23514' || message.includes('vault_limit_reached')) {
+      if (error.code === '23514' || error.code === '22023' ||
+          message.includes('vault_limit_reached') || message.includes('Encrypted cloud vault exceeds the 2 MiB')) {
         cloud.conflict = true;
         cloudStatus('VAULT LIMIT', 'error');
-        cloud.lastSaveError = 'Vault limit reached. This vault was NOT saved. Download an encrypted backup before leaving.';
+        cloud.lastSaveError = 'Vault storage limit reached. Your changes were NOT saved to cloud. Download an encrypted backup, then reduce vault history before trying again.';
         setGlobalStatus(cloud.lastSaveError, 'error');
       } else if (error.code === "40001" || message.includes("vault_conflict") || error.code === "23505") {
         cloud.conflict = true;

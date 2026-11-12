@@ -1,7 +1,5 @@
-name: Build and deploy PassVault 3.0
+name: Legacy GitHub Pages preview (no security response headers)
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 permissions:
   contents: read

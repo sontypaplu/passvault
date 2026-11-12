@@ -1,5 +1,5 @@
--- HISTORICAL VERSION 2.0 MIGRATION. DO NOT RERUN AGAINST YOUR WORKING 2.1 PROJECT.
--- Your previous public.vaults table was removed; this old migration references it.
+-- Baseline-compatible v2 migration. Compare original migration in docs/PRE_HARDENING_AUDIT.md and the source archive.
+-- DO NOT manually rerun against production; apply using the migration ledger.
 -- PassVault v2: non-destructive multi-vault migration. Run ONCE AFTER BACKING UP.
 -- Original public.vaults (one vault per user) is kept untouched.
 -- Its encrypted_vault JSON is copied without decryption or re-encryption.
@@ -20,11 +20,20 @@ alter table public.vault_items enable row level security;
 revoke all on table public.vault_items from public, anon, authenticated;
 grant select on table public.vault_items to authenticated;
 
--- One-way copy: the original encrypted JSON remains in public.vaults.
-insert into public.vault_items (user_id, label, encrypted_vault, revision, legacy_user_id, created_at, updated_at)
-select user_id, 'Migrated Vault', encrypted_vault, revision, user_id, created_at, updated_at
-from public.vaults
-on conflict (legacy_user_id) do nothing;
+-- Copy legacy ciphertext only where the v1 table still exists. This also works on
+-- freshly created Supabase projects without a public.vaults relation.
+DO $legacy_copy$
+BEGIN
+  IF to_regclass('public.vaults') IS NOT NULL THEN
+    EXECUTE $statement$
+      INSERT INTO public.vault_items (user_id,label,encrypted_vault,revision,legacy_user_id,created_at,updated_at)
+      SELECT user_id,'Migrated Vault',encrypted_vault,revision,user_id,created_at,updated_at
+      FROM public.vaults
+      ON CONFLICT (legacy_user_id) DO NOTHING
+    $statement$;
+  END IF;
+END
+$legacy_copy$;
 
 -- No client-side insert/update/delete grants; writes must use controlled RPCs or Edge Functions.
 drop policy if exists vault_items_select_own on public.vault_items;
@@ -86,9 +95,9 @@ begin
   where user_id = p_user_id and vault_id = p_vault_id
   for update;
   if not found then return false; end if;
-  if v_legacy_user_id is not null then
-    delete from public.vaults
-    where user_id = p_user_id and user_id = v_legacy_user_id;
+  if v_legacy_user_id is not null and to_regclass('public.vaults') is not null then
+    execute 'delete from public.vaults where user_id = $1 and user_id = $2'
+      using p_user_id, v_legacy_user_id;
   end if;
   delete from public.vault_items
     where user_id = p_user_id and vault_id = p_vault_id;
@@ -100,6 +109,14 @@ grant execute on function public.delete_multi_vault_as_admin(uuid,uuid) to servi
 
 -- Legacy table remains as rollback backup; revoke application writes AFTER copying.
 -- This also prevents an outdated v1 website from silently diverging from v2.
-revoke insert, update, delete on public.vaults from authenticated;
-revoke execute on function public.save_encrypted_vault(jsonb,bigint) from authenticated;
+DO $legacy_revoke$
+BEGIN
+  IF to_regclass('public.vaults') IS NOT NULL THEN
+    EXECUTE 'REVOKE INSERT, UPDATE, DELETE ON public.vaults FROM authenticated';
+  END IF;
+  IF to_regprocedure('public.save_encrypted_vault(jsonb,bigint)') IS NOT NULL THEN
+    EXECUTE 'REVOKE EXECUTE ON FUNCTION public.save_encrypted_vault(jsonb,bigint) FROM authenticated';
+  END IF;
+END
+$legacy_revoke$;
 commit;

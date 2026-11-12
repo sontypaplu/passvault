@@ -4,6 +4,12 @@ insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_typ
 values ('passvault-avatars', 'passvault-avatars', false, 262144, array['image/webp'])
 on conflict (id) do update set public=false, file_size_limit=262144, allowed_mime_types=array['image/webp'];
 
+-- Re-installing against a manually configured earlier environment is safe.
+drop policy if exists "pv_avatar_select_own" on storage.objects;
+drop policy if exists "pv_avatar_insert_own" on storage.objects;
+drop policy if exists "pv_avatar_update_own" on storage.objects;
+drop policy if exists "pv_avatar_delete_own" on storage.objects;
+
 -- Each account may access only its own folder: <auth.uid()>/avatar.webp.
 create policy "pv_avatar_select_own" on storage.objects
 for select to authenticated

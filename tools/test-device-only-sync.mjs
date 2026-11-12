@@ -25,6 +25,7 @@ const ctx={cloud,state,window:{addEventListener(){},dispatchEvent(){}},
   setDirty:val=>{state.dirty=val;},deleteEncryptedRecovery:()=>{},
   reloadVaultList:async()=>{},renderVaultDashboard:()=>{},
   encryptAndBuildEnvelope:async()=>{encrypts++;return {encrypted:'opaque'};},
+  validateCloudEnvelopeSize:()=>true,
   navigator:{onLine:true},clearTimeout, setTimeout,Date,console};
 vm.createContext(ctx);vm.runInContext(code,ctx,{filename:'cloud.js'});
 assert.equal(ctx.window.PassVaultSync.allowed(),false);

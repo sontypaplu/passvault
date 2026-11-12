@@ -88,6 +88,6 @@ for (const bad of ['Password2026!Example','Welcome2026!Secure','Autumn2026!Autum
 }
 assert.doesNotThrow(()=>vm.runInContext('validateMasterForCreation("V6^zQ9.p7@K3eW!n8%S2yR")',pwCtx));
 assert(!core.includes('bits by a simple character-set heuristic'));
-const sql=read('supabase/migrations/005_harden_avatar_path.sql');
+const sql=read('supabase/migrations/20261112000500_harden_avatar_path.sql');
 assert(sql.includes("name = (select auth.uid()::text) || '/avatar.webp'"));
 console.log('Security regression tests passed: dirty auto-lock, encrypted recovery, never-saved vault discovery, logout order, denied-storage fail-closed, revision protection, strength warnings, avatar path.');

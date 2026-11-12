@@ -1,6 +1,7 @@
 function initializeEvents() {
   els.accessLoginForm.addEventListener("submit", handleAccountLogin);
   window.PassVaultAuth.initialize();
+  window.PassVaultMFA.initialize();
   els.lockedSignOutButton.addEventListener("click", handleSignOut);
   initializeMultiVaultEvents();
   els.unlockedSignOutButton.addEventListener("click", handleSignOut);
