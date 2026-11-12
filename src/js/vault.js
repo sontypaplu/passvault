@@ -86,53 +86,6 @@ function deleteEncryptedRecovery(userId, vaultId) {
   }
   cloud.restoredRecoveryKey = null;
 }
-/* Best-effort encrypted checkpoint after each mutation, rather than only on lock.
- * Browser termination can interrupt asynchronous encryption: until this confirms
- * persistence (or cloud RPC acknowledges), an edit remains UNSAVED. No plaintext,
- * key material or pepper is persisted.
- */
-let recoveryWritePromise = null;
-let recoveryWriteRequested = false;
-function scheduleEncryptedRecoveryCheckpoint() {
-  if (!cloud.userId || !cloud.selectedVaultId || !state.vaultKey || state.locked) return;
-  recoveryWriteRequested = true;
-  if (recoveryWritePromise) return;
-  recoveryWritePromise = (async () => {
-    while (recoveryWriteRequested && !state.locked && state.dirty) {
-      recoveryWriteRequested = false;
-      const userId=cloud.userId, vaultId=cloud.selectedVaultId;
-      const epoch=cloud.epoch, mutation=cloud.mutation, revision=cloud.revision;
-      const deviceOnly=Boolean(cloud.deviceOnly);
-      try {
-        const envelope=await encryptAndBuildEnvelope();
-        if (state.locked || !state.dirty || cloud.epoch!==epoch ||
-            cloud.userId!==userId || cloud.selectedVaultId!==vaultId) break;
-        if (cloud.mutation!==mutation) {recoveryWriteRequested=true;continue;}
-        const key=recoveryStorageKey(userId,vaultId);
-        if (!key) throw new Error('No recovery storage key');
-        const serialized=JSON.stringify({version:1,userId,vaultId,revision,
-          deviceOnly,savedAt:Date.now(),envelope});
-        // Synchronous atomic replacement prevents torn JSON values in localStorage.
-        localStorage.setItem(key,serialized);
-        if (localStorage.getItem(key)!==serialized)
-          throw new Error('Encrypted recovery write verification failed');
-        // The cloud save may still be pending; do not report cloud SAVED here.
-        if(state.dirty && !isCloudSyncAllowed())
-          cloudStatus('LOCAL ENCRYPTED COPY · DOWNLOAD BACKUP','warning');
-      } catch {
-        // Browser storage may be disabled, quota-bound or cleaned by the user.
-        // Never mark the edit as saved or claim crash recovery is guaranteed.
-        if(state.dirty)cloudStatus('LOCAL RECOVERY UNAVAILABLE · BACK UP','error');
-        break;
-      }
-    }
-  })().finally(()=>{
-    recoveryWritePromise=null;
-    if (recoveryWriteRequested && state.dirty && !state.locked)
-      scheduleEncryptedRecoveryCheckpoint();
-  });
-}
-
 async function secureLockWithCheckpoint(reason = 'Vault locked for security.') {
   if (state.locked) return true;
   if (cloud.secureLockPromise) return cloud.secureLockPromise;
@@ -239,7 +192,6 @@ function setDirty(value) {
       els.downloadVaultLink.removeAttribute('download');
       els.downloadVaultLink.classList.add('hidden');
     }
-    scheduleEncryptedRecoveryCheckpoint();
     if (isCloudSyncAllowed()) scheduleCloudSave();
   }
 }

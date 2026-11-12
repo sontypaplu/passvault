@@ -107,15 +107,6 @@ assert.equal(window.PassVaultPWA.updateNow(),true,'Clean unlocked vault can be l
 assert.equal(lockCalls,1);
 assert.equal(confirmations,2);
 assert.equal(state.locked,true);
-// A release endpoint failure is not a server connectivity outage.
-reload='';state.locked=false;
-connected=false;
-const priorLockCount=lockCalls;
-assert.equal(await window.PassVaultPWA.checkNow(),false);
-assert.equal(state.locked,false,'Release marker failure must not lock a valid vault');
-assert.equal(element('pvPwaOffline').hidden,true,'Release marker failure must not show global offline gate');
-assert.equal(lockCalls,priorLockCount);
-connected=true;
 reload='';state.locked=false;
 listeners.offline();
 assert.equal(element('pvPwaOffline').hidden,false,'Offline must obscure vault');

@@ -5,7 +5,6 @@ import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const production = process.argv.includes('--production');
-const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
 const config = readFileSync(join(root, 'src/js/config.js'), 'utf8');
 const url = config.match(/\burl:\s*["']([^"']+)["']/)?.[1];
 const key = config.match(/\bpublishableKey:\s*["']([^"']+)["']/)?.[1];
@@ -63,28 +62,8 @@ releaseHasher.update(readFileSync(join(target, 'manifest.webmanifest')));
 const buildId = releaseHasher.digest('hex').slice(0, 16);
 html = html.replace('name="passvault-build" content="development"', `name="passvault-build" content="${buildId}"`);
 html = html.replace(/((?:src|href)="\.\/src\/[^"?]+)(")/g, `$1?pv=${buildId}$2`);
-// Cloudflare Pages honors _headers from static output. GitHub Pages does NOT.
-// This header is project-scoped to the configured Supabase endpoint.
-const builtCsp = html.match(/http-equiv="Content-Security-Policy" content="([^"]+)"/)?.[1];
-if (!builtCsp) throw new Error('CSP missing from built HTML');
-const headerCsp = builtCsp + "; frame-ancestors 'none'";
-writeFileSync(join(target, '_headers'), `/*
-  Content-Security-Policy: ${headerCsp}
-  X-Frame-Options: DENY
-  Strict-Transport-Security: max-age=63072000; includeSubDomains
-  X-Content-Type-Options: nosniff
-  Referrer-Policy: no-referrer
-  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
-  X-Robots-Tag: noindex, nofollow
-/index.html
-  Cache-Control: no-store
-/
-  Cache-Control: no-store
-/app-version.json
-  Cache-Control: no-store
-`, 'utf8');
 writeFileSync(join(target, 'index.html'), html, 'utf8');
-writeFileSync(join(target, 'app-version.json'), JSON.stringify({ version: pkg.version, build: buildId, onlineOnly: true }) + '\n');
+writeFileSync(join(target, 'app-version.json'), JSON.stringify({ version: '3.1.0', build: buildId, onlineOnly: true }) + '\n');
 const digest = createHash('sha256').update(sdkBytes).digest('hex');
-writeFileSync(join(target, 'DEPENDENCY_INFO.txt'), `Supabase JS ${pkg.dependencies["@supabase/supabase-js"]} (self-hosted from npm package)\nSHA-256: ${digest}\n`, 'utf8');
+writeFileSync(join(target, 'DEPENDENCY_INFO.txt'), `Supabase JS 2.117.3 (self-hosted from npm package)\nSHA-256: ${digest}\n`, 'utf8');
 console.log(`Built ${target} | release ${buildId} | SDK SHA-256 ${digest} | CSP ${validUrl ? 'project-scoped' : 'preview-only'}`);
