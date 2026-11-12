@@ -22,7 +22,7 @@
     "verify:live": "node tools/verify-live-headers.mjs"
   },
   "dependencies": {
-    "@supabase/supabase-js": "2.118.0"
+    "@supabase/supabase-js": "2.119.0"
   },
   "engines": {
     "node": ">=22 <23"
