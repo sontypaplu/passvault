@@ -19,7 +19,7 @@
     "test:offline-flow": "node tools/test-offline-vault-flow.mjs"
   },
   "dependencies": {
-    "@supabase/supabase-js": "2.118.0"
+    "@supabase/supabase-js": "2.119.0"
   },
   "engines": {
     "node": ">=20"
