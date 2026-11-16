@@ -1,4 +1,4 @@
-name: Build and deploy PassVault 3.0
+name: Build and deploy Ciphora
 on:
   push:
     branches: [main]
@@ -39,7 +39,9 @@ jobs:
         run: npm run test:recovery
       - name: Test premium vault experience and custom-field compatibility
         run: npm run test:phase3
-      - name: Test online-only install and update safeguards
+      - name: Test encrypted on-device persistence and conflicts
+        run: npm run test:local
+      - name: Test offline PWA installation and update safeguards
         run: npm run test:pwa
       - name: Test XSS, URL and Trusted Types safeguards
         run: npm run test:xss
