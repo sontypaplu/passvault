@@ -21,7 +21,7 @@ jobs:
       - name: Verify clean install from generated lock
         run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Upload generated lockfile
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: passvault-package-lock
           path: package-lock.json
