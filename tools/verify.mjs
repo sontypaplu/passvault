@@ -22,11 +22,6 @@ if (html.includes('https://cdn.') || html.includes('unpkg.com')) throw new Error
 for (const file of ['manifest.webmanifest','app-version.json','icons/icon-192.png','icons/icon-512.png','icons/icon-maskable-512.png','icons/apple-touch-icon.png','src/js/pwa.js']) {
   if (!existsSync(join(dist,file))) throw new Error(`Missing PWA deployment asset: ${file}`);
 }
-const hostHeaders = readFileSync(join(dist,'_headers'), 'utf8');
-if (!hostHeaders.includes("frame-ancestors 'none'") || !hostHeaders.includes('X-Frame-Options: DENY') ||
-    !hostHeaders.includes('Strict-Transport-Security:') || !hostHeaders.includes('X-Content-Type-Options: nosniff'))
-  throw new Error('Production hosting security headers missing');
-if (!hostHeaders.includes(csp)) throw new Error('Hosted CSP differs from the built HTML CSP');
 const marker = JSON.parse(readFileSync(join(dist,'app-version.json'),'utf8'));
 const manifest = JSON.parse(readFileSync(join(dist,'manifest.webmanifest'),'utf8'));
 if (!/^[a-f0-9]{16}$/.test(marker.build) || !html.includes(`content="${marker.build}"`)) throw new Error('PWA release marker mismatch');

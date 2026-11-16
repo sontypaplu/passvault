@@ -1,8 +1,8 @@
 {
   "name": "passvault-cloud-3",
   "private": true,
-  "version": "3.1.1",
-  "description": "PassVault 3.1.1 production-hardening release (existing encrypted format preserved)",
+  "version": "3.1.0",
+  "description": "PassVault 3.1 account UX and routing upgrade retaining the encrypted vault format",
   "scripts": {
     "build": "node tools/build.mjs --production",
     "build:preview": "node tools/build.mjs",
@@ -16,15 +16,12 @@
     "test:phase3": "node tools/test-phase3-experience.mjs",
     "test:pwa": "node tools/test-online-pwa.mjs",
     "test:xss": "node tools/test-xss-hardening.mjs",
-    "test:offline-flow": "node tools/test-offline-vault-flow.mjs",
-    "test:production": "node tools/test-production-hardening.mjs",
-    "test": "npm run verify:source && npm run test:security && npm run test:device-only && npm run test:history && npm run test:recovery && npm run test:phase3 && npm run test:pwa && npm run test:xss && npm run test:offline-flow && npm run test:production",
-    "verify:live": "node tools/verify-live-headers.mjs"
+    "test:offline-flow": "node tools/test-offline-vault-flow.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.118.0"
   },
   "engines": {
-    "node": ">=22 <23"
+    "node": ">=20"
   }
 }

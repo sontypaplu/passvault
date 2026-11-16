@@ -5,7 +5,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const html = readFileSync(join(root,'index.html'),'utf8');
 const premium = readFileSync(join(root,'src/js/premium.js'),'utf8');
 const js = readFileSync(join(root,'src/js/core.js'),'utf8');
-const sql = readFileSync(join(root,'supabase/migrations/20261112000300_two_vault_cap.sql'),'utf8');
+const sql = readFileSync(join(root,'supabase/migrations/003_two_vault_cap.sql'),'utf8');
 const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map(x => x[1]);
 if(new Set(ids).size !== ids.length) throw new Error('Duplicate HTML element id detected');
 for (const id of ['premiumApp','pv3View-overview','pv3View-items','pv3View-favorites','pv3View-security','pv3View-generator','pv3View-settings','pv3ItemDialog','pv3DetailDialog','legacyWorkspace','credentialForm','vaultDashboardScreen','deleteDialog']) {

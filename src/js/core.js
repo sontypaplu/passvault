@@ -481,23 +481,7 @@ const HISTORY_FIELDS = Object.freeze([
   'tags', 'customFields', 'expiry', 'cvv'
 ]);
 const MAX_VAULT_HISTORY = 2000;
-// 1,400,000 UTF-8 bytes => <= 1,866,692 base64 chars with GCM tag,
-// leaving >200 KB for the authenticated envelope below the 2 MiB PostgreSQL limit.
-// Legacy/oversized backups remain readable; new edits must respect the cloud budget.
-const CLOUD_ENVELOPE_MAX_BYTES = 2 * 1024 * 1024;
-const HISTORY_PLAINTEXT_BUDGET = 1_400_000;
-function utf8Length(value) { return new TextEncoder().encode(JSON.stringify(value)).byteLength; }
-function validateVaultEditBudget(candidate) {
-  validateVaultPlaintext(candidate);
-  if (utf8Length(candidate) > HISTORY_PLAINTEXT_BUDGET)
-    throw new Error('Encrypted vault capacity reached. Export a backup before changing or removing history. No changes were saved.');
-  return true;
-}
-function validateCloudEnvelopeSize(envelope) {
-  if (utf8Length(envelope) > CLOUD_ENVELOPE_MAX_BYTES)
-    throw new Error('Encrypted vault exceeds the cloud 2 MiB limit. Export an encrypted backup; this version was not uploaded.');
-  return true;
-}
+const HISTORY_PLAINTEXT_BUDGET = 24 * 1024 * 1024;
 const HISTORY_ACTIONS = Object.freeze(['created', 'edited', 'deleted', 'restored']);
 function historySnapshot(item) {
   if (!item) return null;
@@ -583,7 +567,9 @@ function recordVaultHistory(before, after, action, at = new Date().toISOString()
       ? [...state.vault.credentials, after]
       : state.vault.credentials.map(item => item.id === after.id ? after : item);
   const candidate = {...state.vault, credentials, editHistory: nextLog};
-  validateVaultEditBudget(candidate);
+  validateVaultPlaintext(candidate);
+  if (new TextEncoder().encode(JSON.stringify(candidate)).length > HISTORY_PLAINTEXT_BUDGET)
+    throw new Error('Vault is approaching its encrypted size limit. Export an encrypted backup before continuing.');
   state.vault.editHistory = nextLog;
   return true;
 }
@@ -613,7 +599,9 @@ function validateVaultRecycleBin(vault) {
   }
 }
 function verifyRecoveryCandidate(candidate) {
-  validateVaultEditBudget(candidate);
+  validateVaultPlaintext(candidate);
+  if (new TextEncoder().encode(JSON.stringify(candidate)).length > HISTORY_PLAINTEXT_BUDGET)
+    throw new Error('Encrypted vault is nearing its size limit. Export a backup and permanently clear unneeded bin entries.');
 }
 function recoveryEvent(before, after, action, at) {
   return {
@@ -1181,8 +1169,6 @@ async function encryptAndBuildEnvelope() {
     envelope.nonceBytes = nonce;
     envelope.ciphertext = await encryptVaultPayload(state.vault, state.vaultKey, envelope);
     delete envelope.nonceBytes;
-    // A local backup may be larger than cloud capacity, so only enforce the
-    // cloud limit when an actual cloud save is attempted.
     return envelope;
   } finally {
     wipeBytes(nonce);

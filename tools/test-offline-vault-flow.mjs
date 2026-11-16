@@ -23,7 +23,7 @@ const els={newVaultName:elements.newVaultName,createVaultButton:elements.createV
   unlockStatus:{},createStatus:{},newMaster:{value:'A strong test password'},newPepper:{value:''},
   newPepperEnabled:{checked:false},newKdfProfile:{value:'mobile'}};
 let generatedIds=0, mode='', cloudWrites=0, status='', encryptCalls=0;
-const ctx={cloud,state,els,vaultOpenRequest:0,uiState:{accessScreen:'dashboard'},window:{dispatchEvent() {},confirm(){return true;}},
+const ctx={cloud,state,els,uiState:{accessScreen:'dashboard'},window:{dispatchEvent() {},confirm(){return true;}},
   Event:class Event{},setStatus:(target,msg)=>{status=msg;},setGlobalStatus:msg=>{status=msg;},
   clearStatus(){},$:key=>elements[key]||{},crypto:{randomUUID:()=>`id-${++generatedIds}`},
   setActiveView(){},renderVault(){},resetCredentialEditor(){},clearCreateSensitiveFields(){},

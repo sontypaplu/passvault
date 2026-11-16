@@ -25,7 +25,7 @@
     e.preventDefault();
     const email=get('signUpEmail').value.trim().toLowerCase();
     const password=get('signUpPassword').value;
-    if(password.length<15 || password!==get('signUpConfirm').value) return status('signUpStatus', 'Passwords must match and contain at least 15 characters.', 'error');
+    if(password.length<12 || password!==get('signUpConfirm').value) return status('signUpStatus', 'Passwords must match and contain at least 12 characters.', 'error');
     if(!cloud.client) return status('signUpStatus','Supabase setup is required before creating an account.','error');
     busy(e.currentTarget,true);
     try {
@@ -64,7 +64,7 @@
     e.preventDefault();
     if(!recoveryVerified) return status('resetStatus','Recovery link has not been verified. Request a fresh reset email.','error');
     const pwd=get('resetPassword').value;
-    if(pwd.length<15 || pwd!==get('resetConfirm').value) return status('resetStatus','Passwords must match and be at least 15 characters.','error');
+    if(pwd.length<12 || pwd!==get('resetConfirm').value) return status('resetStatus','Passwords must match and be at least 12 characters.','error');
     if(!cloud.client) return status('resetStatus','Supabase configuration required.','error');
     busy(e.currentTarget,true);
     try {
