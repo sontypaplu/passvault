@@ -74,7 +74,7 @@ const pvSettingsSectionMeta={
  recycle:['Recycle Bin','','trash'],
  account:['Account security','Manage your account password.','key'],
  management:['Vault & account management','Review vaults and sensitive account actions.','shield-check'],
- application:['Install & updates','Install PassVault or check for a newer release.','download']
+ application:['Install & updates','Install Ciphora or check for a newer release.','download']
 };
 function showSettingsHome(){
  $('pvSettingsHome').hidden=false;$('pvSettingsDetail').hidden=true;
@@ -99,7 +99,7 @@ function navigate(target,push=true){
  $('openMenu').title='Pin navigation open';
  if(target==='settings')showSettingsHome();
  page=target;closeMenu();if(target==='profile')void loadAccountProfile();$('flowsMenu').classList.add('hidden');$('flowsToggle').setAttribute('aria-expanded','false');
- $('crumb').textContent=pageTitles[target];document.title=pageTitles[target]+' | PassVault';
+ $('crumb').textContent=pageTitles[target];document.title=pageTitles[target]+' | Ciphora';
  document.querySelectorAll('#approvedUI [data-page].navitem').forEach(x=>{
   x.classList.toggle('active',x.dataset.page===target);
   if(x.dataset.page===target)x.setAttribute('aria-current','page');else x.removeAttribute('aria-current');
@@ -400,7 +400,7 @@ function resetAccountProfile(){
  renderAccountIdentity();
 }
 async function loadAccountProfile(force=false){
- if(!cloud.client||!cloud.userId)return;
+ if(!cloud.client||!cloud.userId||cloud.localMode)return;
  const requested=cloud.userId;
  if(!force&&profileLoadedUserId===requested){if(page==='profile'&&!profileSaving)profileDraw();return;}
  if(profileLoading)return profileLoading;
@@ -506,8 +506,8 @@ function render(){
    const review=actionButton('linkbtn',{'data-open':x.id});review.textContent='Review →';row.append(content,review);issueArea.append(row);
   }
  }
- const syncLabel=cloud.deviceOnly?'Device-only':!cloud.syncEnabled?'Sync off':cloud.conflict?'Sync conflict':state.dirty?'Unsaved changes':cloud.saveInProgress?'Syncing…':'Unlocked';
- const failure=(!isCloudSyncAllowed() ? (state.dirty ? 'Changes are not syncing. Download an encrypted backup before closing or locking this vault.' : '') : cloud.lastSaveError) || (cloud.conflict?'Another device saved a newer version. Download a backup and reconcile before continuing.':cloud.autoLockDeferred?'Automatic lock deferred while changes are unsaved. Retry sync or download an encrypted backup.':'');
+ const syncLabel=cloud.deviceOnly?(state.dirty?'Saving on device':'Saved on device'):!cloud.syncEnabled?'Sync off':cloud.conflict?'Sync conflict':state.dirty?'Unsaved changes':cloud.saveInProgress?'Syncing…':'Unlocked';
+ const failure=(!isCloudSyncAllowed() ? (state.dirty && !cloud.deviceOnly ? 'Cloud sync is paused. Changes are not uploaded; download an encrypted backup.' : '') : cloud.lastSaveError) || (cloud.conflict?'Another device saved a newer version. Download a backup and reconcile before continuing.':cloud.autoLockDeferred?'Automatic lock deferred while changes are unsaved. Retry sync or download an encrypted backup.':'');
  $('approvedSyncNotice').hidden=!failure;
  $('approvedSyncMessage').textContent=failure;
  $('approvedSyncRetry').disabled=!isCloudSyncAllowed() || !!cloud.conflict || cloud.saveInProgress;
@@ -734,12 +734,14 @@ function selectVault(id){
 }
 function createVault(){
  if(!cloud.loaded)return tip('Vault list is not ready.');
+ if(cloud.localMode){ displayVaultDashboard(); if(state.locked)prepareDeviceOnlyVault(); return; }
  if(vaults().length>=2)return tip('Maximum two encrypted vaults per account.');
  displayVaultDashboard();if(!state.locked)return;
  prepareNewVault(); // Native validated master-password creation form.
 }
 function createVaultModal(){
  if(!cloud.loaded)return tip('Vault list is not ready.');
+ if(cloud.localMode){ displayVaultDashboard(); if(state.locked)prepareDeviceOnlyVault(); return; }
  if(vaults().length>=2)return tip('Maximum two encrypted vaults per account.');
  $('vaultName').value='';$('vaultDialog').showModal();$('vaultName').focus();
 }
@@ -794,6 +796,9 @@ function showVaultGate(){
  $('approvedGateCreate').hidden=unlocking || gateStorageChoice==='offline';
  $('approvedGateOffline').hidden=unlocking || gateStorageChoice==='offline';
  gateVaultList.hidden=unlocking || gateStorageChoice==='offline';
+ $('approvedGateOffline').textContent=cloud.localMode?'New / import vault':'Use on this device';
+ $('approvedGateCreate').hidden=cloud.localMode || unlocking || gateStorageChoice==='offline';
+ $('approvedGateRefresh').textContent=cloud.localMode?'Refresh local vaults':'Refresh vaults';
  $('approvedGateOfflineChoice').hidden=unlocking || gateStorageChoice!=='offline';
  gateSecureForm.hidden=!unlocking;
  if(unlocking){
@@ -803,16 +808,16 @@ function showVaultGate(){
     ? 'Offline backup selected. Enter its master password to unlock it. Your cloud vaults will not change.'
     : "Enter this vault's master password to decrypt it on your device.";
   $('approvedGateHelper').textContent=cloud.deviceOnly
-    ? 'Device-only vault. No encrypted vault uploads; export a fresh backup after edits.'
+    ? 'Encrypted vault saved on this device. Keep a separate downloaded backup for recovery.'
     : !cloud.syncEnabled ? 'Cloud sync is off. Your new edits will not be uploaded.' : 'Your master password is never sent to the cloud.';
   if(nativeUnlockCard.parentNode!==gateSecureForm)gateSecureForm.append(nativeUnlockCard);
  }else{
   restoreNativeUnlockCard();
   $('approvedGateEyebrow').textContent='VAULT ACCESS';
-  $('approvedGateTitle').textContent=gateStorageChoice==='offline' ? 'Work offline' : 'Your vaults';
+  $('approvedGateTitle').textContent=gateStorageChoice==='offline' ? 'On-device vaults' : (cloud.localMode?'Vaults on this device':'Choose your vault');
   $('approvedGateDescription').textContent=gateStorageChoice==='offline'
     ? 'Create a vault or open a backup.'
-    : 'Choose a cloud vault or work offline.';
+    : cloud.localMode?'Select a locally encrypted vault. No account or internet required.':'Choose a cloud vault, or create one stored on this device.';
   $('approvedGateCreate').disabled=!cloud.loaded || cloud.vaults.length>=2;
   $('approvedOfflineCreate').disabled=!cloud.loaded;
   $('approvedOfflineImport').disabled=!cloud.loaded;
@@ -824,7 +829,7 @@ function showVaultGate(){
    gateVaultList.append(message);
   }else if(!cloud.vaults.length){
    const message=document.createElement('p');
-   message.textContent='No cloud vaults yet. Create your first vault.';
+   message.textContent=cloud.localMode?'No encrypted on-device vaults yet. Create or import one to begin.':'No cloud vaults yet. Create your first vault.';
    gateVaultList.append(message);
   }else{
    for(const vault of cloud.vaults){
@@ -834,7 +839,7 @@ function showVaultGate(){
     const lock=document.createElement('span');lock.className='approved-gate-lock';lock.textContent='🔒';lock.setAttribute('aria-hidden','true');
     const body=document.createElement('span');body.className='approved-gate-vault-label';
     const name=document.createElement('strong');name.textContent=vault.label||'Encrypted vault';
-    const description=document.createElement('small');description.textContent='Encrypted · Master password required';
+    const description=document.createElement('small');description.textContent=cloud.localMode?'Encrypted on this device · Master password required':'Encrypted cloud vault · Master password required';
     body.append(name,description);
     const arrow=document.createElement('span');arrow.className='approved-gate-arrow';arrow.textContent='→';arrow.setAttribute('aria-hidden','true');
     button.append(lock,body,arrow);
@@ -884,12 +889,13 @@ $('approvedGateRefresh').addEventListener('click',async()=>{
 });
 gate.addEventListener('cancel',e=>{e.preventDefault();if(uiState.accessScreen==='unlock')displayVaultDashboard();});
 function syncVisible(){
+ document.body.classList.toggle('ciphora-local-mode',!!cloud.localMode);
  renderSyncControls();
  if(ready()){
   closeVaultGate();
   $('approvedUI').hidden=false;
   if(profileLoadedUserId && profileLoadedUserId!==cloud.userId)resetAccountProfile();
-  if(profileLoadedUserId!==cloud.userId && !profileLoading)void loadAccountProfile();
+  if(!cloud.localMode && profileLoadedUserId!==cloud.userId && !profileLoading)void loadAccountProfile();
   const saved=new URL(location.href).searchParams.get('view');
   if(!window.__pvApprovedWasUnlocked){window.__pvApprovedWasUnlocked=true;createMain();createQuick();navigate(pageTitles[saved]?saved:'overview',false);
    if(window.matchMedia('(max-width:760px)').matches){try{if(!sessionStorage.getItem('pv-mobile-greeted')){sessionStorage.setItem('pv-mobile-greeted','1');tip('Welcome back · Your vault is ready');}}catch{}}
@@ -927,15 +933,17 @@ function renderSyncControls(){
   setting.checked=enabled;
   // Device-only vaults are never promoted via a sync setting. This preference
   // applies to cloud vaults, and remains unchanged when working device-only.
-  setting.disabled=cloud.deviceOnly && !state.locked;
+  setting.disabled=!!cloud.deviceOnly;
   const label=setting.closest('label')?.querySelector('span');
   if(label) label.textContent=cloud.deviceOnly?'Unavailable':enabled?'Enabled':'Paused';
  }
+ const command=document.querySelector('#approvedUI [data-unwired="Encrypted cloud sync"]');
+ if(command)command.textContent=enabled?'Sync encrypted vault':'Cloud sync settings';
  const text=cloud.deviceOnly
-  ? 'Device-only · No uploads. Download a backup after edits.'
+  ? 'Device-only · Encrypted changes save on this device. Keep a separate backup; never uploaded.'
   :enabled
     ? 'Cloud sync on · Encrypted changes upload to your account.'
-    : 'Cloud sync paused · New edits stay here. An in-progress upload may finish. Download a backup before leaving.';
+    : 'Cloud sync paused · New edits stay in this session until you download a backup. An in-progress upload may finish.';
  for(const id of ['pvSettingsSyncDescription','pvBackupSyncSummary']){const node=$(id);if(node)node.textContent=text;}
 }
 $('pvSettingsSyncToggle').addEventListener('change',event=>{
@@ -1051,9 +1059,10 @@ $('approvedUI').addEventListener('click',e=>{
  const v=target.closest('[data-selectvault]');if(v){selectVault(v.dataset.selectvault);return;}
  const flow=target.closest('[data-flow]');if(flow){closeAccountMenu();if(flow.dataset.flow==='signout')void handleSignOut();else if(flow.dataset.flow==='lock')lockVault('Manual lock');else navigate('vaults');return;}
  const unw=target.closest('[data-unwired]');if(unw){
+  if(cloud.localMode && /Account password change|Protected deletion confirmation/.test(unw.dataset.unwired)){tip('Account controls require an online signed-in account.');return;}
   switch(unw.dataset.unwired){
   case 'Encrypted backup export':case 'Backup export': void handleExportVault();break;
-  case 'Encrypted cloud sync':void saveCloudVault(true);break;
+  case 'Encrypted cloud sync':if(!isCloudSyncAllowed()){navigate('settings');openSettingsSection('backups');tip('Cloud sync is paused. Enable it in settings to upload.');}else void saveCloudVault(true);break;
   case 'Account password change':navigate('settings');openSettingsSection('account');$('changeAccountPasswordForm').scrollIntoView({behavior:'smooth',block:'center'});$('currentAccountPassword').focus();break;
   case 'Protected deletion confirmation':navigate('settings');openSettingsSection('account');$('approvedAccountManagement').scrollIntoView({behavior:'smooth',block:'start'});break;
   default:info('Account management','Use the protected account controls in Settings.');

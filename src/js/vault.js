@@ -98,7 +98,14 @@ async function secureLockWithCheckpoint(reason = 'Vault locked for security.') {
   const revision = cloud.revision;
   cloud.secureLockPromise = (async () => {
     let stored = !wasDirty;
+    let locallySaved = false;
     try {
+      // Finish an encrypted on-device autosave before clearing the vault key.
+      // The encrypted recovery snapshot remains a fallback if IndexedDB fails.
+      if (cloud.deviceOnly) {
+        const savedLocally = await window.CiphoraLocal?.flush();
+        locallySaved = Boolean(savedLocally && !state.dirty);
+      }
       if (wasDirty) {
         if (!userId || !vaultId || !state.vault || !state.vaultKey || !state.vaultMeta)
           throw new Error('Missing vault context');
@@ -123,9 +130,13 @@ async function secureLockWithCheckpoint(reason = 'Vault locked for security.') {
       if (els.unlockedView) els.unlockedView.inert = false;
     }
     if (wasDirty) {
-      setGlobalStatus(stored
-        ? 'Session locked. Unsynced changes are stored as an encrypted recovery copy on this device. Unlock this vault to restore them.'
-        : 'Session locked for security. Local encrypted recovery failed; unsynced changes may be lost. Check your encrypted backups.', stored ? 'warning' : 'error');
+      if (locallySaved) {
+        setGlobalStatus('Vault locked. Latest encrypted changes were saved on this device. Keep a separate downloaded backup.', 'success');
+      } else {
+        setGlobalStatus(stored
+          ? 'Session locked. Unsynced changes are stored as an encrypted recovery copy on this device. Unlock this vault to restore them.'
+          : 'Session locked for security. Local encrypted recovery failed; unsynced changes may be lost. Check your encrypted backups.', stored ? 'warning' : 'error');
+      }
     }
     return stored;
   })();
@@ -193,6 +204,7 @@ function setDirty(value) {
       els.downloadVaultLink.classList.add('hidden');
     }
     if (isCloudSyncAllowed()) scheduleCloudSave();
+    else if (cloud.deviceOnly && !state.locked) window.CiphoraLocal?.schedule();
   }
 }
 
@@ -432,7 +444,7 @@ async function clearClipboardBestEffort({ announce = true } = {}) {
   state.clipboardClearDeadline = 0;
   state.clipboardLastValue = '';
   if (announce) {
-    if (cleared) setGlobalStatus('PassVault clipboard content was cleared.', 'success');
+    if (cleared) setGlobalStatus('Ciphora clipboard content was cleared.', 'success');
     else if (changed) setGlobalStatus('Clipboard changed after copying; newer content was left untouched.', 'success');
     else setGlobalStatus('Automatic clipboard clearing was blocked by the browser. Clear the clipboard manually.', 'warning');
   }
@@ -502,8 +514,14 @@ async function handleCreateVault(event) {
     resetCredentialEditor();
     clearCreateSensitiveFields();
     if (cloud.deviceOnly) {
-      setStatus(els.createStatus, 'Device-only vault created. Nothing was uploaded. Download an encrypted backup to preserve it.', 'success');
-      setGlobalStatus('Device-only vault active: download and verify an encrypted backup before signing out or leaving this browser.', 'warning');
+      window.CiphoraLocal?.resetRevision();
+      await window.CiphoraLocal?.saveNow();
+      if (window.CiphoraLocal && !state.dirty) {
+        setStatus(els.createStatus, 'Vault created and encrypted on this device.', 'success');
+        setGlobalStatus('Encrypted local copy saved. Export a separate backup in case device storage is cleared or lost.', 'success');
+      } else {
+        setStatus(els.createStatus, 'Vault created, but local storage has not confirmed a save. Export an encrypted backup now.', 'error');
+      }
     } else {
       if (isCloudSyncAllowed()) {
         setStatus(els.createStatus, 'Vault created. Uploading encrypted vault to Supabase…', 'success');
@@ -580,6 +598,7 @@ async function handleUnlockVault() {
       setDirty(true);
       state.pendingImport = null;
       state.locked = false;
+      if (cloud.deviceOnly) { window.CiphoraLocal?.resetRevision(); await window.CiphoraLocal?.saveNow(); }
       state.failedAttempts = 0;
       setActiveView();
       renderVault();
@@ -621,19 +640,21 @@ async function handleUnlockVault() {
       state.pendingImport = null;
       const importingLocalBackup = cloud.importSource === "file";
       const importingDeviceBackup = cloud.importSource === "device-file";
+      const openingSavedLocal = cloud.importSource === "device-local";
       if (importingDeviceBackup) cloud.vaultLabel = vault.name || 'Device-only vault';
       const importingLocalRecovery = cloud.importSource === "local-recovery";
       if (importingLocalRecovery) cloud.vaultLabel = vault.name || 'Recovered vault';
       state.locked = false;
       state.failedAttempts = 0;
-      setDirty(importingLocalBackup || importingLocalRecovery);
+      setDirty(importingLocalBackup || importingLocalRecovery || importingDeviceBackup);
+      if (importingDeviceBackup) { window.CiphoraLocal?.resetRevision(); await window.CiphoraLocal?.saveNow(); }
       const hadRecovery = !importingLocalRecovery && !importingDeviceBackup && !!readEncryptedRecovery(openingUser, openingVaultId);
       const restoredRecovery = importingLocalRecovery ? true
         : importingDeviceBackup ? false : await offerEncryptedRecovery(record, state.vaultKey, openingUser, openingVaultId);
       cloud.importSource = "cloud";
       setActiveView();
       renderVault();
-      setStatus(els.unlockStatus, importingDeviceBackup ? "Device-only vault unlocked. Download an encrypted backup after editing." : importingLocalBackup ? "Backup unlocked; encrypted cloud save scheduled." : "Vault unlocked successfully.", "success");
+      setStatus(els.unlockStatus, importingDeviceBackup ? "On-device vault unlocked. Encrypted edits will save locally; keep a separate backup." : importingLocalBackup ? "Backup unlocked; encrypted cloud save scheduled." : "Vault unlocked successfully.", "success");
       if (!hadRecovery && !restoredRecovery) setGlobalStatus("Vault unlocked in memory.", "success");
     } catch (error) {
       state.failedAttempts += 1;
@@ -717,7 +738,7 @@ async function handleFileChoose(selectedFile = null) {
     state.pendingImport = parsed;
     uiState.accessScreen = "unlock";
     showAccessScreen("unlock");
-    els.selectedFileName.textContent = `${file.name} • ${parsed.type === "v2" ? "Pass Vault v2" : "Legacy Pass v1"}`;
+    els.selectedFileName.textContent = `${file.name} • ${parsed.type === "v2" ? "Encrypted vault v2" : "Legacy vault v1"}`;
     els.unlockPepperHint.textContent = parsed.type === "v2" && parsed.record.pepperRequired
       ? "This vault declares that a secret pepper is required."
       : "Leave empty unless the vault was created with a pepper.";
@@ -749,7 +770,7 @@ async function handleExportVault() {
     const json = JSON.stringify(envelope, null, 2);
     const blob = new Blob([json], { type: "application/json" });
     const url = URL.createObjectURL(blob);
-    const fileName = `${safeFileName(state.vault.name || "Pass-Vault")}.pvault.json`;
+    const fileName = `${safeFileName(state.vault.name || "Ciphora-Vault")}.pvault.json`;
 
     /*
      * Desktop browsers normally honor a programmatic download after a user click.
@@ -781,7 +802,7 @@ async function handleExportVault() {
       ? { userId: cloud.userId, vaultId: exportingVaultId, mutation: exportingMutation }
       : null;
     setGlobalStatus(cloud.lastBackup
-      ? 'Encrypted backup download requested. Verify the file was saved. If it did not start, open “Download didn\'t start?” for a manual link. Cloud sync is unchanged.'
+      ? 'Encrypted backup prepared. Check your Downloads or Files folder. A manual save link is available below if needed.'
       : 'Edits changed while exporting. Prepare another backup to include the latest changes.', 'warning');
     renderVaultHeader();
   } catch (error) {
@@ -793,12 +814,12 @@ async function handleExportVault() {
 }
 
 function safeFileName(name) {
-  return String(name).replace(/[^a-zA-Z0-9._-]+/g, "-").replace(/^-+|-+$/g, "") || "Pass-Vault";
+  return String(name).replace(/[^a-zA-Z0-9._-]+/g, "-").replace(/^-+|-+$/g, "") || "Ciphora-Vault";
 }
 
 function renderVaultHeader() {
   if (!state.vault || !state.vaultMeta || uiState.activePage !== "vault") return;
-  els.vaultTitle.textContent = state.vault.name || "Pass Vault";
+  els.vaultTitle.textContent = state.vault.name || "Ciphora Vault";
   const p = state.vaultMeta.parameters;
   els.vaultMetaText.textContent = `${state.vault.credentials.length} credential${state.vault.credentials.length === 1 ? "" : "s"} • Argon2id ${p.memoryKiB / 1024} MiB / t=${p.iterations} / p=${p.parallelism} • ${state.vaultMeta.pepperRequired ? "pepper required" : "no pepper"}`;
 }
@@ -871,10 +892,10 @@ function clearUnlockedDom() {
 function lockVault(reason = "Vault locked.") {
   if (state.locked) return;
   if (cloud.deviceOnly && state.dirty && reason === 'Manual lock' && !cloud.secureLockPromise) {
-    void secureLockWithCheckpoint('Device-only vault locked; encrypted local recovery saved when supported.');
+    void secureLockWithCheckpoint('Device vault locked. Encrypted changes saved when local storage is available.');
     return;
   }
-  if (state.dirty && reason === "Manual lock" && !window.confirm("There are unsaved changes. Locking now will discard them. Continue?")) return;
+  if (state.dirty && reason === "Manual lock" && !cloud.deviceOnly && !window.confirm("There are unsaved changes. Locking now will discard them. Continue?")) return;
 
   /*
    * Do not clear copied passwords early when the vault locks. The clipboard

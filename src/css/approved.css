@@ -373,7 +373,7 @@ html[data-theme="dark"] #approvedUI{--bg:#0c1020;--surface:#151b2e;--surface-2:#
 #loginView .approved-auth-intro h1,#lockedView .approved-lock-intro h1{font-size:38px;line-height:1.15;letter-spacing:-1.2px}
 #loginView .approved-auth-intro p,#lockedView .approved-lock-intro p{color:var(--muted);line-height:1.75}
 #loginView .approved-auth-benefit,#lockedView .approved-auth-benefit{padding:10px 0;color:var(--text);font-weight:600}
-#loginView .approved-auth-benefit::before,#lockedView .approved-auth-benefit::before{content:'âœ“';color:#6052d9;margin-right:12px}
+#loginView .approved-auth-benefit::before,#lockedView .approved-auth-benefit::before{content:'✓';color:#6052d9;margin-right:12px}
 #lockedView .lock-main .access-shell{width:100%;max-width:640px}
 #lockedView .lock-main .access-screen:not(.hidden){max-width:100%}
 @media(max-width:850px){#loginView .entry-main,#lockedView .lock-main{flex-direction:column;gap:20px}#loginView .approved-auth-intro,#lockedView .approved-lock-intro{display:none}#loginView .entry-main>.entry-card:not(.hidden){width:100%;flex:auto}}

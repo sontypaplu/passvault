@@ -1,0 +1,129 @@
+/* Ciphora identity and responsive entry / vault selection system.
+   Structural redesign isolated from cryptography and internal storage keys. */
+:root{--accent:#137e80;--accent-hover:#0c686c;--accent-soft:#e6f5f2;--accent-border:#c0e6e1;--ring:0 0 0 3px rgba(25,149,148,.17)}
+html[data-theme="dark"]{--accent:#73dfcb;--accent-hover:#91eddb;--accent-soft:#163635;--accent-border:#276461;--ring:0 0 0 3px rgba(115,223,203,.19)}
+#loginView.entry-view{background:radial-gradient(circle at 18% 40%,rgba(32,134,140,.13),transparent 40%),radial-gradient(circle at 93% 6%,rgba(98,134,201,.1),transparent 30%),#f5f8fb;}
+html[data-theme="dark"] #loginView.entry-view{background:radial-gradient(circle at 15% 40%,rgba(24,125,131,.18),transparent 42%),radial-gradient(circle at 90% 0%,rgba(86,118,184,.12),transparent 33%),#08111b}
+#loginView .entry-topbar{max-width:none;width:100%;padding:22px clamp(24px,5vw,82px);gap:16px}
+#loginView .entry-topbar .theme-toggle{margin-left:0}
+#loginView .entry-topbar .brand{margin-right:auto}
+#loginView .brand-mark{background:linear-gradient(145deg,#0b7178,#1ca494);color:#fff;box-shadow:0 10px 22px rgba(7,120,120,.18);border:1px solid rgba(255,255,255,.2)}
+#loginView .brand-title{font-size:23px;font-weight:810;letter-spacing:-.8px}
+#loginView .brand-sub{letter-spacing:.9px;text-transform:uppercase;font-size:9px;font-weight:730}
+#loginView .ciphora-header-install{padding:10px 16px;border:1px solid var(--border-strong);border-radius:11px;background:var(--surface);color:var(--text-strong);font-weight:700;min-height:43px}
+#loginView .ciphora-header-install:hover{border-color:var(--accent);color:var(--accent)}
+#loginView .entry-main{display:grid;grid-template-columns:minmax(320px,1.13fr) minmax(360px,480px);align-items:center;justify-content:center;max-width:1280px;width:100%;margin:0 auto;padding:55px 38px 74px;gap:clamp(28px,6vw,112px)}
+#loginView .approved-auth-intro.ciphora-hero{display:block;max-width:630px;margin:0;padding:10px 0}
+#loginView .ciphora-hero .ciphora-kicker{display:inline-flex;gap:10px;align-items:center;border:1px solid rgba(19,126,128,.21);border-radius:99px;color:var(--accent);font-size:11px;font-weight:800;letter-spacing:1.4px;padding:9px 13px;margin-bottom:22px}
+.ciphora-live-dot{width:8px;height:8px;background:#35ba9c;border-radius:50%;box-shadow:0 0 0 4px rgba(53,186,156,.13)}
+#loginView .ciphora-hero h1{font-size:clamp(38px,4.3vw,63px);line-height:1.08;letter-spacing:-.065em;margin:0 0 22px;color:var(--text-strong);font-weight:810}
+#loginView .ciphora-hero h1 em{color:#168f91;font-style:normal}
+html[data-theme="dark"] #loginView .ciphora-hero h1 em{color:#70dbc8}
+#loginView .ciphora-hero>p{font-size:16px;line-height:1.85;color:var(--muted);max-width:49ch}
+#loginView .ciphora-hero-features{display:grid;gap:13px;margin-top:26px}
+#loginView .ciphora-hero-features span{display:flex;align-items:center;gap:11px;color:var(--text);font-size:13px;font-weight:640}
+#loginView .ciphora-hero-features span:before{content:'✓';width:23px;height:23px;display:grid;place-items:center;border-radius:50%;background:#ddf3ec;color:#0b7677;font-weight:850}
+#loginView .ciphora-hero-art{margin-top:34px;height:120px;position:relative;display:flex;align-items:center}
+#loginView .ciphora-art-orbit{width:116px;height:116px;border:1px solid rgba(22,141,147,.19);border-radius:34px;transform:rotate(-14deg);display:grid;place-items:center;background:linear-gradient(135deg,rgba(37,164,150,.13),rgba(255,255,255,.5));box-shadow:0 25px 70px rgba(23,103,110,.11)}
+#loginView .ciphora-art-center{width:68px;height:68px;border-radius:23px;background:#0f7881;display:grid;place-items:center;color:#e9fffb;transform:rotate(14deg);box-shadow:0 15px 28px rgba(5,87,97,.25)}
+#loginView .ciphora-art-center svg{width:38px;height:38px}
+#loginView .ciphora-art-tag{margin-left:30px;letter-spacing:1.5px;font-size:10px;color:var(--muted);font-weight:800}
+#loginView .entry-card{width:100%;max-width:480px;padding:40px 40px 32px;border-radius:26px;border:1px solid var(--border);box-shadow:0 28px 95px rgba(29,50,76,.11);position:relative}
+#loginView .entry-card:before{content:'';position:absolute;left:37px;right:37px;top:0;height:3px;border-radius:0 0 5px 5px;background:linear-gradient(90deg,#148c90,#8de1bd)}
+#loginView .entry-card .entry-symbol{display:none}
+#loginView .entry-card .entry-eyebrow{font-weight:780;letter-spacing:1.5px;font-size:10px;color:var(--accent);margin-bottom:14px}
+#loginView .entry-card h1{font-size:32px;letter-spacing:-1.15px;line-height:1.14}
+#loginView .entry-subtitle{margin-top:12px;margin-bottom:30px;line-height:1.65;color:var(--muted);font-size:13px}
+#loginView .entry-card label{font-size:12px;font-weight:750}
+#loginView .entry-card input:not([type="checkbox"]){height:49px;border-radius:12px;padding:13px 15px;box-shadow:none}
+#loginView .entry-card input:focus-visible{border-color:var(--accent);outline:0;box-shadow:var(--ring)}
+#loginView .access-submit{background:linear-gradient(110deg,#106f79,#168f86)!important;border:1px solid #0d7178;color:#fff!important;border-radius:12px;min-height:49px;font-size:14px;box-shadow:0 9px 23px rgba(12,114,115,.21)}
+#loginView .access-submit:hover{filter:brightness(1.07)}
+#loginView .ciphora-forgot{display:block;margin:7px 0 0 auto;font-weight:680;font-size:12px;color:var(--accent)}
+#loginView .ciphora-auth-divider{display:flex;align-items:center;gap:12px;margin:24px 0 13px;color:var(--muted);font-size:10px;letter-spacing:1.25px;font-weight:780}
+#loginView .ciphora-auth-divider:before,#loginView .ciphora-auth-divider:after{content:'';height:1px;background:var(--border);flex:1}
+#loginView .ciphora-create-link{width:100%;padding:13px;border-radius:12px;min-height:46px;border:1px solid var(--border-strong);background:var(--surface);color:var(--text-strong);font-weight:720;display:flex;align-items:center;justify-content:center;gap:10px}
+#loginView .ciphora-create-link:hover{border-color:var(--accent);color:var(--accent)}
+#loginView .ciphora-local-entry{margin-top:25px;padding:19px;border:1px solid var(--accent-border);background:var(--accent-soft);border-radius:15px;display:grid;gap:12px}
+#loginView .ciphora-local-copy strong{display:block;font-size:13px;color:var(--text-strong)}
+#loginView .ciphora-local-copy small{display:block;margin-top:6px;font-size:11px;line-height:1.6;color:var(--muted)}
+#loginView .ciphora-local-button{padding:11px 14px;min-height:44px;display:flex;justify-content:space-between;align-items:center;width:100%;border-radius:10px;border:1px solid var(--accent-border);background:var(--surface);font-weight:750;color:var(--accent)}
+#loginView .entry-disclaimer{margin-top:18px;font-size:11px;line-height:1.5}
+#loginView .entry-footer{max-width:none;padding:12px 32px 23px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+#loginView .entry-footer small{font-size:11px;max-width:460px;line-height:1.4}
+/* Dedicated, spacious vault-choice surface over the protected workspace. */
+#approvedVaultGate{width:min(980px,calc(100vw - 30px));max-width:min(980px,calc(100vw - 30px));min-height:min(610px,calc(100dvh - 36px));max-height:calc(100dvh - 26px);border-radius:26px;border:1px solid var(--border);box-shadow:0 44px 140px #0006;background:var(--surface);padding:0;overflow:auto}
+#approvedVaultGate::backdrop{background:rgba(4,12,23,.77);backdrop-filter:blur(12px)}
+#approvedVaultGate .dialog-head{padding:42px 48px 24px;align-items:start;border:0}
+#approvedVaultGate .dialog-head .pv-gate-overline{font-size:11px;letter-spacing:2.3px;color:var(--primary,#178d8c)}
+#approvedVaultGate .dialog-head h2{margin-top:12px;font-size:clamp(27px,3.3vw,39px);letter-spacing:-1.25px}
+#approvedVaultGate .dialog-head p{max-width:none;font-size:14px;margin-top:11px}
+#approvedVaultGate .approved-gate-mark{width:51px;height:51px;border-radius:17px;background:var(--primary-wash,var(--accent-soft));color:var(--primary,var(--accent));display:grid;place-items:center}
+#approvedVaultGate .dialog-body{padding:5px 48px 27px}
+#approvedVaultGate .ciphora-gate-label{display:flex;justify-content:space-between;gap:12px;margin:6px 0 15px;font-size:10px;letter-spacing:1.6px;color:var(--muted);font-weight:780}
+#approvedVaultGate .ciphora-gate-label span:last-child{letter-spacing:.2px;font-weight:600}
+#approvedVaultGate .approved-gate-vaults{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+#approvedVaultGate .approved-gate-vault{min-height:150px;padding:23px;border:1px solid var(--border);border-radius:17px;background:var(--surface-subtle,var(--surface));display:grid;grid-template-columns:auto 1fr;grid-template-rows:1fr auto;column-gap:16px;row-gap:12px;transition:transform .12s,box-shadow .12s,border-color .12s;text-align:left}
+#approvedVaultGate .approved-gate-vault:hover{transform:translateY(-2px);border-color:var(--accent);box-shadow:0 16px 40px rgba(0,0,0,.09)}
+#approvedVaultGate .approved-gate-lock{width:43px;height:43px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent);border-radius:13px;font-size:20px;grid-row:span 2}
+#approvedVaultGate .approved-gate-vault-label{display:flex;flex-direction:column;justify-content:center;gap:7px}
+#approvedVaultGate .approved-gate-vault-label strong{font-size:17px;letter-spacing:-.3px}
+#approvedVaultGate .approved-gate-vault-label small{font-size:12px;line-height:1.45}
+#approvedVaultGate .approved-gate-arrow{font-size:21px;grid-column:2;align-self:end}
+#approvedVaultGate .approved-gate-form{max-width:550px;margin:auto}
+#approvedVaultGate .approved-gate-helper{font-size:12px;margin:20px 0 0;color:var(--muted)}
+#approvedVaultGate .approved-gate-foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-start;gap:10px;padding:20px 48px 30px;border-top:1px solid var(--border);margin-top:8px}
+#approvedVaultGate .approved-gate-foot button{font-weight:720;border-radius:11px;min-height:45px;padding:11px 16px;font-size:12px}
+#approvedVaultGate .approved-gate-foot button#approvedGateOffline{margin-right:auto;background:var(--accent);color:#fff;border-color:var(--accent)}
+#approvedVaultGate .pv-offline-choices{grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}
+#approvedVaultGate .pv-device-note{grid-column:1/-1;padding:17px;border-radius:13px}
+#approvedVaultGate .pv-offline-choice{min-height:130px;flex-direction:column;align-items:flex-start;position:relative;padding:21px;gap:11px}
+#approvedVaultGate .pv-choice-chevron{position:absolute;top:20px;right:20px}
+#approvedVaultGate .pv-choice-body strong{font-size:16px}
+#approvedVaultGate .pv-offline-back{grid-column:1/-1}
+/* Consistent Ciphora accents in existing approved dashboard. */
+#approvedUI{--primary:#0e8a88;--primary-wash:#e5f5f1}
+html[data-theme="dark"] #approvedUI{--primary:#70dfcb;--primary-wash:#143b39}
+#approvedUI .btn-primary,#approvedUI .newbtn{border-radius:12px}
+#approvedUI .card{border-radius:18px}
+#approvedUI .sync-notice{border-radius:14px}
+#loginView button:focus-visible,#approvedVaultGate button:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+@media(max-width:900px){
+ #loginView .entry-main{grid-template-columns:1fr;max-width:600px;gap:24px;padding:25px 24px 55px}
+ #loginView .ciphora-hero{max-width:none;text-align:left}
+ #loginView .ciphora-hero h1{font-size:clamp(36px,7vw,52px)}
+ #loginView .ciphora-hero-art{display:none}
+ #loginView .ciphora-hero-features{grid-template-columns:1fr 1fr;gap:8px}
+ #loginView .entry-card{max-width:none}
+}
+@media(max-width:600px){
+ #loginView .entry-topbar{padding:15px 17px;gap:8px}
+ #loginView .brand-title{font-size:19px}
+ #loginView .ciphora-header-install{padding:9px 12px;min-height:40px;font-size:12px}
+ #loginView .entry-main{padding:15px 15px 42px;gap:19px}
+ #loginView .ciphora-hero h1{font-size:36px;line-height:1.12}
+ #loginView .ciphora-hero>p{font-size:13px;margin:0}
+ #loginView .ciphora-hero-features{grid-template-columns:1fr;margin-top:16px;gap:6px}
+ #loginView .ciphora-hero-features span{font-size:11px}
+ #loginView .entry-card{padding:30px 23px 25px;border-radius:21px}
+ #loginView .entry-footer{padding:10px 17px 25px;flex-direction:column;align-items:flex-start;gap:7px}
+ #approvedVaultGate{width:calc(100vw - 12px);max-width:calc(100vw - 12px);min-height:0;max-height:calc(100dvh - 12px);border-radius:20px}
+ #approvedVaultGate .dialog-head{padding:29px 22px 17px}
+ #approvedVaultGate .dialog-body{padding:8px 22px 22px}
+ #approvedVaultGate .approved-gate-vaults,#approvedVaultGate .pv-offline-choices{grid-template-columns:1fr;gap:10px}
+ #approvedVaultGate .approved-gate-vault{min-height:100px;padding:16px}
+ #approvedVaultGate .pv-offline-choice{min-height:98px}
+ #approvedVaultGate .approved-gate-foot{padding:17px 22px calc(22px + env(safe-area-inset-bottom,0px));gap:8px}
+ #approvedVaultGate .approved-gate-foot button{flex:1 1 calc(50% - 8px);min-width:0}
+ #approvedVaultGate .approved-gate-foot button#approvedGateOffline{flex:1 1 100%;margin-right:0}
+ #approvedVaultGate .ciphora-gate-label span:last-child{display:none}
+}
+@media(prefers-reduced-motion:reduce){#approvedVaultGate .approved-gate-vault{transition:none}}
+
+/* Account-only features are unavailable in independent on-device mode. */
+body.ciphora-local-mode #approvedAccountManagement,body.ciphora-local-mode #pvSettingsAccountPanel{display:none!important}
+
+body.ciphora-local-mode #dashboardDeleteAccount,
+body.ciphora-local-mode #approvedUI [data-page="profile"],
+body.ciphora-local-mode #approvedUI [data-settings-panel="account"],
+body.ciphora-local-mode #approvedUI [data-settings-target="account"] {display:none!important}
