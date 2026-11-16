@@ -93,7 +93,7 @@ async function initialize() {
   // GitHub Pages cannot set an HTTP frame-ancestors policy. This JS guard is
   // defense in depth; hosting-level frame restrictions remain recommended.
   if (window.self !== window.top) {
-    document.body.replaceChildren(document.createTextNode('Ciphora cannot run inside another website. Open it in a direct browser tab.'));
+    document.body.replaceChildren(document.createTextNode('PassVault cannot run inside another website. Open it in a direct browser tab.'));
     return;
   }
   populateGeneratorLengths();
@@ -102,7 +102,6 @@ async function initialize() {
   setActiveView();
   state.initialized = true;
   if (!await runStartupSelfTest()) return;
-  // Device-only entry is initialized independently of the cloud SDK.
   if (!isCloudConfigured()) {
     return setStatus(els.accessStatus, "Setup required: add the Supabase Project URL and publishable key in src/js/config.js.", "warning");
   }

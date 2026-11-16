@@ -1,5 +1,3 @@
-> **Historical document — superseded for Ciphora 4.0.** See `docs/CIPHORA_OFFLINE_GUIDE.md` for the current offline design.
-
 # PassVault — cloud vault vs. device-only vault
 
 ## What happens after login

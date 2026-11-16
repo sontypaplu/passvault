@@ -59,29 +59,11 @@ releaseHasher.update(html);
 addBuildInputs(join(target, 'src'), 'src/');
 addBuildInputs(join(target, 'icons'), 'icons/');
 releaseHasher.update(readFileSync(join(target, 'manifest.webmanifest')));
-releaseHasher.update(readFileSync(join(root, 'sw.js')));
 const buildId = releaseHasher.digest('hex').slice(0, 16);
 html = html.replace('name="passvault-build" content="development"', `name="passvault-build" content="${buildId}"`);
 html = html.replace(/((?:src|href)="\.\/src\/[^"?]+)(")/g, `$1?pv=${buildId}$2`);
 writeFileSync(join(target, 'index.html'), html, 'utf8');
-writeFileSync(join(target, 'app-version.json'), JSON.stringify({ version: '4.0.0', build: buildId, offlineCapable: true }) + '\n');
-// Pre-cache ONLY public, immutable app-shell assets. No account data or API
-// responses are ever included. The URL query matches the published HTML.
-const staticFiles = ['./','./index.html','./manifest.webmanifest'];
-for(const path of ['src/js','src/css','icons']) {
-  function scan(dir,rel) {
-    for(const file of readdirSync(dir,{withFileTypes:true})) {
-      const f=rel+'/'+file.name;
-      if(file.isDirectory())scan(join(dir,file.name),f);
-      else if(file.isFile())staticFiles.push('./'+f+((path==='src/js'||path==='src/css')?'?pv='+buildId:''));
-    }
-  }
-  scan(join(target,path),path);
-}
-let sw = readFileSync(join(root,'sw.js'),'utf8')
-  .replace('__CIPHORA_BUILD__',buildId)
-  .replace('__CIPHORA_FILES__',JSON.stringify(staticFiles));
-writeFileSync(join(target,'sw.js'),sw,'utf8');
+writeFileSync(join(target, 'app-version.json'), JSON.stringify({ version: '3.1.0', build: buildId, onlineOnly: true }) + '\n');
 const digest = createHash('sha256').update(sdkBytes).digest('hex');
-writeFileSync(join(target, 'DEPENDENCY_INFO.txt'), `Supabase JS 2.119.0 (self-hosted from npm package)\nSHA-256: ${digest}\n`, 'utf8');
+writeFileSync(join(target, 'DEPENDENCY_INFO.txt'), `Supabase JS 2.117.3 (self-hosted from npm package)\nSHA-256: ${digest}\n`, 'utf8');
 console.log(`Built ${target} | release ${buildId} | SDK SHA-256 ${digest} | CSP ${validUrl ? 'project-scoped' : 'preview-only'}`);

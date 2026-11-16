@@ -1,8 +1,8 @@
 {
-  "name": "ciphora-vault",
+  "name": "passvault-cloud-3",
   "private": true,
-  "version": "4.0.0",
-  "description": "Ciphora encrypted password manager with offline on-device vaults; compatible with PassVault v2 encrypted exports",
+  "version": "3.1.0",
+  "description": "PassVault 3.1 account UX and routing upgrade retaining the encrypted vault format",
   "scripts": {
     "build": "node tools/build.mjs --production",
     "build:preview": "node tools/build.mjs",
@@ -14,15 +14,14 @@
     "test:history": "node tools/test-edit-history.mjs",
     "test:recovery": "node tools/test-phase1-recovery.mjs",
     "test:phase3": "node tools/test-phase3-experience.mjs",
-    "test:pwa": "node tools/test-offline-pwa.mjs",
+    "test:pwa": "node tools/test-online-pwa.mjs",
     "test:xss": "node tools/test-xss-hardening.mjs",
-    "test:offline-flow": "node tools/test-offline-vault-flow.mjs",
-    "test:local": "node tools/test-local-encrypted-store.mjs"
+    "test:offline-flow": "node tools/test-offline-vault-flow.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.119.0"
   },
   "engines": {
-    "node": ">=22"
+    "node": ">=20"
   }
 }

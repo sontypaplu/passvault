@@ -14,7 +14,7 @@
     const url = new URL(location.href);
     if(next === 'signin') url.searchParams.delete('auth'); else url.searchParams.set('auth', next);
     if(push && url.href !== location.href) history.pushState({pvAuth:next}, '', url);
-    document.title = `${({signin:'Sign in',signup:'Create account',forgot:'Forgot password',verify:'Verify email',reset:'Reset password'})[next]} | Ciphora`;
+    document.title = `${({signin:'Sign in',signup:'Create account',forgot:'Forgot password',verify:'Verify email',reset:'Reset password'})[next]} | PassVault`;
     window.scrollTo({top:0,behavior:'instant'});
   }
   function status(id, text, kind) { setStatus(get(id), text, kind); }
