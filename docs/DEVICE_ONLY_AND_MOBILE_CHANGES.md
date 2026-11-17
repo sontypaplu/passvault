@@ -1,4 +1,4 @@
-> **Historical document — superseded for Ciphora 4.0.** See `docs/CIPHORA_OFFLINE_GUIDE.md` for the current offline design.
+> **Legacy PassVault 3.x reference only.** This document describes the former online-only release and is superseded by `AVENLOCK_UPGRADE_GUIDE.md`, `docs/PWA_DEPLOYMENT.md`, and `docs/OFFLINE_VAULT_WORKFLOW.md`. Do not use its older offline/backup instructions for AVENLOCK 4.0.
 
 # PassVault: mobile interaction and device-only mode
 

@@ -1,8 +1,8 @@
 {
-  "name": "ciphora-vault",
+  "name": "avenlock-secure-vault",
   "private": true,
   "version": "4.0.0",
-  "description": "Ciphora encrypted password manager with offline on-device vaults; compatible with PassVault v2 encrypted exports",
+  "description": "AVENLOCK encrypted cloud and offline device vault manager",
   "scripts": {
     "build": "node tools/build.mjs --production",
     "build:preview": "node tools/build.mjs",
@@ -14,15 +14,16 @@
     "test:history": "node tools/test-edit-history.mjs",
     "test:recovery": "node tools/test-phase1-recovery.mjs",
     "test:phase3": "node tools/test-phase3-experience.mjs",
-    "test:pwa": "node tools/test-offline-pwa.mjs",
+    "test:pwa": "node tools/test-avenlock-pwa.mjs",
     "test:xss": "node tools/test-xss-hardening.mjs",
     "test:offline-flow": "node tools/test-offline-vault-flow.mjs",
-    "test:local": "node tools/test-local-encrypted-store.mjs"
+    "test:local": "node tools/test-avenlock-local.mjs",
+    "test:security-regression": "node tools/test-security-hardening.mjs"
   },
   "dependencies": {
-    "@supabase/supabase-js": "2.119.0"
+    "@supabase/supabase-js": "2.118.0"
   },
   "engines": {
-    "node": ">=22"
+    "node": ">=20"
   }
 }

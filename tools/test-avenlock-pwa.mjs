@@ -1,0 +1,32 @@
+/* AVENLOCK PWA offline-startup and identity regression gates. Source-only,
+   complement with a real SDK build, installed-device and restore tests. */
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const root=new URL('../',import.meta.url);
+const read=file=>readFileSync(new URL(file,root),'utf8');
+const h=read('index.html'),pwa=read('src/js/pwa.js'),builder=read('tools/build.mjs');
+const app=read('src/js/app.js'),vault=read('src/js/vault.js'),approved=read('src/js/approved.js');
+const premium=read('src/js/premium.js'),local=read('src/js/local-vault.js');
+const manifest=JSON.parse(read('manifest.webmanifest'));
+assert.match(manifest.name,/AVENLOCK/);assert.match(manifest.description,/offline/i);
+assert.match(h,/avenlock-auth-shell/);assert.match(h,/avenlock-gate-top/);
+assert.match(h,/src\/css\/avenlock-entry.css/);assert.match(h,/src\/js\/local-vault.js/);
+assert.match(h,/worker-src 'self' blob:/);
+assert.match(app,/navigator.onLine === false/);assert.match(app,/await window.AvenlockLocal.enter\(\)/);
+assert.match(vault,/!window.AvenlockLocal\?\.active && \(idleSignOutPending/);
+assert.match(app,/window.AvenlockLocal\?\.active\?window.AvenlockLocal.flush\(\)/);
+assert.match(approved,/window.AvenlockLocal\?\.active/);
+assert.match(premium,/window.AvenlockLocal\.flush\(\)/);
+assert.match(pwa,/serviceWorker\.register\('\.\/sw\.js'/);
+assert.match(pwa,/offerLocalEntry/);
+assert.match(builder,/onlineOnly: false, offlineCapable: true/);
+assert.match(builder,/if \(request\.method !== 'GET'\) return/);
+assert.match(builder,/url\.origin !== self\.location\.origin/);
+assert.match(builder,/if \(!ALLOWED\.has\(request\.url\)\) return/);
+assert.match(builder,/app-version\.json'\)\) return/);
+assert.doesNotMatch(builder,/caches\.(?:put|add)\([^\n]*(?:token|credential|password|supabase)/i);
+assert.match(local,/indexedDB\.open\(DB_NAME, 1\)/);
+assert.match(local,/encryptAndBuildEnvelope\(\)/);
+assert.match(local,/tx\.abort\(\)/);
+assert.match(vault,/AAD_PREFIX/);
+console.log('AVENLOCK offline PWA gates passed: brand, preview flows, offline startup, worker caching rules, local save isolation, idle and back-compat.');

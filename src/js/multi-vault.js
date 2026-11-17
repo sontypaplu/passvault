@@ -4,7 +4,6 @@ let deleteTarget = null;
 let deletionBusy = false;
 
 async function reloadVaultList() {
-  if (cloud.localMode) { await window.CiphoraLocal.refresh(); return cloud.vaults; }
   if (!cloud.client || !cloud.userId) throw new Error('Sign in required');
   const {data,error} = await cloud.client.from('vault_items')
     .select('vault_id,label,revision,created_at,updated_at')
@@ -18,19 +17,19 @@ function renderVaultDashboard() {
   const list = $('vaultDashboardList');
   const localRecoveries = listUnsyncedNewVaultRecoveries(cloud.userId)
     .filter(draft => !cloud.vaults.some(v => v.vault_id === draft.vaultId));
-  const atLimit = !cloud.localMode && cloud.vaults.length >= 2;
+  const atLimit = cloud.vaults.length >= 2;
   $('dashboardCreateVault').disabled = atLimit;
-  $('dashboardCreateVault').textContent = cloud.localMode ? '+ Create on-device vault' : atLimit ? 'Cloud vault limit (2/2)' : '+ Create cloud vault';
+  $('dashboardCreateVault').textContent = atLimit ? 'Cloud vault limit (2/2)' : '+ Create cloud vault';
   if (!list) return;
   list.replaceChildren();
   if (!cloud.loaded) {
     const msg = document.createElement('p'); msg.className = 'hint';
-    msg.textContent = cloud.localMode ? 'Cannot load local vaults. Check browser storage and try again.' : 'Could not load vaults. Check your internet and try Refresh.';
+    msg.textContent = 'Could not load vaults. Check your internet and try Refresh.';
     list.append(msg); return;
   }
   if (!cloud.vaults.length && !localRecoveries.length) {
     const empty = document.createElement('div'); empty.className='empty-state';
-    empty.textContent=cloud.localMode?'No saved vaults on this device. Create or import your first encrypted vault.':'No cloud vaults yet. Create your first vault to get started.';
+    empty.textContent='No cloud vaults yet. Create your first vault to get started.';
     list.append(empty); return;
   }
   for (const draft of localRecoveries) {
@@ -53,14 +52,13 @@ function renderVaultDashboard() {
     const text = document.createElement('div'); text.className='vault-tile-text';
     const name = document.createElement('strong'); name.textContent = v.label || 'Encrypted vault';
     const sub = document.createElement('small');
-    sub.textContent = cloud.localMode ? `Encrypted on device · Updated ${new Date(v.updated_at).toLocaleString()}` : `Revision ${v.revision} · Updated ${new Date(v.updated_at).toLocaleString()}`;
+    sub.textContent = `Revision ${v.revision} · Updated ${new Date(v.updated_at).toLocaleString()}`;
     text.append(name,sub);
     const open = document.createElement('button'); open.type='button'; open.textContent='Open';
     open.addEventListener('click',()=>{ void openVaultById(v.vault_id); });
     const remove = document.createElement('button'); remove.type='button'; remove.className='danger'; remove.textContent='Delete';
     remove.setAttribute('aria-label',`Delete ${v.label || 'vault'}`);
     remove.addEventListener('click',()=>requestDeletion('vault',v.vault_id,v.label));
-    remove.hidden=!!cloud.localMode; // Local deletion requires a separate encrypted-backup-first flow.
     row.append(icon,text,open,remove); list.append(row);
   }
 }
@@ -90,6 +88,20 @@ function openUnsyncedNewVaultRecovery(vaultId) {
 
 function displayVaultDashboard() {
   if (!cloud.userId) return;
+  if (window.AvenlockLocal?.active) {
+    if (!state.locked) {
+      void secureLockWithCheckpoint('Local vault locked.').then(saved => { if (saved) displayVaultDashboard(); });
+      return;
+    }
+    cloud.selectedVaultId = null;
+    cloud.encryptedEnvelope = null;
+    state.pendingImport = null;
+    cloud.deviceOnly = true;
+    uiState.accessScreen = 'dashboard';
+    setActiveView();
+    window.dispatchEvent(new Event('passvault-access-change'));
+    return;
+  }
   if (!state.locked) {
     lockVault('Manual lock');
     if (!state.locked) return; // Cancelled because changes were unsaved.
@@ -100,7 +112,7 @@ function displayVaultDashboard() {
   cloud.encryptedEnvelope = null;
   state.pendingImport = null;
   cloud.conflict = false;
-  cloud.importSource = cloud.localMode ? 'device-local' : 'cloud'; cloud.deviceOnly = !!cloud.localMode; cloud.lastBackup = null;
+  cloud.importSource = 'cloud'; cloud.deviceOnly = false; cloud.lastBackup = null;
   clearSensitiveFieldsEverywhere();
   uiState.accessScreen='dashboard';
   setActiveView(); renderVaultDashboard();
@@ -108,7 +120,6 @@ function displayVaultDashboard() {
 
 async function openVaultById(vaultId) {
   if (!cloud.userId || !cloud.loaded || !state.locked) return;
-  if (cloud.localMode) return window.CiphoraLocal.open(vaultId);
   if (!cloud.vaults.some(v=>v.vault_id === vaultId)) return;
   const epoch=cloud.epoch;
   const userId=cloud.userId;
@@ -132,8 +143,8 @@ async function openVaultById(vaultId) {
 }
 
 function prepareNewVault() {
-  if (cloud.localMode) return prepareDeviceOnlyVault();
   if (!cloud.loaded || !cloud.userId || !state.locked) return;
+  if (window.AvenlockLocal?.active) return prepareDeviceOnlyVault();
   if (!crypto.randomUUID) return setStatus($('dashboardStatus'),'Your browser does not support secure UUID generation','error');
   if (cloud.vaults.length >= 2) return setStatus($('dashboardStatus'),'Vault limit reached: maximum 2 vaults per account. Delete a vault (after backup) to create another.','error');
   cloud.selectedVaultId=crypto.randomUUID(); cloud.revision=0;
@@ -147,7 +158,9 @@ function prepareNewVault() {
 function setCreateVaultMode(deviceOnly) {
   $('createVaultModeBadge').textContent = deviceOnly ? 'Device-only · no cloud uploads' : 'New cloud vault';
   $('createVaultModeDescription').textContent = deviceOnly
-    ? 'Start a new encrypted vault on this device. No vault contents will be sent to the server. You must download encrypted backups to keep changes.'
+    ? (typeof window !== 'undefined' && window.AvenlockLocal?.active
+      ? 'Create a device vault with encrypted automatic saves. Keep an independently exported backup too.'
+      : 'Create a device-only vault within your account session. Download encrypted backups after changes.')
     : 'Create an encrypted vault connected to your signed-in account.';
   els.createVaultButton.textContent = deviceOnly ? 'Create device-only vault' : 'Create cloud vault';
 }
@@ -160,7 +173,6 @@ function prepareDeviceOnlyVault() {
   cloud.encryptedEnvelope = null;
   cloud.conflict = false;
   cloud.deviceOnly = true;
-  window.CiphoraLocal?.resetRevision();
   cloud.importSource = 'device-new';
   cloud.vaultLabel = 'Device-only vault';
   cloud.lastBackup = null;
@@ -172,7 +184,6 @@ function prepareDeviceOnlyVault() {
 
 async function changeAccountPassword(event) {
   event.preventDefault();
-  if (cloud.localMode) return setGlobalStatus('Account settings are unavailable in on-device mode. Sign in online to manage an account.', 'warning');
   if(state.dirty) return setGlobalStatus("Save changes or export an encrypted backup before changing your account password.","error");
   const form=$('changeAccountPasswordForm');
   const status=$('accountPasswordStatus');
@@ -275,10 +286,7 @@ async function confirmDeletion(event) {
 }
 
 function initializeMultiVaultEvents() {
-  $('dashboardCreateVault').addEventListener('click', () => {
-    if (cloud.localMode) prepareDeviceOnlyVault();
-    else prepareNewVault();
-  });
+  $('dashboardCreateVault').addEventListener('click',prepareNewVault);
   $('dashboardRefresh').addEventListener('click',async()=>{
     try { await reloadVaultList();cloud.loaded=true;renderVaultDashboard();clearStatus($('dashboardStatus')); }
     catch(e) {setStatus($('dashboardStatus'),e.message||'Refresh failed','error');}
