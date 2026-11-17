@@ -77,6 +77,7 @@
   function rowFor(item) {
     const kind=itemKind(item); const row=el('div','recentrow pv3-item-row');
     const logo=el('div',`itemlogo ${kind==='card'?'green':kind==='note'?'violet':'blue'}`,item.title.slice(0,1).toUpperCase() || '•');
+    globalThis.PassVaultServiceIcons?.mount(logo,item);
     const names=el('div','pv3-row-names'); names.append(el('div','itemname',item.title), el('div','itemsub',kind==='login'?item.username:(kind==='note'?'Secure note':'Payment card')));
     const type=el('span','mini-pill',kind==='login'?'Login':kind==='note'?'Note':'Card');
     const updated=el('span','updated',new Date(item.updatedAt).toLocaleDateString());

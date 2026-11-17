@@ -536,3 +536,7 @@ html[data-theme="light"] #loginView .auth-link{
 
 #premiumApp .sidefooter .userdots{font-size:11px;font-weight:700;white-space:nowrap;min-height:38px;color:var(--muted);border:1px solid var(--stroke);border-radius:9px;padding:6px 8px}
 #premiumApp .sidefooter .userdots:hover{background:var(--panel3);color:var(--text)}
+
+#premiumApp .itemlogo.service-brand-ready {overflow:hidden;border-color:transparent;}
+#premiumApp .itemlogo .service-brand-mark {width:78%;height:78%;max-width:32px;max-height:32px;}
+#premiumApp .itemlogo .service-brand-letter {display:grid;place-items:center;line-height:1;}

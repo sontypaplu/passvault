@@ -1,6 +1,6 @@
 /* Encrypted history UI. All versions remain inside the existing encrypted
- * vault. Only requested secrets are inserted into the DOM while unlocked.
- * Closing or locking clears the entire history viewer.
+ * vault. Non-password history is visible while unlocked. Login passwords are
+ * masked until explicitly revealed. Locking clears the entire history viewer.
  */
 (()=>{
   'use strict';
@@ -25,11 +25,10 @@
     ['notes','Additional notes'],['expiry','Expiry'],['cvv','Security code'],
     ['favorite','Favorite'],['tags','Tags'],['customFields','Custom fields']
   ];
-  const secrets = new Set(['username','password','notes','cvv','customFields']);
   const BATCH = 25;
   let activeKind = null;
   let activeItemId = null;
-  let revealed = new Set();
+  const revealed = new Set();
   const readable = () => !state.locked && !!state.vault && !!uiState.accessGranted;
   const log = () => readable() && Array.isArray(state.vault.editHistory) ? state.vault.editHistory : [];
   const element = (tag, css='', text) => {
@@ -173,7 +172,7 @@
     for(const [,label] of fields)head.append(element('th','',label));
     thead.append(head);const tbody=element('tbody');
     table.append(caption,thead,tbody);wrapper.append(table);
-    const hint=element('p','pv-history-table-hint','— = unchanged · (cleared) = value removed · baseline = oldest known values. Sensitive values are masked until revealed. Scroll sideways for every field.');
+    const hint=element('p','pv-history-table-hint','— = unchanged · (cleared) = value removed · baseline = oldest known values. Only login passwords are masked. Scroll sideways for every field.');
     const footer=element('div','pv-history-table-footer');
     details.replaceChildren(hint,wrapper,footer);
     let offset=0;
@@ -197,19 +196,12 @@
           const raw=event?.[entry.side]?.[field];
           if(!changed || entry.action==='deleted')td.textContent='—';
           else if(raw===null || raw===undefined || raw==='' || Array.isArray(raw)&&raw.length===0){td.textContent=entry.action==='created'||entry.action==='baseline'?'—':'(cleared)';}
-          else if(typeof value(raw)==='string' && (value(raw).length>96 || value(raw).includes('\n')) && (field!=='password' || item.kind==='note')) {
-            // Long private notes are never inserted into truncated table cells.
-            // The full value is read from the active decrypted vault only after a click.
-            const fullLabel=field==='password'&&item.kind==='note'?'Secure note content':label;
-            const trigger=element('button','pv-history-full-text',field==='password'&&item.kind==='note'?'View note':'View full text');
-            trigger.type='button';trigger.setAttribute('aria-label',`View full ${fullLabel} saved ${entry.at?stamp(entry.at):'in the baseline'}`);
-            trigger.addEventListener('click',()=>showFullText(entry.recordId,entry.side,field,fullLabel,itemId,entry.at));
-            td.append(trigger,element('span','pv-history-long-caption',`${value(raw).length.toLocaleString()} characters`));
-          }
-          else if(secrets.has(field)){
+          else if(field==='password' && (event?.[entry.side]?.kind||item.kind)==='login'){
+            // Passwords are the ONLY masked history values. Crucially, their
+            // plaintext does not enter the DOM until the user clicks Reveal.
             const masked=element('span','pv-history-mask','••••••••');
             const reveal=element('button','pv-history-reveal','Reveal');reveal.type='button';
-            reveal.setAttribute('aria-label',`Reveal ${label} for ${entry.at?stamp(entry.at):'baseline'}`);
+            reveal.setAttribute('aria-label',`Reveal login password for ${entry.at?stamp(entry.at):'baseline'}`);
             const key=`${entry.recordId}:${entry.side}:${field}`;
             reveal.addEventListener('click',()=>{
               if(!readable()||activeItemId!==itemId){clear();return;}
@@ -219,7 +211,11 @@
               else {revealed.add(key);masked.textContent=value(live[entry.side]?.[field]);reveal.textContent='Hide';}
             });
             td.append(masked,reveal);
-          } else td.textContent=value(raw);
+          } else {
+            // Notes, usernames, card details and custom fields—including long
+            // multiline values—are shown in full. textContent prevents XSS.
+            td.textContent=value(raw);
+          }
           tr.append(td);
         }
         tbody.append(tr);

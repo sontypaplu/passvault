@@ -1,0 +1,74 @@
+/* Offline service-brand presentation. All vector artwork is in service-icons.js.
+   No network fonts, per-domain image requests, remote favicons or inline CSS. */
+#approvedUI .service-brand-ready,
+#premiumApp .service-brand-ready {
+  display:grid;place-items:center;overflow:hidden;
+  background:#fff;box-sizing:border-box;
+  color:inherit;border:1px solid #1720301c;
+}
+#approvedUI .service-brand-ready .service-brand-mark,
+#premiumApp .service-brand-ready .service-brand-mark {
+  width:77%;height:77%;max-width:35px;max-height:35px;display:block;flex:none;
+}
+#approvedUI .service-brand-ready .service-brand-letter,
+#premiumApp .service-brand-ready .service-brand-letter {
+  display:grid;place-items:center;line-height:1;max-width:100%;max-height:100%;
+}
+#approvedUI .service-brand-ready.service-brand-instagram,
+#premiumApp .service-brand-ready.service-brand-instagram {background:linear-gradient(145deg,#515bd4 0%,#a735a9 38%,#e63d73 64%,#feb357 100%)}
+#approvedUI .service-brand-ready.service-brand-kotak,
+#premiumApp .service-brand-ready.service-brand-kotak {background:#fff}
+#approvedUI .service-brand-ready.service-brand-youtube,
+#premiumApp .service-brand-ready.service-brand-youtube {background:#ff0033}
+#approvedUI .service-brand-ready.service-brand-google,
+#approvedUI .service-brand-ready.service-brand-gmail,
+#premiumApp .service-brand-ready.service-brand-google,
+#premiumApp .service-brand-ready.service-brand-gmail {background:#fff}
+#approvedUI .service-brand-ready.service-brand-facebook,
+#premiumApp .service-brand-ready.service-brand-facebook {background:#0866ff}
+#approvedUI .service-brand-ready.service-brand-whatsapp,
+#premiumApp .service-brand-ready.service-brand-whatsapp {background:#25d366}
+#approvedUI .service-brand-ready.service-brand-amazon,
+#premiumApp .service-brand-ready.service-brand-amazon {background:#18253a}
+#approvedUI .service-brand-ready.service-brand-flipkart,
+#premiumApp .service-brand-ready.service-brand-flipkart {background:#ffe600}
+#approvedUI .service-brand-ready.service-brand-github,
+#premiumApp .service-brand-ready.service-brand-github {background:#24292f}
+#approvedUI .service-brand-ready.service-brand-linkedin,
+#premiumApp .service-brand-ready.service-brand-linkedin {background:#0a66c2}
+#approvedUI .service-brand-ready.service-brand-outlook,
+#premiumApp .service-brand-ready.service-brand-outlook {background:#0067b8}
+#approvedUI .service-brand-ready.service-brand-apple,
+#premiumApp .service-brand-ready.service-brand-apple {background:#202124}
+#approvedUI .service-brand-ready.service-brand-netflix,
+#premiumApp .service-brand-ready.service-brand-netflix {background:#151515}
+#approvedUI .service-brand-ready.service-brand-x,
+#premiumApp .service-brand-ready.service-brand-x {background:#141414}
+#approvedUI .service-brand-ready.service-brand-reddit,
+#premiumApp .service-brand-ready.service-brand-reddit {background:#ff4500}
+#approvedUI .service-brand-ready.service-brand-telegram,
+#premiumApp .service-brand-ready.service-brand-telegram {background:#24a1de}
+#approvedUI .service-brand-ready.service-brand-openai,
+#premiumApp .service-brand-ready.service-brand-openai {background:#142924}
+#approvedUI .service-brand-ready.service-brand-axis,
+#premiumApp .service-brand-ready.service-brand-axis {background:#901945}
+#approvedUI .service-brand-ready.service-brand-facebook .service-brand-letter,
+#premiumApp .service-brand-ready.service-brand-facebook .service-brand-letter {font:900 28px/1 Arial,sans-serif;color:#fff}
+#approvedUI .service-brand-ready.service-brand-amazon .service-brand-letter,
+#premiumApp .service-brand-ready.service-brand-amazon .service-brand-letter {font:800 25px/1 Arial,sans-serif;color:#fff}
+#approvedUI .service-brand-ready.service-brand-linkedin .service-brand-letter,
+#premiumApp .service-brand-ready.service-brand-linkedin .service-brand-letter {font:800 17px/1 Arial,sans-serif;letter-spacing:-1px;color:#fff}
+#approvedUI .service-brand-ready.service-brand-outlook .service-brand-letter,
+#premiumApp .service-brand-ready.service-brand-outlook .service-brand-letter {font:bold 24px/1 Arial,sans-serif;color:#fff}
+#approvedUI .service-brand-ready.service-brand-netflix .service-brand-letter,
+#premiumApp .service-brand-ready.service-brand-netflix .service-brand-letter {font:900 26px/1 Arial,sans-serif;color:#e50914}
+#approvedUI .service-brand-ready.service-brand-paypal .service-brand-letter,
+#premiumApp .service-brand-ready.service-brand-paypal .service-brand-letter {font:italic 900 27px/1 Arial,sans-serif;color:#003087}
+#approvedUI .service-brand-ready.service-brand-reddit .service-brand-letter,
+#premiumApp .service-brand-ready.service-brand-reddit .service-brand-letter {font-size:27px;color:#fff}
+#approvedUI .service-brand-ready.service-brand-openai .service-brand-letter,
+#premiumApp .service-brand-ready.service-brand-openai .service-brand-letter {font-size:27px;color:#fff}
+#approvedUI .service-brand-ready.service-brand-icici .service-brand-letter,
+#premiumApp .service-brand-ready.service-brand-icici .service-brand-letter {font:italic bold 28px/1 Arial,sans-serif;color:#c54c1b}
+#approvedUI .service-brand-ready.service-brand-axis .service-brand-letter,
+#premiumApp .service-brand-ready.service-brand-axis .service-brand-letter {font:bold 24px/1 Arial,sans-serif;color:#fff}
