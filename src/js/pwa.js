@@ -1,4 +1,4 @@
-/* Installable, ONLINE-ONLY PassVault. No service worker, CacheStorage, or offline vault copies. */
+/* AVENLOCK offline-capable PWA. Cache only public static app files, never secrets, account tokens or API data. */
 (() => {
   'use strict';
 
@@ -13,32 +13,23 @@
   let latestBuild = null;
   let lastChecked = 0;
   let checking = null;
-  let connectionLocked = Promise.resolve();
   let dismissedBuild = null;
-  // Hold the visible app behind a connection gate until the deployed release responds.
-  let networkUnavailable = navigator.onLine === false || isDeployment;
+  // The network is optional after installation; version checks never gate local access.
+  let networkUnavailable = navigator.onLine === false;
 
   const message = (text) => { for (const id of ['pvPwaStatus','pvPwaStatusLogin','pvPwaStatusLocked']) { const target=byId(id); if (target) target.textContent=text; } };
-  const setOffline = (offline) => {
+  const setOffline = (offline, offerLocalEntry = false) => {
     networkUnavailable = offline;
-    const localSession = typeof cloud !== 'undefined' && cloud.userId && (!cloud.syncEnabled || cloud.deviceOnly) && typeof state !== 'undefined' && !state.locked;
-    if (offline) {
-      const heading = byId('pvPwaOfflineTitle');
-      const detail = byId('pvPwaOfflineDescription');
-      if (heading) heading.textContent = navigator.onLine === false ? 'Connection required' : 'Unable to verify connection';
-      if (detail) detail.textContent = 'PassVault is online only. Connect to the internet, then retry.';
-    }
     const overlay = byId('pvPwaOffline');
-    if (overlay) overlay.hidden = !offline || !!localSession;
-    // Hide the entire decrypted workspace synchronously on connection loss.
-    if (offline && !localSession && typeof state !== 'undefined' && !state.locked) {
-      try { connectionLocked = Promise.resolve(secureLockWithCheckpoint('Connection lost. Vault locked.')); }
-      catch { connectionLocked = Promise.resolve(); }
+    if (overlay) overlay.hidden = true;
+    if (offline && offerLocalEntry && !window.AvenlockLocal?.active && !cloud.userId && state.locked && !window.PassVaultAuth?.recoveryPending) {
+      // Offline entry is shown immediately after the already cached app has loaded.
+      void window.AvenlockLocal?.enter();
     }
   };
 
   const installInstructions = () => {
-    if (installed()) return 'Installed on this device. Open PassVault from your home screen or apps.';
+    if (installed()) return 'Installed. Device vaults can open offline after the app shell has been cached.';
     if (ios) return 'iPhone/iPad: open the Share menu and choose Add to Home Screen.';
     return 'Choose Install app from your browser menu or address bar.';
   };
@@ -66,8 +57,8 @@
     const dirty = typeof state !== 'undefined' && state.dirty;
     const note = byId('pvPwaNoticeText');
     if (note) note.textContent = dirty
-      ? 'Update ready. Export an encrypted backup and sign out before updating.'
-      : 'New PassVault version ready. Tap Update to lock and reload safely.';
+      ? 'Update ready. Finish saving your encrypted changes before updating.'
+      : 'New AVENLOCK version ready. Update when your vault is safely locked.';
     // Standard fixed notices render beneath native <dialog> top-layer elements.
     // Surface the same release status INSIDE the sign-in and vault chooser too.
     for (const [id, actionId] of [['pvPwaLoginUpdate','pvPwaLoginUpdateAction'],['pvPwaGateUpdate','pvPwaGateUpdateAction']]) {
@@ -90,7 +81,7 @@
       });
       if (!result.ok) throw new Error('Version endpoint unavailable');
       const data = await result.json();
-      if (!data || !releasePattern.test(data.build) || data.onlineOnly !== true) {
+      if (!data || !releasePattern.test(data.build) || data.offlineCapable !== true) {
         throw new Error('Invalid release marker');
       }
       return data;
@@ -102,7 +93,7 @@
     checking = (async () => {
       if (navigator.onLine === false) {
         setOffline(true);
-        message('Offline — reconnect to check for updates and sign in.');
+        message('Offline mode: device vaults remain available; update checks require a connection.');
         return false;
       }
       if (!isDeployment) {
@@ -114,17 +105,16 @@
       if (checkButton) checkButton.disabled = true;
       try {
         const release = await fetchRelease();
-        await connectionLocked;
         setOffline(false);
         lastChecked = Date.now();
         latestBuild = release.build;
-        if (latestBuild === currentBuild) message('PassVault is up to date.');
+        if (latestBuild === currentBuild) message('AVENLOCK is up to date.');
         else message('New version available. Your installed app checks automatically; apply the update when your vault is safely locked.');
         render();
         return true;
       } catch {
-        setOffline(true);
-        message('Cannot reach PassVault updates. Connect to the internet and retry.');
+        setOffline(true, navigator.onLine === false);
+        message('Update service unavailable. Existing device vaults are still accessible.');
         render();
         return false;
       } finally {
@@ -134,7 +124,7 @@
     try { return await checking; } finally { checking = null; }
   }
 
-  function updateNow() {
+  async function updateNow() {
     if (!latestBuild || latestBuild === currentBuild || networkUnavailable) {
       message('Check for updates while connected before continuing.');
       return false;
@@ -144,22 +134,28 @@
       message('Complete account recovery before updating.');
       return false;
     }
+    if (window.AvenlockLocal?.active && !state.locked) {
+      if (!await window.AvenlockLocal.flush()) { message('Encrypted device save is pending or failed. Export a backup before updating.'); return false; }
+    }
     if (typeof state === 'undefined' || typeof cloud === 'undefined' || state.kdfInProgress ||
         state.exportInProgress || cloud.saveInProgress || cloud.conflict || state.dirty) {
       message('An update is ready, but this vault has pending changes or a save in progress. If working device-only or with sync paused, download and verify a backup, sign out, then update.');
       return false;
     }
     if (!window.confirm(state.locked
-      ? 'Reload PassVault with the latest version? Any unfinished form entry will be lost.'
-      : 'Lock your vault and reload the latest PassVault version? Save any open form edits first.')) return false;
+      ? 'Reload AVENLOCK with the latest version? Any unfinished form entry will be lost.'
+      : 'Lock your vault and reload the latest AVENLOCK version? Save any open form edits first.')) return false;
     if (!state.locked) {
-      lockVault('Manual lock');
+      if (window.AvenlockLocal?.active) await secureLockWithCheckpoint('Update requested.');
+      else lockVault('Manual lock');
       if (!state.locked) {
         message('Vault could not be locked; update cancelled.');
         return false;
       }
     }
     // Refresh the HTML over the network rather than reusing a potentially stale entry document.
+    // A new SW release must be ready before a page reload can use the new app shell.
+    try { const registration=await navigator.serviceWorker?.getRegistration();await registration?.update(); } catch {}
     const fresh = new URL('./', document.baseURI);
     fresh.searchParams.set('pv_app', latestBuild);
     location.replace(fresh.href);
@@ -186,7 +182,7 @@
     render();
   });
   window.addEventListener('appinstalled', () => { installPrompt = null; render(); });
-  window.addEventListener('offline', () => { setOffline(true); render(); });
+  window.addEventListener('offline', () => { setOffline(true, true); render(); });
   window.addEventListener('passvault-sync-change', () => { setOffline(networkUnavailable); render(); });
   window.addEventListener('online', () => { void checkNow(); });
   document.addEventListener('visibilitychange', () => {
@@ -205,15 +201,19 @@
   byId('pvPwaNoticeClose')?.addEventListener('click', () => { dismissedBuild = latestBuild; render(); });
   byId('pvPwaRetry')?.addEventListener('click', () => { void checkNow(); });
 
-  // No service worker is registered or modified by this feature.
-  window.PassVaultPWA = Object.freeze({ checkNow, updateNow });
-  setOffline(networkUnavailable);
-  if (isDeployment && navigator.onLine !== false) {
-    const heading = byId('pvPwaOfflineTitle');
-    const detail = byId('pvPwaOfflineDescription');
-    if (heading) heading.textContent = 'Checking connection';
-    if (detail) detail.textContent = 'Confirming the latest secure PassVault release…';
+  // Cache a versioned, static-only application shell. The SW explicitly
+  // ignores Supabase, APIs and non-GET traffic; it never sees encryption keys.
+  if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+    navigator.serviceWorker.register('./sw.js', { scope: './', updateViaCache: 'none' })
+      .catch(() => message('Offline installation could not be enabled in this browser. Try installing from a secure HTTPS site.'));
   }
+  byId('avenlockInstallNow')?.addEventListener('click', async () => {
+    await installApp();
+    const status=byId('avenlockInstallStatus');
+    if(status)status.textContent=installInstructions();
+  });
+  window.PassVaultPWA = Object.freeze({ checkNow, updateNow, installApp });
+  setOffline(networkUnavailable, networkUnavailable);
   render();
-  if (isDeployment) void checkNow();
+  if (isDeployment && navigator.onLine !== false) void checkNow();
 })();

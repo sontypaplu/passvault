@@ -1,8 +1,8 @@
 {
   "id": "./",
-  "name": "PassVault \u2014 Secure Password Manager",
-  "short_name": "PassVault",
-  "description": "Encrypted password and secure note manager. Internet connection required.",
+  "name": "AVENLOCK \u2014 Secure Password Manager",
+  "short_name": "AVENLOCK",
+  "description": "Encrypted password and secure note manager. Encrypted device vaults work offline after the first installation.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

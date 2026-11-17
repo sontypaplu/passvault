@@ -1,7 +1,7 @@
 /* Public authentication pages: no passwords or tokens are written to URL or storage. */
 (() => {
   'use strict';
-  const allowed = ['signin', 'signup', 'forgot', 'verify', 'reset'];
+  const allowed = ['signin', 'signup', 'forgot', 'verify', 'reset','install'];
   const get = id => document.getElementById(id);
   const recoveryCallback = /(?:^|[&#?])type=recovery(?:&|$)/.test(location.hash + '&' + location.search);
   let recoveryPending = recoveryCallback;
@@ -14,7 +14,7 @@
     const url = new URL(location.href);
     if(next === 'signin') url.searchParams.delete('auth'); else url.searchParams.set('auth', next);
     if(push && url.href !== location.href) history.pushState({pvAuth:next}, '', url);
-    document.title = `${({signin:'Sign in',signup:'Create account',forgot:'Forgot password',verify:'Verify email',reset:'Reset password'})[next]} | PassVault`;
+    document.title = `${({signin:'Sign in',signup:'Create account',forgot:'Forgot password',verify:'Verify email',reset:'Reset password',install:'Install app'})[next]} | AVENLOCK`;
     window.scrollTo({top:0,behavior:'instant'});
   }
   function status(id, text, kind) { setStatus(get(id), text, kind); }

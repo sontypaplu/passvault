@@ -14,4 +14,4 @@ for(const fragment of ['history.pushState','history','popstate','pvClearPremiumS
 if(!source('src/js/vault.js').includes("phrase !== 'REPLACE'"))throw new Error('Backup overwrite explicit confirmation missing');
 if(!html.includes("src/js/auth-pages.js"))throw new Error('Auth controller not loaded');
 if(/<script\b(?![^>]*src=)/i.test(html))throw new Error('Inline scripts not allowed');
-console.log(`PassVault upgrade static checks passed (${pages.length} independent auth panels).`);
+console.log(`AVENLOCK upgrade static checks passed (${pages.length} independent auth panels).`);

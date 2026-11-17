@@ -1,5 +1,8 @@
 function initializeEvents() {
   els.accessLoginForm.addEventListener("submit", handleAccountLogin);
+  document.querySelectorAll('[data-avenlock-offline]').forEach(button => button.addEventListener('click', async () => {
+    await window.AvenlockLocal.enter();
+  }));
   window.PassVaultAuth.initialize();
   els.lockedSignOutButton.addEventListener("click", handleSignOut);
   initializeMultiVaultEvents();
@@ -28,7 +31,7 @@ function initializeEvents() {
     event.preventDefault();
     if (!els.unlockVaultButton.disabled) void handleUnlockVault();
   });
-  els.exportVaultButton.addEventListener("click", () => { void saveCloudVault(true); });
+  els.exportVaultButton.addEventListener("click", () => { void (window.AvenlockLocal?.active?window.AvenlockLocal.flush():saveCloudVault(true)); });
   els.backupVaultButton.addEventListener("click", handleExportVault);
   els.lockVaultButton.addEventListener("click", () => lockVault("Manual lock"));
   els.addCredentialButton.addEventListener("click", handleNewCredential);
@@ -93,7 +96,7 @@ async function initialize() {
   // GitHub Pages cannot set an HTTP frame-ancestors policy. This JS guard is
   // defense in depth; hosting-level frame restrictions remain recommended.
   if (window.self !== window.top) {
-    document.body.replaceChildren(document.createTextNode('PassVault cannot run inside another website. Open it in a direct browser tab.'));
+    document.body.replaceChildren(document.createTextNode('AVENLOCK cannot run inside another website. Open it in a direct browser tab.'));
     return;
   }
   populateGeneratorLengths();
@@ -102,11 +105,16 @@ async function initialize() {
   setActiveView();
   state.initialized = true;
   if (!await runStartupSelfTest()) return;
+  // A cached installation starts locally without requiring an account, version
+  // endpoint, cloud client, or online authentication session.
+  if (navigator.onLine === false && !window.PassVaultAuth.recoveryPending) {
+    await window.AvenlockLocal.enter();
+  }
   if (!isCloudConfigured()) {
     return setStatus(els.accessStatus, "Setup required: add the Supabase Project URL and publishable key in src/js/config.js.", "warning");
   }
   if (!window.supabase || typeof window.supabase.createClient !== "function") {
-    return setStatus(els.accessStatus, "Locally hosted Supabase SDK did not load. Check the GitHub Actions build and browser console.", "error");
+    return setStatus(els.accessStatus, "Cloud sign-in is unavailable because its local SDK is missing. Device-only vaults can still be opened.", "error");
   }
   // Tab-scoped storage avoids keeping login credentials in localStorage indefinitely.
   // A closed tab normally loses its local session; closing cannot guarantee server
@@ -134,6 +142,7 @@ async function initialize() {
     auth: { autoRefreshToken: true, persistSession: true, storage: authStorage, detectSessionInUrl: true }
   });
   cloud.client.auth.onAuthStateChange((event, session) => {
+    if (window.AvenlockLocal.active && event !== 'PASSWORD_RECOVERY') return;
     // Recovery session must not open the vault workspace before its password is updated.
     if(event === 'PASSWORD_RECOVERY') { window.PassVaultAuth.startRecovery(); return; }
     if(window.PassVaultAuth.recoveryPending) return;
@@ -141,7 +150,7 @@ async function initialize() {
   });
   const { data, error } = await cloud.client.auth.getSession();
   if (error) setStatus(els.accessStatus, error.message, "error");
-  else if (!window.PassVaultAuth.recoveryPending) await loadAccountVault(data.session);
+  else if (!window.PassVaultAuth.recoveryPending && !window.AvenlockLocal.active) await loadAccountVault(data.session);
 }
 
 initialize().catch((error) => {

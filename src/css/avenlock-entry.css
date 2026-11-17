@@ -1,0 +1,119 @@
+/* Approved AVENLOCK concept — login, onboarding, vault chooser and offline access only.
+   Existing unlocked-vault theme/tokens are deliberately untouched. */
+#loginView { --al-navy:#0c1d30; --al-ink:#15283f; --al-sub:#65758a; --al-blue:#345edc;
+  --al-pale:#f6f8fc; --al-border:#e5eaf1; font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+#loginView .avenlock-auth-shell { display:grid; grid-template-columns:minmax(360px,47%) minmax(0,1fr);min-height:100dvh; }
+#loginView .avenlock-art { background:radial-gradient(ellipse at 72% 22%,#234466 0,transparent 48%),linear-gradient(140deg,#0b1c2d,#12314e 78%,#173c56);padding:54px clamp(34px,6vw,100px);display:flex;flex-direction:column;position:relative;isolation:isolate;overflow:hidden;color:#fff; }
+#loginView .avenlock-art:after { content:"";position:absolute;width:550px;height:550px;border:1px solid #ffffff19;right:-215px;bottom:-165px;border-radius:50%;box-shadow:0 0 0 70px #ffffff09,0 0 0 155px #ffffff05;z-index:-1;pointer-events:none; }
+#loginView .avenlock-brand { display:flex;align-items:center;gap:12px;letter-spacing:.1em;font-size:19px; }
+#loginView .avenlock-brand strong { display:block;font-weight:800; }
+#loginView .avenlock-brand small { display:block;font-size:9px;letter-spacing:.23em;opacity:.7;margin-top:4px;font-weight:650; }
+#loginView .avenlock-brand-icon { width:44px;height:44px;border:1px solid rgba(255,255,255,.3);border-radius:13px;display:grid;place-items:center;background:rgba(255,255,255,.08); }
+#loginView .avenlock-brand-icon svg { width:29px;height:29px; }
+#loginView .avenlock-art-body { margin:auto 0;padding:80px 0; }
+#loginView .avenlock-eyebrow { font-size:11px;color:#adc7e6;letter-spacing:.2em;font-weight:800;margin-bottom:24px; }
+#loginView .avenlock-art h1 { margin:0 0 22px;font-size:clamp(40px,4.4vw,71px);line-height:1.08;letter-spacing:-.052em;font-weight:650;max-width:560px;color:#fff; }
+#loginView .avenlock-art h1 em { font-style:normal;color:#97bafb; }
+#loginView .avenlock-art-body p { font-size:17px;line-height:1.75;color:#b9cbdf;max-width:430px;margin:0; }
+#loginView .avenlock-art-foot { display:flex;flex-wrap:wrap;gap:14px 25px;font-size:12px;color:#b6cadd; }
+#loginView .avenlock-art-foot span:before { content:"✓";font-weight:bold;color:#8ed3b8;margin-right:8px; }
+#loginView .avenlock-auth-content { background:var(--surface,#fff);display:flex;flex-direction:column;min-width:0;padding:22px clamp(26px,6vw,94px) 14px; }
+#loginView .entry-topbar { min-height:52px;padding:0;justify-content:flex-end;gap:24px;border:0;background:none;box-shadow:none; }
+#loginView .entry-topbar>.brand { display:none; }
+#loginView .avenlock-auth-nav { display:flex;align-items:center;gap:18px; }
+#loginView .avenlock-auth-nav button { background:transparent;border:0;color:var(--al-sub);font-size:13px;font-weight:650;padding:8px 0;cursor:pointer; }
+#loginView .avenlock-auth-nav button:hover { color:var(--al-blue); }
+#loginView .theme-toggle { flex-shrink:0;font-size:12px; }
+#loginView .entry-main { padding:42px 0;display:flex;align-items:center;justify-content:center;flex:1;max-width:none;width:100%;margin:0;min-height:0; }
+#loginView .approved-auth-intro { display:none!important; }
+#loginView .entry-card { box-sizing:border-box;display:block;width:100%;max-width:440px;margin:0 auto;padding:0;border:0;border-radius:0;box-shadow:none;background:none; }
+#loginView .entry-card.hidden { display:none!important; }
+#loginView .entry-symbol { display:none; }
+#loginView .entry-eyebrow { color:#5474b8;font-size:11px;letter-spacing:.22em;font-weight:800;margin:0 0 18px; }
+#loginView .entry-eyebrow .entry-dot { display:none; }
+#loginView .entry-card h1 { font-size:clamp(30px,3.25vw,38px);line-height:1.18;letter-spacing:-.045em;font-weight:750;margin:0 0 10px;color:var(--text-strong,var(--al-ink)); }
+#loginView .entry-subtitle { margin:10px 0 30px;color:var(--muted,var(--al-sub));line-height:1.65;font-size:15px; }
+#loginView .entry-card .field { margin:18px 0; }
+#loginView .entry-card .field label { display:block;font-size:13px;font-weight:680;margin-bottom:10px;color:var(--text-strong,var(--al-ink)); }
+#loginView .entry-card input:not([type=checkbox]) { width:100%;height:51px;padding:0 16px;border:1px solid var(--border,#d9e1ee);border-radius:12px;background:var(--input,#fff);color:var(--text,#15283f);font-size:14px;box-shadow:none; }
+#loginView .entry-card input:focus { border-color:#486cf0;box-shadow:0 0 0 3px #6a83f723; }
+#loginView .entry-card .access-submit { display:block;width:100%;min-height:51px;border-radius:12px;background:#345edc;color:#fff;font-weight:700;font-size:14px;box-shadow:0 7px 18px #3159ce26;margin:18px 0 0; }
+#loginView .entry-card .access-submit:hover { background:#244cbe; }
+#loginView .account-register-button { display:none; }
+#loginView .entry-card .auth-link { border:0;background:transparent;color:#3657bb;font-weight:650;font-size:13px;padding:9px 0;margin-top:14px; }
+#loginView .entry-card .auth-link:hover { text-decoration:underline; }
+#loginView .entry-install { display:none; }
+#loginView .entry-install-status { display:none; }
+#loginView .entry-disclaimer { margin:22px 0 0;font-size:12px;color:var(--muted); }
+#loginView .avenlock-auth-extra { border-top:1px solid var(--border);padding-top:18px;margin-top:23px; }
+#loginView .avenlock-offline-btn { display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 14px;width:100%;border-radius:12px;background:var(--surface-subtle,#f7f9fe);border:1px solid var(--border,#e1e8f1);font-size:14px;color:var(--text-strong);font-weight:700;text-align:left;cursor:pointer; }
+#loginView .avenlock-offline-btn:hover { border-color:#a7bde8; }
+#loginView .avenlock-auth-extra p { margin:7px 0 0;font-size:11px;color:var(--muted);line-height:1.6; }
+#loginView .entry-footer { padding:14px 0;border:0;background:none;text-align:center;font-size:11px;color:var(--muted); }
+#loginView .avenlock-install-step { padding:14px 0;display:flex;flex-direction:column;gap:7px;border-top:1px solid var(--border); }
+#loginView .avenlock-install-step strong { font-size:14px;color:var(--text-strong); }
+#loginView .avenlock-install-step span { font-size:13px;line-height:1.6;color:var(--muted); }
+/* The vault picker now uses the approved full-page card layout, not a tiny modal. */
+dialog#approvedVaultGate { position:fixed;inset:0;width:100vw;max-width:none;height:100dvh;max-height:none;margin:0;border:0;border-radius:0;padding:0;overflow-y:auto;background:var(--bg,#f6f8fc);color:var(--text,#15283f);box-shadow:none; }
+#approvedVaultGate::backdrop { background:rgba(15,28,45,.07); }
+#approvedVaultGate .avenlock-gate-top { max-width:1120px;margin:0 auto;padding:35px 30px;display:flex;align-items:center;justify-content:space-between;gap:15px; }
+#approvedVaultGate .avenlock-gate-brand { display:flex;align-items:center;gap:12px;font-size:19px;letter-spacing:.1em;font-weight:850;color:var(--text-strong,#15283f); }
+#approvedVaultGate .avenlock-gate-brand-icon { width:42px;height:42px;display:grid;place-items:center;border-radius:12px;background:#eaf0ff;color:#345edc; }
+#approvedVaultGate .avenlock-gate-brand-icon svg { width:27px;height:27px; }
+#approvedVaultGate .avenlock-gate-brand small { display:block;font-size:9px;font-weight:650;letter-spacing:.21em;color:var(--muted);margin-top:2px; }
+#approvedVaultGate .avenlock-gate-protected { color:var(--muted);font-size:12px; }
+#approvedVaultGate .dialog-head { display:flex;flex-direction:column;align-items:center;text-align:center;max-width:800px;margin:12px auto 36px;padding:0 22px;border:0;background:none; }
+#approvedVaultGate .dialog-head>div { width:100%; }
+#approvedVaultGate .dialog-head .approved-gate-mark { display:none; }
+#approvedVaultGate .dialog-head h2 { font-size:clamp(27px,4vw,38px);line-height:1.18;letter-spacing:-.05em;color:var(--text-strong);margin:10px 0 14px;font-weight:750; }
+#approvedVaultGate .dialog-head p { font-size:15px;line-height:1.7;color:var(--muted);margin:0; }
+#approvedVaultGate .pv-gate-overline { font-size:11px;letter-spacing:.21em;color:#5474b8;font-weight:800; }
+#approvedVaultGate .dialog-body { max-width:1120px;width:100%;margin:0 auto;padding:0 30px;overflow:visible; }
+#approvedVaultGate .approved-gate-vaults { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px; }
+#approvedVaultGate .approved-gate-vault { min-height:205px;display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;border:1px solid var(--border,#e5eaf1);border-radius:18px;padding:26px;text-align:left;background:var(--surface,#fff);box-shadow:0 10px 38px #263f5908;transition:border-color .18s,transform .18s; }
+#approvedVaultGate .approved-gate-vault:hover { border-color:#a9bbec;transform:translateY(-2px); }
+#approvedVaultGate .approved-gate-lock { width:50px;height:50px;border-radius:14px;display:grid;place-items:center;background:#eef2fd;color:#3457c8;font-size:22px; }
+#approvedVaultGate .approved-gate-vault-label { display:block;flex:1;padding:19px 0 5px; }
+#approvedVaultGate .approved-gate-vault-label strong { font-size:19px;font-weight:760;display:block;letter-spacing:-.03em;color:var(--text-strong); }
+#approvedVaultGate .approved-gate-vault-label small { display:block;font-size:13px;line-height:1.6;color:var(--muted);padding-top:6px; }
+#approvedVaultGate .approved-gate-arrow { align-self:flex-end;font-size:22px;color:#345bd2; }
+#approvedVaultGate .pv-offline-choices { width:100%;padding:0;margin:0; }
+#approvedVaultGate .avenlock-local-list { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;margin-bottom:18px; }
+#approvedVaultGate .avenlock-local-card,#approvedVaultGate .pv-offline-choice { display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:10px;border:1px solid var(--border,#e5eaf1);background:var(--surface,#fff);border-radius:18px;padding:24px;min-height:190px;text-align:left;box-shadow:0 10px 38px #263f5908;cursor:pointer; }
+#approvedVaultGate .avenlock-local-card:hover,#approvedVaultGate .pv-offline-choice:hover { border-color:#a9bbec; }
+#approvedVaultGate .avenlock-local-card strong { font-size:18px;color:var(--text-strong); }
+#approvedVaultGate .avenlock-local-card small { font-size:12px;color:var(--muted); }
+#approvedVaultGate .avenlock-local-card .avenlock-local-symbol { width:49px;height:49px;background:#e7f6ef;color:#168361;border-radius:13px;display:grid;place-items:center;font-size:24px; }
+#approvedVaultGate .pv-offline-choice { display:inline-flex;width:calc(50% - 12px);min-height:160px;vertical-align:top;margin:0 16px 16px 0; }
+#approvedVaultGate .pv-offline-choice .pv-choice-symbol { width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:#eef2fd;color:#345bd2; }
+#approvedVaultGate .pv-offline-choice .pv-choice-body strong { display:block;color:var(--text-strong);font-size:18px;margin:0 0 7px; }
+#approvedVaultGate .pv-offline-choice .pv-choice-body small { color:var(--muted);line-height:1.5; }
+#approvedVaultGate .pv-choice-chevron { display:none; }
+#approvedVaultGate .pv-device-note { padding:15px 18px;border-radius:13px;background:#e9f5f0;color:#286956;font-size:12px;line-height:1.6;margin:0 0 20px; }
+#approvedVaultGate .pv-device-note .pv-device-note-icon { color:#168361;margin-right:8px; }
+#approvedVaultGate .approved-gate-form { max-width:520px;margin:auto; }
+#approvedVaultGate .approved-gate-form .access-card { max-width:100%;margin:0 auto; }
+#approvedVaultGate .approved-gate-helper { color:var(--muted);font-size:12px;line-height:1.6;text-align:center;padding:18px 0 0; }
+#approvedVaultGate .dialog-foot { max-width:1120px;width:100%;margin:32px auto 0;padding:23px 30px 45px;border-top:1px solid var(--border);display:flex;gap:12px;flex-wrap:wrap;justify-content:center;background:none; }
+#approvedVaultGate .dialog-foot button { min-height:43px;border-radius:11px;padding:10px 17px;font-size:13px; }
+#approvedVaultGate .pv-offline-back { display:none; }
+@media(min-width:850px){#approvedVaultGate .approved-gate-vaults:has(>.approved-gate-vault:nth-child(3)) { grid-template-columns:repeat(3,minmax(0,1fr)); }}
+@media(max-width:850px){
+ #loginView .avenlock-auth-shell { grid-template-columns:1fr; }
+ #loginView .avenlock-art { min-height:270px;padding:26px; }
+ #loginView .avenlock-art-body { padding:22px 0; }
+ #loginView .avenlock-art h1 { font-size:40px; }
+ #loginView .avenlock-art-body p { font-size:13px; }
+ #loginView .avenlock-art-foot { font-size:10px; }
+ #loginView .avenlock-auth-content { padding:16px 25px; }
+ #loginView .entry-main { padding:35px 0; }
+ #loginView .avenlock-auth-nav { gap:12px; }
+ #loginView .avenlock-auth-nav button { font-size:12px; }
+ #approvedVaultGate .approved-gate-vaults,#approvedVaultGate .avenlock-local-list { grid-template-columns:1fr; }
+ #approvedVaultGate .pv-offline-choice { width:100%;min-height:135px;margin-right:0; }
+ #approvedVaultGate .dialog-head { margin-bottom:22px; }
+ #approvedVaultGate .dialog-body { padding:0 20px; }
+ #approvedVaultGate .avenlock-gate-top { padding:22px 20px; }
+ #approvedVaultGate .approved-gate-vault { min-height:180px; }
+}
+@media(max-width:500px){#loginView .entry-topbar { gap:7px;flex-wrap:wrap; }#loginView .theme-toggle .theme-label{display:none}#approvedVaultGate .avenlock-gate-protected { display:none; }}

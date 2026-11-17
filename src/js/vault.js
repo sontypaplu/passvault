@@ -88,6 +88,17 @@ function deleteEncryptedRecovery(userId, vaultId) {
 }
 async function secureLockWithCheckpoint(reason = 'Vault locked for security.') {
   if (state.locked) return true;
+  if (window.AvenlockLocal?.active && cloud.deviceOnly && !cloud.secureLockPromise) {
+    // A normal local session has a complete encrypted IndexedDB copy; no
+    // perpetual backup prompt should be required after a committed save.
+    const saved = await window.AvenlockLocal.flush();
+    if (saved && !state.locked) { lockVault(reason); return true; }
+    if (/manual|local vault locked|update requested/i.test(reason)) {
+      setGlobalStatus('Local encrypted save failed. Keep this vault open; export and verify a backup before leaving.', 'error');
+      return false;
+    }
+    // For forced security locks, create a last-resort encrypted checkpoint.
+  }
   if (cloud.secureLockPromise) return cloud.secureLockPromise;
   // Prevent any view/edit of decrypted data while an asynchronous Web Crypto
   // checkpoint is being encrypted. This must happen before the first await.
@@ -193,6 +204,7 @@ function setDirty(value) {
       els.downloadVaultLink.classList.add('hidden');
     }
     if (isCloudSyncAllowed()) scheduleCloudSave();
+    if (window.AvenlockLocal?.active && cloud.deviceOnly) window.AvenlockLocal.schedule();
   }
 }
 
@@ -432,7 +444,7 @@ async function clearClipboardBestEffort({ announce = true } = {}) {
   state.clipboardClearDeadline = 0;
   state.clipboardLastValue = '';
   if (announce) {
-    if (cleared) setGlobalStatus('PassVault clipboard content was cleared.', 'success');
+    if (cleared) setGlobalStatus('AVENLOCK clipboard content was cleared.', 'success');
     else if (changed) setGlobalStatus('Clipboard changed after copying; newer content was left untouched.', 'success');
     else setGlobalStatus('Automatic clipboard clearing was blocked by the browser. Clear the clipboard manually.', 'warning');
   }
@@ -502,8 +514,13 @@ async function handleCreateVault(event) {
     resetCredentialEditor();
     clearCreateSensitiveFields();
     if (cloud.deviceOnly) {
-      setStatus(els.createStatus, 'Device-only vault created. Nothing was uploaded. Download an encrypted backup to preserve it.', 'success');
-      setGlobalStatus('Device-only vault active: download and verify an encrypted backup before signing out or leaving this browser.', 'warning');
+      if (window.AvenlockLocal?.active) {
+        const persisted = await window.AvenlockLocal.flush();
+        setStatus(els.createStatus, persisted ? 'Encrypted vault saved on this device.' : 'Local save failed. Export and verify an encrypted backup.', persisted ? 'success' : 'error');
+        setGlobalStatus(persisted ? 'Your device vault is ready.' : 'Device storage is unavailable. Do not close this vault until you have exported a verified backup.', persisted ? 'success' : 'error');
+      } else {
+        setStatus(els.createStatus, 'Device-only vault created. Download an encrypted backup to preserve it.', 'success');
+      }
     } else {
       if (isCloudSyncAllowed()) {
         setStatus(els.createStatus, 'Vault created. Uploading encrypted vault to Supabase…', 'success');
@@ -531,8 +548,8 @@ function getPreferredKdfProfile() {
 }
 
 async function handleUnlockVault() {
-  if (!cloud.userId || !cloud.loaded || !cloud.selectedVaultId) return setStatus(els.unlockStatus, "Cloud account is not ready.", "error");
-  if (idleSignOutPending || Date.now() - state.lastActivity >= ACCOUNT_IDLE_LIMIT_MS) {
+  if (!cloud.userId || !cloud.loaded || !cloud.selectedVaultId) return setStatus(els.unlockStatus, "Vault is not ready. Select an encrypted vault first.", "error");
+  if (!window.AvenlockLocal?.active && (idleSignOutPending || Date.now() - state.lastActivity >= ACCOUNT_IDLE_LIMIT_MS)) {
     void updateAccountInactivity();
     return setStatus(els.unlockStatus, 'Your account session expired. Sign in again.', 'error');
   }
@@ -581,10 +598,19 @@ async function handleUnlockVault() {
       state.pendingImport = null;
       state.locked = false;
       state.failedAttempts = 0;
+      if (window.AvenlockLocal?.active) cloud.importSource = 'device-local';
       setActiveView();
       renderVault();
-      setStatus(els.unlockStatus, "Legacy credential migrated into a new Argon2id vault in memory.", "success");
-      setGlobalStatus("Legacy v1 data was migrated. Export the new v2 vault to store it in the modern format.", "success");
+      if (window.AvenlockLocal?.active) {
+        const committed = await window.AvenlockLocal.flush();
+        setStatus(els.unlockStatus, committed
+          ? "Legacy backup migrated to Argon2id and encrypted on this device. Export a separate recovery backup."
+          : "Legacy backup opened, but encrypted local storage failed. Keep this vault open and export a verified backup.",
+          committed ? 'success' : 'error');
+      } else {
+        setStatus(els.unlockStatus, "Legacy credential migrated into a new Argon2id vault in memory.", "success");
+        setGlobalStatus("Legacy v1 data was migrated. Export the new v2 vault to store it in the modern format.", "success");
+      }
       return;
     }
 
@@ -626,15 +652,20 @@ async function handleUnlockVault() {
       if (importingLocalRecovery) cloud.vaultLabel = vault.name || 'Recovered vault';
       state.locked = false;
       state.failedAttempts = 0;
-      setDirty(importingLocalBackup || importingLocalRecovery);
+      setDirty(importingLocalBackup || importingLocalRecovery || (importingDeviceBackup && window.AvenlockLocal?.active));
       const hadRecovery = !importingLocalRecovery && !importingDeviceBackup && !!readEncryptedRecovery(openingUser, openingVaultId);
       const restoredRecovery = importingLocalRecovery ? true
-        : importingDeviceBackup ? false : await offerEncryptedRecovery(record, state.vaultKey, openingUser, openingVaultId);
-      cloud.importSource = "cloud";
+        : importingDeviceBackup || window.AvenlockLocal?.active ? false
+        : await offerEncryptedRecovery(record, state.vaultKey, openingUser, openingVaultId);
+      cloud.importSource = window.AvenlockLocal?.active ? 'device-local' : 'cloud';
       setActiveView();
       renderVault();
-      setStatus(els.unlockStatus, importingDeviceBackup ? "Device-only vault unlocked. Download an encrypted backup after editing." : importingLocalBackup ? "Backup unlocked; encrypted cloud save scheduled." : "Vault unlocked successfully.", "success");
-      if (!hadRecovery && !restoredRecovery) setGlobalStatus("Vault unlocked in memory.", "success");
+      setStatus(els.unlockStatus, window.AvenlockLocal?.active ? "Encrypted vault unlocked on this device. Edits save automatically; keep a separate recovery backup." : importingDeviceBackup ? "Device-only vault unlocked. Download an encrypted backup after editing." : importingLocalBackup ? "Backup unlocked; encrypted cloud save scheduled." : "Vault unlocked successfully.", "success");
+      if (window.AvenlockLocal?.active && importingDeviceBackup) {
+        const persisted = await window.AvenlockLocal.flush();
+        if (!persisted) setGlobalStatus('Imported vault was unlocked, but encrypted device storage failed. Export a verified backup before leaving.', 'error');
+      }
+      if (!hadRecovery && !restoredRecovery && !window.AvenlockLocal?.active) setGlobalStatus("Vault unlocked in memory.", "success");
     } catch (error) {
       state.failedAttempts += 1;
       state.vault = null;
@@ -781,7 +812,7 @@ async function handleExportVault() {
       ? { userId: cloud.userId, vaultId: exportingVaultId, mutation: exportingMutation }
       : null;
     setGlobalStatus(cloud.lastBackup
-      ? 'Encrypted backup prepared. Check your downloads and verify the saved encrypted file. Cloud sync is unchanged.'
+      ? 'Encrypted backup download requested. Verify the file was saved. If it did not start, open “Download didn\'t start?” for a manual link. Cloud sync is unchanged.'
       : 'Edits changed while exporting. Prepare another backup to include the latest changes.', 'warning');
     renderVaultHeader();
   } catch (error) {
@@ -798,7 +829,7 @@ function safeFileName(name) {
 
 function renderVaultHeader() {
   if (!state.vault || !state.vaultMeta || uiState.activePage !== "vault") return;
-  els.vaultTitle.textContent = state.vault.name || "Pass Vault";
+  els.vaultTitle.textContent = state.vault.name || "Secure vault";
   const p = state.vaultMeta.parameters;
   els.vaultMetaText.textContent = `${state.vault.credentials.length} credential${state.vault.credentials.length === 1 ? "" : "s"} • Argon2id ${p.memoryKiB / 1024} MiB / t=${p.iterations} / p=${p.parallelism} • ${state.vaultMeta.pepperRequired ? "pepper required" : "no pepper"}`;
 }

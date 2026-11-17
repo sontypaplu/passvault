@@ -88,6 +88,20 @@ function openUnsyncedNewVaultRecovery(vaultId) {
 
 function displayVaultDashboard() {
   if (!cloud.userId) return;
+  if (window.AvenlockLocal?.active) {
+    if (!state.locked) {
+      void secureLockWithCheckpoint('Local vault locked.').then(saved => { if (saved) displayVaultDashboard(); });
+      return;
+    }
+    cloud.selectedVaultId = null;
+    cloud.encryptedEnvelope = null;
+    state.pendingImport = null;
+    cloud.deviceOnly = true;
+    uiState.accessScreen = 'dashboard';
+    setActiveView();
+    window.dispatchEvent(new Event('passvault-access-change'));
+    return;
+  }
   if (!state.locked) {
     lockVault('Manual lock');
     if (!state.locked) return; // Cancelled because changes were unsaved.
@@ -130,6 +144,7 @@ async function openVaultById(vaultId) {
 
 function prepareNewVault() {
   if (!cloud.loaded || !cloud.userId || !state.locked) return;
+  if (window.AvenlockLocal?.active) return prepareDeviceOnlyVault();
   if (!crypto.randomUUID) return setStatus($('dashboardStatus'),'Your browser does not support secure UUID generation','error');
   if (cloud.vaults.length >= 2) return setStatus($('dashboardStatus'),'Vault limit reached: maximum 2 vaults per account. Delete a vault (after backup) to create another.','error');
   cloud.selectedVaultId=crypto.randomUUID(); cloud.revision=0;
@@ -143,7 +158,9 @@ function prepareNewVault() {
 function setCreateVaultMode(deviceOnly) {
   $('createVaultModeBadge').textContent = deviceOnly ? 'Device-only · no cloud uploads' : 'New cloud vault';
   $('createVaultModeDescription').textContent = deviceOnly
-    ? 'Start a new encrypted vault on this device. No vault contents will be sent to the server. You must download encrypted backups to keep changes.'
+    ? (typeof window !== 'undefined' && window.AvenlockLocal?.active
+      ? 'Create a device vault with encrypted automatic saves. Keep an independently exported backup too.'
+      : 'Create a device-only vault within your account session. Download encrypted backups after changes.')
     : 'Create an encrypted vault connected to your signed-in account.';
   els.createVaultButton.textContent = deviceOnly ? 'Create device-only vault' : 'Create cloud vault';
 }

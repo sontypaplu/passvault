@@ -93,6 +93,7 @@ async function resetCloudUserState() {
 }
 
 async function loadAccountVault(session) {
+  if (window.AvenlockLocal?.active) return;
   if (window.PassVaultAuth?.recoveryPending) return;
   if (!session?.user?.id) { await resetCloudUserState(); return; }
   const userId = session.user.id;
@@ -126,7 +127,7 @@ async function loadAccountVault(session) {
 const ACCOUNT_IDLE_LIMIT_MS = 15 * 60 * 1000;
 let idleSignOutPending = false;
 async function updateAccountInactivity() {
-  if (!cloud.userId || idleSignOutPending) return;
+  if (window.AvenlockLocal?.active || !cloud.userId || idleSignOutPending) return;
   if (Date.now() - state.lastActivity < ACCOUNT_IDLE_LIMIT_MS) return;
   idleSignOutPending = true;
   try {
@@ -211,6 +212,11 @@ function confirmBackupBeforeSignOut() {
   return signOutBackupPrompt;
 }
 async function handleSignOut() {
+  if (typeof window !== 'undefined' && window.AvenlockLocal?.active) {
+    try { await window.AvenlockLocal.leave(); }
+    catch(error) { setGlobalStatus(error.message || 'Device vault could not be safely closed.', 'error'); }
+    return;
+  }
   if (!cloud.client) return;
   if (!await confirmBackupBeforeSignOut()) return;
   // Signing out always locks immediately. Unsaved changes are encrypted into
