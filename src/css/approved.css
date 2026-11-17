@@ -1046,3 +1046,9 @@ body.approved-gate-active #approvedUI > #app{visibility:hidden}
 .pv-pwa-inline-update button{min-height:38px;padding:8px 12px;border-radius:9px;border:0;background:#5e4bd4;color:#fff;font:inherit;font-weight:700;cursor:pointer}
 html[data-theme="dark"] .pv-pwa-inline-update{color:#eae5ff;background:#211e36;border-color:#494063}
 @media(max-width:520px){.pv-pwa-inline-update{align-items:stretch;flex-direction:column}.pv-pwa-inline-update button{width:100%}}
+
+/* Brand icons are drawn from local JS only. No icon network requests. */
+#approvedUI .service-brand-ready,
+#approvedUI .pvb-appicon.service-brand-ready {overflow:hidden;isolation:isolate;color:inherit;border:1px solid #1720301c;}
+#approvedUI .service-brand-mark {width:77%;height:77%;max-width:35px;max-height:35px;display:block;flex:none;}
+#approvedUI .service-brand-letter {display:grid;place-items:center;line-height:1;max-width:100%;max-height:100%;}

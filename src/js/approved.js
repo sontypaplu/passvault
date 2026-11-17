@@ -138,6 +138,7 @@ function buildTable(items,empty='No items found.',headers=true){
   const k=itemKind(x),weak=k==='login'&&basicWeak(x.password),reused=k==='login'&&pwCount.get(x.password)>1;
   const issue=k==='login'&&(weak||reused),label=k!=='login'?'Stored':weak?'Weak':reused?'Reused':'No flags';
   const tr=el('tr'),nameCell=el('td'),namebox=el('div','itemnamebox'),badge=el('span','service-icon '+serviceColor(k),(x.title||'•').slice(0,1).toUpperCase());
+  globalThis.PassVaultServiceIcons?.mount(badge,x);
   const names=el('span'),title=actionButton('name-button',{'data-open':x.id});title.textContent=x.title;
   const stamp=x.updatedAt?new Date(x.updatedAt):null;
   names.append(title,el('small','',stamp&&!Number.isNaN(stamp.getTime())?stamp.toLocaleDateString():'Recently added'));
@@ -333,7 +334,9 @@ function renderBaskets(){
   for(const x of these){
    const tile=el('div','pvb-tile');tile.draggable=true;tile.dataset.basketDrag=x.id;
    const open=actionButton('pvb-tile-open',{'data-open':x.id,'aria-label':'Open '+x.title});
-   open.append(el('span','pvb-appicon pvb-'+itemKind(x),(x.title||'•').slice(0,1).toUpperCase()),el('span','pvb-appname',x.title));
+   const tileIcon=el('span','pvb-appicon pvb-'+itemKind(x),(x.title||'•').slice(0,1).toUpperCase());
+   globalThis.PassVaultServiceIcons?.mount(tileIcon,x);
+   open.append(tileIcon,el('span','pvb-appname',x.title));
    const move=actionButton('pvb-tile-move',{'data-basket-move':x.id,'aria-label':'Move '+x.title+' to another basket',title:'Move item'});move.textContent='Move';
    tile.append(open,move);apps.append(tile);
   }
