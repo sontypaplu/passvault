@@ -1,4 +1,4 @@
-name: Build and deploy Ciphora
+name: Build and deploy AVENLOCK 4.0
 on:
   push:
     branches: [main]
@@ -18,7 +18,7 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@v4
       - name: Install Node.js
         uses: actions/setup-node@v7
         with:
@@ -39,10 +39,10 @@ jobs:
         run: npm run test:recovery
       - name: Test premium vault experience and custom-field compatibility
         run: npm run test:phase3
-      - name: Test encrypted on-device persistence and conflicts
-        run: npm run test:local
-      - name: Test offline PWA installation and update safeguards
-        run: npm run test:pwa
+      - name: Test offline PWA and encrypted local storage
+        run: |
+          npm run test:local
+          npm run test:pwa
       - name: Test XSS, URL and Trusted Types safeguards
         run: npm run test:xss
       - name: Build local SDK and project-scoped CSP
@@ -57,4 +57,4 @@ jobs:
           path: ./dist
       - name: Deploy GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v5
+        uses: actions/deploy-pages@v4
