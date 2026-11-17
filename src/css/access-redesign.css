@@ -1,0 +1,131 @@
+/* Original PassVault 3.1 UI refinement.
+   Deliberately inherits the existing light/dark theme. No global palette,
+   crypto, auth, storage, or session behavior is changed here. */
+
+/* Dedicated, uncluttered sign-in experience */
+#loginView .entry-topbar {max-width:1190px;width:min(1190px,calc(100% - 54px));padding:25px 0}
+#loginView .pv-auth-header-actions {display:flex;align-items:center;gap:12px}
+#loginView .pv-header-install {min-height:42px;padding:0 17px;border-radius:10px;color:var(--text-strong);border:1px solid var(--border-strong);background:var(--surface);font-weight:700}
+#loginView .pv-header-install:hover {background:var(--surface-hover);border-color:var(--accent-border)}
+#loginView .entry-main {width:100%;max-width:1200px;min-height:min(780px,calc(100dvh - 176px));display:flex;flex-direction:row;align-items:center;justify-content:space-between;gap:clamp(34px,6vw,120px);padding:clamp(36px,5vw,74px) 30px}
+#loginView .pv-auth-hero {flex:1 1 50%;max-width:525px;min-width:0}
+#loginView .pv-auth-hero .entry-eyebrow {display:block;font-size:12px;letter-spacing:2px;font-weight:800;color:var(--accent)}
+#loginView .pv-auth-hero h1 {font-weight:790;font-size:clamp(36px,4.1vw,57px);line-height:1.12;letter-spacing:-2px;margin:20px 0 22px;color:var(--text-strong)}
+#loginView .pv-auth-hero h1 span {color:var(--accent)}
+#loginView .pv-auth-hero>p {font-size:16px;line-height:1.75;max-width:465px;color:var(--muted)}
+#loginView .pv-auth-hero-features {display:grid;gap:17px;margin-top:34px}
+#loginView .pv-auth-feature {display:flex;align-items:center;gap:13px;font-size:14px;font-weight:680;color:var(--text-strong)}
+#loginView .pv-feature-mark {width:34px;height:34px;flex:0 0 34px;display:grid;place-items:center;border-radius:11px;background:var(--accent-soft);color:var(--accent);border:1px solid var(--accent-border)}
+#loginView .pv-auth-hero-note {border-top:1px solid var(--border);margin-top:35px;padding-top:18px;color:var(--muted);font-size:12px;line-height:1.6}
+#loginView .entry-main>.entry-card:not(.hidden) {flex:0 1 460px;width:min(100%,460px);max-width:460px;border-radius:20px;padding:clamp(25px,3vw,42px);box-shadow:var(--shadow-lg);border:1px solid var(--border);background:var(--surface)}
+#loginView .entry-main>.entry-card:not(.hidden) h1 {font-size:clamp(27px,3vw,32px);margin:11px 0 5px;color:var(--text-strong);letter-spacing:-.9px}
+#loginView .entry-main .entry-card .entry-subtitle {font-size:14px;margin:0 0 30px;line-height:1.6;color:var(--muted)}
+#loginView .entry-card .entry-eyebrow {font-size:11px;font-weight:800;letter-spacing:1.5px;color:var(--accent)}
+#loginView .entry-card .field label {font-size:13px;font-weight:720;color:var(--text-strong)}
+#loginView .entry-card input {min-height:48px;border-radius:11px;font-size:14px}
+#loginView .entry-card .access-submit {width:100%;min-height:48px;font-size:14px;font-weight:780;border-radius:11px;background:var(--accent);color:white;border-color:var(--accent)}
+#loginView .entry-card .access-submit:hover {background:var(--accent-hover)}
+#loginView .entry-card .pv-forgot-link {font-size:12px;text-align:right;margin:10px 0 0 auto;min-height:35px;padding-right:0;color:var(--accent)}
+#loginView .pv-auth-create-row {border-top:1px solid var(--border);margin-top:22px;padding-top:22px;text-align:center;font-size:13px;color:var(--muted);line-height:1.55}
+#loginView .entry-card .pv-auth-create-link {display:inline-flex;align-items:center;gap:5px;min-height:38px;margin:0;padding:2px 3px;color:var(--accent);font-weight:760}
+#loginView .entry-card .entry-disclaimer {margin-top:16px;text-align:center;font-size:11px;line-height:1.5;color:var(--muted)}
+#loginView .entry-footer {width:min(1190px,calc(100% - 54px));max-width:1190px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:9px 20px;padding:14px 0 22px;margin:0 auto;font-size:11px;color:var(--muted)}
+#loginView .pv-auth-install-footer {display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+#loginView .pv-auth-install-footer small {font-size:11px;color:var(--muted)}
+#loginView .pv-auth-install-footer [role=status]:empty {display:none}
+#loginView #pvPwaLoginUpdate {flex-basis:100%;max-width:600px;margin:8px 0 0 auto}
+#loginView .entry-card button:focus-visible,#loginView .pv-header-install:focus-visible {outline:3px solid var(--accent);outline-offset:2px}
+
+/* Full-screen vault-selection page, keeping the original validated vault flows.
+   A dialog remains only as a focus/screen-reader security gate; visually it is a page. */
+#approvedUI #approvedVaultGate.pv-vault-page {inset:0!important;top:0!important;left:0!important;right:0!important;bottom:0!important;margin:0!important;padding:0!important;width:100vw!important;max-width:100vw!important;height:100dvh!important;max-height:100dvh!important;min-height:100dvh!important;border:0!important;border-radius:0!important;overflow:auto!important;box-shadow:none!important;background:var(--bg)!important;color:var(--text)!important;overscroll-behavior:contain}
+#approvedUI #approvedVaultGate::backdrop {background:var(--bg);backdrop-filter:none}
+#approvedVaultGate .pv-vault-page-shell {display:flex;flex-direction:column;min-height:100dvh;width:100%;background:var(--bg);color:var(--text)}
+#approvedVaultGate .pv-vault-page-nav {display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:82px;padding:16px max(22px,calc((100vw - 1100px)/2));border-bottom:1px solid var(--border);background:var(--surface)}
+#approvedVaultGate .pv-vault-page-brand {display:flex;align-items:center;gap:12px;min-width:0}
+#approvedVaultGate .pv-vault-logo {display:grid;place-items:center;flex:0 0 40px;height:40px;border-radius:12px;background:var(--primary);color:#fff}
+#approvedVaultGate .pv-vault-logo svg {width:23px;height:23px}
+#approvedVaultGate .pv-vault-page-brand>span:last-child {display:grid;gap:3px;min-width:0}
+#approvedVaultGate .pv-vault-page-brand strong {font-size:16px;letter-spacing:-.4px;font-weight:800}
+#approvedVaultGate .pv-vault-page-brand small {letter-spacing:1px;font-size:9px;font-weight:800}
+#approvedVaultGate .pv-vault-top-actions {display:flex;gap:9px;align-items:center}
+#approvedUI #approvedVaultGate .pv-vault-top-actions button {display:inline-flex;align-items:center;justify-content:center;min-height:42px;border:1px solid var(--border);border-radius:10px;padding:9px 15px;background:var(--surface);color:var(--text);font-size:12px;font-weight:740;white-space:nowrap}
+#approvedUI #approvedVaultGate .pv-vault-top-actions button:hover {background:var(--surface-2);border-color:var(--primary)}
+#approvedVaultGate .pv-vault-page-main {width:min(100% - 44px,980px);margin:clamp(34px,5vw,74px) auto 52px;flex:1}
+#approvedUI #approvedVaultGate .pv-vault-page-heading {display:flex;align-items:center;gap:20px;justify-content:space-between;padding:0;margin:0 0 31px;border:0}
+#approvedUI #approvedVaultGate .pv-vault-page-heading h2 {font-size:clamp(27px,3.4vw,42px);letter-spacing:-1.3px;line-height:1.2;font-weight:800;color:var(--text);margin:5px 0 0}
+#approvedUI #approvedVaultGate .pv-vault-page-heading p {font-size:14px;line-height:1.6;margin:10px 0 0;color:var(--muted)}
+#approvedUI #approvedVaultGate .pv-gate-overline {font-size:11px;letter-spacing:1.6px;font-weight:800;color:var(--primary)}
+#approvedUI #approvedVaultGate .approved-gate-mark {border:1px solid var(--border);border-radius:18px;flex:0 0 64px;height:64px;display:grid;place-items:center;background:var(--surface);color:var(--primary)}
+#approvedUI #approvedVaultGate .approved-gate-mark svg {width:28px;height:28px}
+#approvedUI #approvedVaultGate .pv-vault-page-content {padding:0;border:0}
+#approvedUI #approvedVaultGate .approved-gate-vaults {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+#approvedUI #approvedVaultGate .approved-gate-vault {display:grid;grid-template-columns:52px 1fr 23px;align-items:center;gap:14px;min-height:152px;width:100%;padding:25px 23px;border:1px solid var(--border);border-radius:18px;background:var(--surface);box-shadow:var(--shadow);color:var(--text);text-align:left;transition:border .16s ease,box-shadow .16s ease,transform .16s ease}
+#approvedUI #approvedVaultGate .approved-gate-vault:hover:not(:disabled) {border-color:var(--primary);background:var(--surface);box-shadow:0 9px 30px rgba(30,32,90,.12);transform:translateY(-2px)}
+#approvedVaultGate .approved-gate-lock {display:grid;place-items:center;width:52px;height:52px;border-radius:15px;background:var(--primary-wash);color:var(--primary)}
+#approvedVaultGate .approved-gate-lock svg {width:24px;height:24px}
+#approvedUI #approvedVaultGate .approved-gate-vault-label strong {font-size:16px;font-weight:770;line-height:1.4;color:var(--text)}
+#approvedUI #approvedVaultGate .approved-gate-vault-label small {font-size:12px;line-height:1.55;color:var(--muted)}
+#approvedUI #approvedVaultGate .approved-gate-arrow {font-size:23px;color:var(--primary)}
+#approvedVaultGate .approved-gate-vaults>p {grid-column:1/-1;max-width:100%;padding:25px;border:1px dashed var(--border);border-radius:15px;background:var(--surface);color:var(--muted)}
+#approvedVaultGate .pv-vault-section-divider {height:1px;background:var(--border);margin:33px 0 22px}
+#approvedVaultGate .pv-vault-secondary h3 {font-size:15px;letter-spacing:-.2px;margin:0 0 17px;font-weight:800;color:var(--text)}
+#approvedVaultGate .pv-vault-other-grid {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+#approvedUI #approvedVaultGate .pv-vault-option {min-height:112px;display:grid;grid-template-columns:44px minmax(0,1fr) 20px;align-items:center;gap:13px;text-align:left;width:100%;padding:17px;border:1px solid var(--border);border-radius:15px;background:var(--surface);color:var(--text)}
+#approvedUI #approvedVaultGate .pv-vault-option:hover:not(:disabled) {border-color:var(--primary);background:var(--primary-wash)}
+#approvedVaultGate .pv-vault-option>span:nth-child(2) {min-width:0;display:grid;gap:6px}
+#approvedVaultGate .pv-vault-option strong {font-size:14px;font-weight:770;color:var(--text)}
+#approvedVaultGate .pv-vault-option small {font-size:12px;color:var(--muted);line-height:1.45;overflow-wrap:anywhere}
+#approvedVaultGate .pv-vault-option-icon {display:grid;place-items:center;width:44px;height:44px;border-radius:13px;background:var(--primary-wash);color:var(--primary);font-size:23px}
+#approvedVaultGate .pv-vault-option-arrow {font-size:18px;color:var(--primary)}
+#approvedVaultGate .pv-vault-page-footer {padding:21px;text-align:center;border-top:1px solid var(--border);font-size:12px;line-height:1.5;color:var(--muted)}
+#approvedUI #approvedVaultGate .approved-gate-helper {margin:16px 0 0;line-height:1.55;color:var(--muted)}
+#approvedVaultGate .pv-vault-page-content .pv-offline-choices {max-width:700px;display:grid;gap:12px}
+#approvedUI #approvedVaultGate .pv-offline-choice {display:flex;min-height:86px;align-items:center;gap:15px;border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:15px;padding:17px}
+#approvedUI #approvedVaultGate .pv-offline-choice:hover {border-color:var(--primary);background:var(--primary-wash)}
+#approvedVaultGate.pv-gate-offline .pv-vault-secondary,#approvedVaultGate.pv-gate-offline .approved-gate-vaults,#approvedVaultGate.pv-gate-unlocking .pv-vault-secondary,#approvedVaultGate.pv-gate-unlocking .approved-gate-vaults {display:none!important}
+#approvedUI #approvedVaultGate .approved-gate-form {max-width:550px;margin:auto;padding:28px;border:1px solid var(--border);background:var(--surface);border-radius:18px;box-shadow:var(--shadow)}
+#approvedUI #approvedVaultGate .approved-gate-form[hidden],#approvedUI #approvedVaultGate .pv-offline-choices[hidden] {display:none!important}
+#approvedUI #approvedVaultGate .approved-gate-form .access-card {background:transparent!important;box-shadow:none!important;border:0!important;padding:0!important;color:var(--text)}
+#approvedUI #approvedVaultGate .approved-gate-form .access-card input {color:var(--text);background:var(--surface-2);border-color:var(--border)}
+#approvedUI #approvedVaultGate .approved-gate-form .access-card label {color:var(--text)}
+#approvedUI #approvedVaultGate .approved-gate-form .access-card button.grow {background:var(--primary);color:#fff;width:100%;min-height:46px}
+#approvedUI #approvedVaultGate .approved-gate-foot {border:0;padding:15px 0 0;justify-content:flex-start}
+#approvedUI #approvedVaultGate .approved-gate-foot:has(button[hidden]) {margin-top:0}
+#approvedUI #approvedVaultGate button[hidden] {display:none!important}
+#approvedVaultGate .pv-vault-page-content [role=status] {overflow-wrap:anywhere}
+
+@media (max-width:850px) {
+ #loginView .entry-main {flex-direction:column;gap:20px;min-height:0;padding:30px 20px 40px}
+ #loginView .pv-auth-hero {display:block;max-width:550px;flex:0 1 auto;text-align:center}
+ #loginView .pv-auth-hero h1 {font-size:clamp(30px,6vw,42px);letter-spacing:-1.2px;margin:10px auto 12px}
+ #loginView .pv-auth-hero>p {font-size:13px;margin:0 auto;max-width:460px}
+ #loginView .pv-auth-hero-features,#loginView .pv-auth-hero-note {display:none}
+ #loginView .entry-main>.entry-card:not(.hidden) {flex:0 1 auto;width:min(100%,460px);max-width:460px}
+ #approvedVaultGate .pv-vault-page-main {margin-top:35px}
+}
+@media (max-width:620px) {
+ #loginView .entry-topbar,#loginView .entry-footer {width:calc(100% - 32px)}
+ #loginView .entry-topbar {padding:16px 0}
+ #loginView .pv-auth-header-actions {gap:7px}
+ #loginView .pv-header-install {padding:0 10px;min-height:39px;font-size:11px}
+ #loginView .pv-auth-hero h1 {font-size:30px}
+ #loginView .entry-main {padding:16px 15px 30px}
+ #loginView .entry-main>.entry-card:not(.hidden) {padding:25px 20px;border-radius:17px}
+ #approvedVaultGate .pv-vault-page-nav {padding:13px 17px;min-height:70px}
+ #approvedVaultGate .pv-vault-logo {width:34px;height:34px;flex-basis:34px}
+ #approvedVaultGate .pv-vault-page-brand small {display:none}
+ #approvedVaultGate .pv-vault-top-actions {gap:6px}
+ #approvedUI #approvedVaultGate .pv-vault-top-actions button {min-height:40px;padding:8px 10px;font-size:11px}
+ #approvedVaultGate .pv-vault-page-main {width:calc(100% - 30px);margin:30px auto 40px}
+ #approvedUI #approvedVaultGate .pv-vault-page-heading {margin-bottom:25px}
+ #approvedUI #approvedVaultGate .approved-gate-mark {display:none}
+ #approvedUI #approvedVaultGate .approved-gate-vaults,#approvedVaultGate .pv-vault-other-grid {grid-template-columns:1fr;gap:11px}
+ #approvedUI #approvedVaultGate .approved-gate-vault {min-height:118px;padding:16px;grid-template-columns:46px 1fr 18px;gap:11px}
+ #approvedVaultGate .approved-gate-lock {width:46px;height:46px}
+ #approvedUI #approvedVaultGate .pv-vault-option {min-height:95px;padding:14px;grid-template-columns:42px minmax(0,1fr) 18px}
+ #approvedUI #approvedVaultGate .approved-gate-form {padding:19px}
+ #approvedVaultGate .pv-vault-page-footer {font-size:11px}
+}
+@media (prefers-reduced-motion:reduce) {#approvedUI #approvedVaultGate .approved-gate-vault {transition:none}#loginView .entry-card * {scroll-behavior:auto}}
+#loginView .pv-header-install[hidden] {display:none!important}

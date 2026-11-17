@@ -1,8 +1,8 @@
 {
   "id": "./",
-  "name": "Ciphora \u2014 Secure Password Manager",
-  "short_name": "Ciphora",
-  "description": "Encrypted password manager with on-device vaults available offline after installation.",
+  "name": "PassVault \u2014 Secure Password Manager",
+  "short_name": "PassVault",
+  "description": "Encrypted password and secure note manager. Internet connection required.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

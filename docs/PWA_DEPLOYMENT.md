@@ -1,5 +1,3 @@
-> **Historical document — superseded for Ciphora 4.0.** See `docs/CIPHORA_OFFLINE_GUIDE.md` for the current offline design.
-
 # PassVault — Online-only PWA installation and updates
 
 **Scope:** This page describes PWA installation/updates. For the separate device-only vault workflow and cloud-sync controls, see `docs/OFFLINE_VAULT_WORKFLOW.md`. Device-only storage does not change online-only startup or network-loss protection.
