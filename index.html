@@ -26,22 +26,29 @@
 
   <section id="loginView" class="entry-view" aria-label="AVENLOCK entry">
     <div class="avenlock-auth-shell"><aside class="avenlock-art">
-      <div class="avenlock-brand"><span class="avenlock-brand-icon"><svg viewBox="0 0 40 44" aria-hidden="true" fill="none"><path d="M20 3 36 9v13c0 10-6.6 16.3-16 20C10.6 38.3 4 32 4 22V9L20 3Z" stroke="currentColor" stroke-width="2.4"/><path d="m12.6 31.2 7.4-18.1 7.4 18.1M16 24h8" stroke="currentColor" stroke-width="2.9" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><strong>AVENLOCK</strong><small>PRIVATE DIGITAL VAULT</small></div></div>
-      <div class="avenlock-art-body"><div class="avenlock-eyebrow">YOUR PRIVATE WORKSPACE</div><h1>Your digital life.<br><em>Safely within reach.</em></h1><p>Keep passwords, private notes, and important information in one carefully protected space.</p></div>
-      <div class="avenlock-art-foot"><span>Encryption by default</span><span>Offline access</span><span>Private by design</span></div>
+      <div class="avenlock-brand"><span class="avenlock-brand-icon"><svg viewBox="0 0 40 44" aria-hidden="true" fill="none"><path d="M20 3 36 9v13c0 10-6.6 16.3-16 20C10.6 38.3 4 32 4 22V9L20 3Z" stroke="currentColor" stroke-width="2.4"/><path d="m12.6 31.2 7.4-18.1 7.4 18.1M16 24h8" stroke="currentColor" stroke-width="2.9" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><strong>AVENLOCK</strong><small>SECURE WORKSPACE</small></div></div>
+      <div class="avenlock-art-body"><div class="avenlock-eyebrow">PRIVATE BY DESIGN</div><h1>Your digital life.<br><em>Safely organized.</em></h1><p>A refined space for your passwords, secure notes and personal vaults. Built around privacy and clarity.</p></div>
+      <div class="avenlock-art-foot"><span>Encrypted vaults</span><span>Cloud and device-only modes</span></div>
     </aside><div class="avenlock-auth-content">
-    <header class="entry-topbar"><div class="brand"><div class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="5.7" y="10.4" width="12.6" height="10" rx="2.2"/><path d="M8.6 10.4V7.6a3.4 3.4 0 0 1 6.8 0v2.8"/><circle cx="12" cy="15.4" r="1" fill="currentColor" stroke="none"/></svg></div><div class="brand-copy"><div class="brand-title">AVENLOCK</div><div class="brand-sub">Password manager</div></div></div><nav class="avenlock-auth-nav" aria-label="Account and installation"><button type="button" data-auth-target="signin">Sign in</button><button type="button" data-auth-target="signup">Create account</button><button type="button" data-auth-target="install">Install</button></nav><button class="theme-toggle" type="button" data-theme-toggle aria-label="Toggle light and dark theme"><span class="theme-symbol" aria-hidden="true">☾</span><span class="theme-label">Dark mode</span></button></header>
+    <header class="entry-topbar">
+      <nav class="avenlock-auth-nav" aria-label="Account navigation">
+        <span class="avenlock-nav-new">New to AVENLOCK?</span>
+        <button class="avenlock-nav-new" type="button" data-auth-target="signup">Create an account</button>
+        <span class="avenlock-nav-existing">Already registered?</span>
+        <button class="avenlock-nav-existing" type="button" data-auth-target="signin">Sign in</button>
+      </nav>
+    </header>
     <main class="entry-main">
 <div class="approved-auth-intro"><div class="entry-eyebrow">PRIVATE BY DESIGN</div><h1>One secure place for what matters.</h1><p>Your passwords and private notes, in one place.</p><div class="approved-auth-benefit">Separate account and master passwords</div><div class="approved-auth-benefit">Encrypted vault storage</div><div class="approved-auth-benefit">Backup and recovery guidance</div></div>
       <div class="entry-card" id="signInPanel" data-auth-panel="signin">
         <div class="entry-symbol" aria-hidden="true"><div class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="5.7" y="10.4" width="12.6" height="10" rx="2.2"/><path d="M8.6 10.4V7.6a3.4 3.4 0 0 1 6.8 0v2.8"/><circle cx="12" cy="15.4" r="1" fill="currentColor" stroke="none"/></svg></div></div>
-        <div class="entry-eyebrow"><span class="entry-dot"></span> PRIVATE ACCESS</div>
-        <h1>Welcome to AVENLOCK.</h1>
-        <p class="entry-subtitle">Sign in to continue.</p>
+        <div class="entry-eyebrow">WELCOME BACK</div>
+        <h1>Sign in to your workspace</h1>
+        <p class="entry-subtitle">Access your account and encrypted cloud vaults.</p>
         <form id="accessLoginForm" autocomplete="on">
           <div class="field">
             <label for="accessEmail">Email address</label>
-            <input id="accessEmail" type="email" maxlength="254" placeholder="you@example.com" autocomplete="email" required spellcheck="false" />
+            <input id="accessEmail" type="email" maxlength="254" placeholder="name@company.com" autocomplete="email" required spellcheck="false" />
           </div>
           <div class="field">
             <label for="accessPassword">Account password</label>
@@ -51,17 +58,17 @@
             </div>
           </div>
           <div id="accessStatus" class="status-line entry-status" role="status" aria-live="polite"></div>
-          <button id="accessSubmit" class="access-submit" type="submit">Sign in <span class="button-arrow">→</span></button>
+          <button id="accessSubmit" class="access-submit" type="submit">Continue securely <span class="button-arrow">→</span></button>
           <button id="registerAccountButton" class="secondary account-register-button" type="button">Create an account</button>
           <button type="button" class="auth-link" data-auth-target="forgot">Forgot account password?</button>
         </form>
         <div class="entry-install"><div><strong>Install AVENLOCK</strong><small id="pvPwaInstallHelpLogin">Add AVENLOCK to your phone or computer. After installing online, device vaults can open without internet.</small></div><button type="button" id="pvPwaInstallLogin" class="secondary">Install app</button></div><p class="entry-install-status" id="pvPwaStatusLogin" role="status" aria-live="polite"></p><div id="pvPwaLoginUpdate" class="pv-pwa-inline-update" hidden><strong>An AVENLOCK update is ready</strong><span>Update when your vault is safely locked.</span><button type="button" id="pvPwaLoginUpdateAction">Update now</button></div>
-        <div class="avenlock-auth-extra"><button type="button" data-avenlock-offline class="avenlock-offline-btn">Open offline vault <span aria-hidden="true">→</span></button><p>Available without a cloud account. Saved locally in encrypted storage.</p></div>
-        <div class="entry-disclaimer">Your vault uses a separate master password.</div>
+        <div class="avenlock-auth-extra"><span>Want to work without an account?</span> <button type="button" data-avenlock-offline class="avenlock-offline-btn">Open offline vault</button></div>
+        <div class="entry-disclaimer">Your cloud account password and vault master password are separate.</div>
       </div>
       <div class="entry-card hidden" id="signUpPanel" data-auth-panel="signup">
-        <div class="entry-eyebrow"><span class="entry-dot"></span> NEW ACCOUNT</div>
-        <h1>Create your account</h1><p class="entry-subtitle">Create an account to start using AVENLOCK.</p>
+        <div class="entry-eyebrow">STEP 1 OF 2 · CLOUD ACCOUNT</div>
+        <h1>Create your account</h1><p class="entry-subtitle">Start your cloud workspace. Vault encryption is configured separately in the next step.</p>
         <form id="accountSignUpForm" autocomplete="on">
           <div class="field"><label for="signUpEmail">Email address</label><input id="signUpEmail" type="email" maxlength="254" autocomplete="email" placeholder="you@example.com" required spellcheck="false"></div>
           <div class="field"><label for="signUpPassword">Account password</label><input id="signUpPassword" type="password" minlength="12" maxlength="256" autocomplete="new-password" required></div>
@@ -103,7 +110,9 @@
         <button type="button" class="auth-link" data-auth-target="signin">Back to sign in</button>
       </div>
     </main>
-    <footer class="entry-footer">AVENLOCK <span aria-hidden="true">·</span> Protected by encryption · Keep a separate recovery backup</footer>
+    <footer class="entry-footer"><span>© AVENLOCK · Private workspace</span>
+      <div class="avenlock-entry-footer-actions"><button type="button" class="avenlock-footer-install" data-auth-target="install">Install the app</button>
+      <button class="theme-toggle" type="button" data-theme-toggle aria-label="Toggle light and dark theme"><span class="theme-symbol" aria-hidden="true">☾</span><span class="theme-label">Dark mode</span></button></div></footer>
     </div></div>
   </section>
 
@@ -660,34 +669,64 @@
 <dialog class="dialog pvb-dialog" id="pvbMoveDialog" aria-labelledby="pvbMoveTitle"><form id="pvbMoveForm"><div class="dialog-head"><div><h2 id="pvbMoveTitle">Move item</h2><p id="pvbMoveDescription">Choose a different basket.</p></div><button type="button" class="iconbtn" data-close="pvbMoveDialog" aria-label="Close">×</button></div><div class="dialog-body"><div class="field"><label for="pvbMoveSelect">Move to basket</label><select id="pvbMoveSelect" required></select></div></div><div class="dialog-foot"><button class="btn btn-light" type="button" data-close="pvbMoveDialog">Cancel</button><button class="btn btn-primary" type="submit">Move item</button></div></form></dialog>
 <dialog aria-labelledby="infoTitle" class="dialog" id="infoDialog"><div class="dialog-head"><div><div class="eyebrow">ABOUT AVENLOCK</div><h2 id="infoTitle">AVENLOCK information</h2></div><button aria-label="Close" class="iconbtn" data-close="infoDialog" data-icon="x"></button></div><div class="dialog-body"><p class="preview-inline-9" id="infoMessage"></p></div><div class="dialog-foot"><button class="btn btn-primary" data-close="infoDialog">Got it</button></div></dialog>
 <dialog aria-labelledby="vaultDialogTitle" class="dialog" id="vaultDialog"><form id="vaultForm"><div class="dialog-head"><div><div class="eyebrow">VAULT CREATION</div><h2 id="vaultDialogTitle">Create vault</h2><p>Vault creation requires a separate master password.</p></div><button aria-label="Close" class="iconbtn" data-close="vaultDialog" data-icon="x" type="button"></button></div><div class="dialog-body"><div class="field"><label for="vaultName">Vault name</label><input id="vaultName" maxlength="70" placeholder="Work vault" required=""/></div><div class="note">Continue to choose your vault master password and encryption settings.</div></div><div class="dialog-foot"><button class="btn btn-light" data-close="vaultDialog" type="button">Cancel</button><button class="btn btn-primary" type="submit">Continue to secure setup</button></div></form></dialog>
-<!-- Approved dashboard vault-access flow. Existing secure input nodes are moved here at runtime. -->
-<dialog id="approvedVaultGate" class="dialog approved-vault-gate" aria-labelledby="approvedGateTitle" aria-describedby="approvedGateDescription">
-  <div class="avenlock-gate-top"><div class="avenlock-gate-brand"><span class="avenlock-gate-brand-icon"><svg viewBox="0 0 40 44" aria-hidden="true" fill="none"><path d="M20 3 36 9v13c0 10-6.6 16.3-16 20C10.6 38.3 4 32 4 22V9L20 3Z" stroke="currentColor" stroke-width="2.4"/><path d="m12.6 31.2 7.4-18.1 7.4 18.1M16 24h8" stroke="currentColor" stroke-width="2.9" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>AVENLOCK<small>PRIVATE VAULT WORKSPACE</small></span></div><span class="avenlock-gate-protected">Encrypted access</span></div>
-  <div class="dialog-head">
-    <div><div class="eyebrow pv-gate-overline" id="approvedGateEyebrow">VAULT ACCESS</div>
-      <h2 id="approvedGateTitle">Your encrypted vaults</h2>
-      <p id="approvedGateDescription">Choose a vault to unlock.</p></div>
-    <span class="approved-gate-mark" aria-hidden="true"><span data-icon="shield-check"></span></span>
-  </div>
-  <div class="dialog-body">
-    <div id="approvedGateVaultList" class="approved-gate-vaults"></div>
-    <section id="approvedGateOfflineChoice" class="pv-offline-choices" aria-label="Device-only vault options" hidden>
-      <div id="avenlockLocalVaultList" class="avenlock-local-list" aria-label="Saved device vaults"></div>
-      <p class="pv-device-note"><span aria-hidden="true" class="pv-device-note-icon">✓</span><span><strong>Device vaults save encrypted changes automatically.</strong> Browser storage can still be cleared; keep a separate exported backup.</span></p>
-      <button class="pv-offline-choice" id="approvedOfflineCreate" type="button"><span class="pv-choice-symbol" aria-hidden="true">+</span><span class="pv-choice-body"><strong>Create offline vault</strong><small>Start with an empty vault</small></span><span class="pv-choice-chevron" aria-hidden="true">›</span></button>
-      <button class="pv-offline-choice" id="approvedOfflineImport" type="button"><span class="pv-choice-symbol" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m-4-4 4 4 4-4M4 18v3h16v-3"/></svg></span><span class="pv-choice-body"><strong>Import backup</strong><small>Open a saved encrypted vault</small></span><span class="pv-choice-chevron" aria-hidden="true">›</span></button>
-      <input class="pv-offline-file" id="approvedOfflineFile" hidden type="file" accept=".json,.pvault,.pvault.json,application/json,text/json">
-      <button class="pv-offline-back" id="approvedOfflineBack" type="button">← Cloud vaults</button>
-    </section>
-    <div id="approvedGateSecureForm" class="approved-gate-form"></div><div id="pvPwaGateUpdate" class="pv-pwa-inline-update" hidden><strong>New version available</strong><span>Update while the vault is locked.</span><button type="button" id="pvPwaGateUpdateAction">Update now</button></div>
-    <p class="approved-gate-helper" id="approvedGateHelper">Your master password stays on this device.</p>
-  </div>
-  <div class="dialog-foot approved-gate-foot">
-    <button class="btn btn-light" id="approvedGateBack" type="button" hidden>← My vaults</button>
-    <button class="btn btn-light" id="approvedGateRefresh" type="button" hidden>Refresh vaults</button>
-    <button class="btn btn-light" id="approvedGateSignOut" type="button">Sign out</button>
-    <button class="btn btn-primary" id="approvedGateOffline" type="button">Work offline</button>
-    <button class="btn btn-primary" id="approvedGateCreate" type="button" hidden>Create new vault</button>
+<!-- AVENLOCK page-style vault access. Existing secure unlock form is moved here at runtime. -->
+<dialog id="approvedVaultGate" class="dialog approved-vault-gate" aria-labelledby="approvedGateTitle" aria-describedby="approvedGateDescription" data-avenlock-gate-mode="cloud">
+  <div class="avenlock-gate-stage">
+    <header class="avenlock-gate-top">
+      <div class="avenlock-gate-brand">
+        <span class="avenlock-gate-brand-icon" aria-hidden="true"><svg viewBox="0 0 40 44" fill="none"><path d="M20 3 36 9v13c0 10-6.6 16.3-16 20C10.6 38.3 4 32 4 22V9L20 3Z" stroke="currentColor" stroke-width="2.4"/><path d="m12.6 31.2 7.4-18.1 7.4 18.1M16 24h8" stroke="currentColor" stroke-width="2.9" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        <span>AVENLOCK<small>SECURE WORKSPACE</small></span>
+      </div>
+      <div class="avenlock-gate-top-actions">
+        <span class="avenlock-gate-protected" id="avenlockGateStatus">Encrypted access</span>
+        <button class="avenlock-gate-top-link" id="approvedGateRefresh" type="button" hidden>Refresh vaults</button>
+        <button class="avenlock-gate-top-link" id="approvedGateSignOut" type="button">Sign out</button>
+      </div>
+    </header>
+    <main class="avenlock-gate-main">
+      <div class="dialog-head">
+        <div><div class="eyebrow pv-gate-overline" id="approvedGateEyebrow">YOUR WORKSPACE</div>
+          <h2 id="approvedGateTitle">Choose a vault to continue</h2>
+          <p id="approvedGateDescription">Your vaults remain private and protected. Choose one below, or create a new encrypted vault.</p>
+        </div>
+      </div>
+      <div class="dialog-body">
+        <section id="approvedGateCloudChoice" class="avenlock-cloud-grid" aria-label="Available vaults">
+          <div id="approvedGateVaultList" class="approved-gate-vaults"></div>
+          <button class="avenlock-device-choice" id="approvedGateOffline" type="button">
+            <span class="avenlock-device-symbol" aria-hidden="true">⌁</span>
+            <strong>Device-only vault</strong>
+            <span class="avenlock-device-detail">Access a locally stored encrypted vault without cloud sign-in.</span>
+            <span class="avenlock-card-footer"><span class="avenlock-status-pill">Offline capable</span><span class="avenlock-open-arrow">Open →</span></span>
+          </button>
+        </section>
+        <section id="approvedGateOfflineChoice" class="pv-offline-choices" aria-label="Device-only vault options" hidden>
+          <div class="avenlock-offline-hero">
+            <div class="avenlock-offline-header"><span class="avenlock-offline-symbol" aria-hidden="true">⌁</span>
+              <div><h3>Your device vaults</h3><p>All items stay encrypted on this device.</p></div>
+            </div>
+            <div id="avenlockLocalVaultList" class="avenlock-local-list" aria-live="polite" aria-label="Saved device vaults"></div>
+            <div class="avenlock-offline-actions">
+              <button class="pv-offline-choice" id="approvedOfflineCreate" type="button"><span class="pv-choice-symbol" aria-hidden="true">＋</span><span class="pv-choice-body"><strong>Create offline vault</strong></span></button>
+              <button class="pv-offline-choice" id="approvedOfflineImport" type="button"><span class="pv-choice-symbol" aria-hidden="true">⇩</span><span class="pv-choice-body"><strong>Import encrypted backup</strong></span></button>
+            </div>
+            <p class="pv-device-note"><span aria-hidden="true" class="pv-device-note-icon">✓</span><span><strong>Privacy notice:</strong> Device vault changes are encrypted and saved locally. Browser storage can still be cleared; keep a separate exported recovery backup.</span></p>
+            <input class="pv-offline-file" id="approvedOfflineFile" hidden type="file" accept=".json,.pvault,.pvault.json,application/json,text/json">
+          </div>
+          <button class="pv-offline-back" id="approvedOfflineBack" type="button" hidden>← Back to cloud vaults</button>
+        </section>
+        <div id="approvedGateSecureForm" class="approved-gate-form" hidden></div>
+        <div id="pvPwaGateUpdate" class="pv-pwa-inline-update" hidden><strong>New version available</strong><span>Update while the vault is locked.</span><button type="button" id="pvPwaGateUpdateAction">Update now</button></div>
+      </div>
+      <footer class="dialog-foot approved-gate-foot">
+        <span class="avenlock-gate-footer-note">Cloud vaults require a separate master password.</span>
+        <p class="approved-gate-helper" id="approvedGateHelper" role="status" aria-live="polite"></p>
+        <div class="avenlock-gate-footer-actions">
+          <button class="btn btn-light" id="approvedGateBack" type="button" hidden>← My vaults</button>
+          <button class="btn btn-primary" id="approvedGateCreate" type="button" hidden>Create new vault →</button>
+        </div>
+      </footer>
+    </main>
   </div>
 </dialog>
 <dialog class="pv-command-dialog" id="pvCommandDialog" aria-labelledby="pvCommandHeading">

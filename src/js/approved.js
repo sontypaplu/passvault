@@ -804,6 +804,7 @@ function closeVaultGate(){
 }
 function showVaultGate(){
  if (gateLastUserId !== cloud.userId) { gateStorageChoice=window.AvenlockLocal?.active?'offline':'cloud'; gateLastUserId=cloud.userId; }
+ gate.dataset.avenlockGateMode=uiState.accessScreen==='unlock' && !!cloud.selectedVaultId && !!state.pendingImport ? 'unlock' : gateStorageChoice;
  $('app').inert=true; // The dashboard behind the password gate cannot be operated.
  document.body.classList.add('approved-gate-active');
  const unlocking=uiState.accessScreen==='unlock' && !!cloud.selectedVaultId && !!state.pendingImport;
@@ -811,8 +812,11 @@ function showVaultGate(){
  $('approvedGateRefresh').hidden=unlocking || gateStorageChoice==='offline' || window.AvenlockLocal?.active;
  $('approvedGateCreate').hidden=unlocking || gateStorageChoice==='offline' || window.AvenlockLocal?.active;
  $('approvedGateOffline').hidden=unlocking || gateStorageChoice==='offline' || window.AvenlockLocal?.active;
+ $('approvedGateCloudChoice').hidden=unlocking || gateStorageChoice==='offline';
  gateVaultList.hidden=unlocking || gateStorageChoice==='offline';
  $('approvedGateOfflineChoice').hidden=unlocking || gateStorageChoice!=='offline';
+ $('avenlockGateStatus').textContent=gateStorageChoice==='offline'?'Offline mode':'Encrypted access';
+ $('approvedOfflineBack').hidden=!!window.AvenlockLocal?.active || !cloud.userId;
  $('approvedGateSignOut').textContent=window.AvenlockLocal?.active?'Exit offline workspace':'Sign out';
  gateSecureForm.hidden=!unlocking;
  if(unlocking){
@@ -831,15 +835,15 @@ function showVaultGate(){
   if(nativeUnlockCard.parentNode!==gateSecureForm)gateSecureForm.append(nativeUnlockCard);
  }else{
   restoreNativeUnlockCard();
-  $('approvedGateEyebrow').textContent='VAULT ACCESS';
-  $('approvedGateTitle').textContent=gateStorageChoice==='offline' ? (window.AvenlockLocal?.active?'Your device vaults':'Work offline') : 'Choose your vault';
+  $('approvedGateEyebrow').textContent=gateStorageChoice==='offline'?'WORK WITHOUT INTERNET':'YOUR WORKSPACE';
+  $('approvedGateTitle').textContent=gateStorageChoice==='offline' ? 'Continue securely, offline' : 'Choose a vault to continue';
   $('approvedGateDescription').textContent=gateStorageChoice==='offline'
-    ? 'Open a saved local vault, create a private vault, or import an encrypted backup.'
-    : 'Choose an encrypted workspace or use the private device-only option.';
+    ? 'No internet connection is required to unlock a vault already stored on this device.'
+    : 'Your vaults remain private and protected. Choose one below, or create a new encrypted vault.';
   const localList=$('avenlockLocalVaultList');localList.replaceChildren();
   if(window.AvenlockLocal?.active && gateStorageChoice==='offline') {
     const saved=window.AvenlockLocal.cachedList;
-    if (!saved.length) localList.append(el('p','avenlock-local-empty','No saved device vaults yet. Create one or import an encrypted backup.'));
+    if (!saved.length) localList.append(el('p','avenlock-local-empty','No saved device vaults on this device yet. Create one below, or import an encrypted backup.'));
     for(const entry of saved) {
       const button=el('button','avenlock-local-card');button.type='button';
       const symbol=el('span','avenlock-local-symbol','◈');symbol.setAttribute('aria-hidden','true');
@@ -871,13 +875,14 @@ function showVaultGate(){
     const button=document.createElement('button');
     button.type='button'; button.className='approved-gate-vault';
     button.disabled=gateFetchingVault;
-    const lock=document.createElement('span');lock.className='approved-gate-lock';lock.textContent='🔒';lock.setAttribute('aria-hidden','true');
-    const body=document.createElement('span');body.className='approved-gate-vault-label';
+    const lock=document.createElement('span');lock.className='approved-gate-lock';lock.textContent='◇';lock.setAttribute('aria-hidden','true');
     const name=document.createElement('strong');name.textContent=vault.label||'Encrypted vault';
-    const description=document.createElement('small');description.textContent='Encrypted · Master password required';
-    body.append(name,description);
-    const arrow=document.createElement('span');arrow.className='approved-gate-arrow';arrow.textContent='→';arrow.setAttribute('aria-hidden','true');
-    button.append(lock,body,arrow);
+    const description=document.createElement('small');description.textContent='Passwords and notes protected by your master password.';
+    const body=document.createElement('span');body.className='approved-gate-vault-label';body.append(name,description);
+    const status=document.createElement('span');status.className='avenlock-status-pill is-cloud';status.textContent='Cloud · Locked';
+    const arrow=document.createElement('span');arrow.className='approved-gate-arrow';arrow.textContent='Open →';arrow.setAttribute('aria-hidden','true');
+    const cardFoot=document.createElement('span');cardFoot.className='avenlock-card-footer';cardFoot.append(status,arrow);
+    button.append(lock,body,cardFoot);
     button.addEventListener('click',async()=>{
      if(gateFetchingVault)return;
      gateFetchingVault=true;showVaultGate();

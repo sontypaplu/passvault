@@ -10,6 +10,7 @@
     const next = allowed.includes(page) ? page : 'signin';
     if(next === 'reset' && !recoveryPending) return route('forgot', push);
     document.querySelectorAll('[data-auth-panel]').forEach(panel => panel.classList.toggle('hidden', panel.dataset.authPanel !== next));
+    document.getElementById('loginView').dataset.authView=next;
     document.querySelectorAll('#loginView input[type="password"]').forEach(input => { if(!input.closest(`[data-auth-panel="${next}"]`)) input.value = ''; });
     const url = new URL(location.href);
     if(next === 'signin') url.searchParams.delete('auth'); else url.searchParams.set('auth', next);
