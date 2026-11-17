@@ -173,7 +173,7 @@
     for(const b of pv('premiumApp').querySelectorAll('[data-pv-view]')) {const active=b.dataset.pvView===view;b.classList.toggle('active',active);if(active)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');}
     txt('pv3Crumb',({overview:'Overview',items:'All items',favorites:'Favorites',vault:cloud.vaultLabel,security:'Security center',generator:'Password generator',settings:'Settings'})[view]);
     if(push){ const url = new URL(location.href);url.searchParams.set('view',view);url.searchParams.delete('auth');if(url.href!==location.href)history.pushState({pvView:view},'',url); }
-    document.title = `${({overview:'Overview',items:'All items',favorites:'Favorites',vault:'My vault',security:'Security center',generator:'Password generator',settings:'Settings'})[view]} | PassVault`;
+    document.title = `${({overview:'Overview',items:'All items',favorites:'Favorites',vault:'My vault',security:'Security center',generator:'Password generator',settings:'Settings'})[view]} | Ciphora`;
     closeMobileNav();renderItems();
     const main=pv('pv3Main'); if(main)main.scrollTop=0;
     window.scrollTo({top:0,behavior:'instant'});
