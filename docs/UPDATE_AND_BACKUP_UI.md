@@ -1,3 +1,5 @@
+> **Legacy PassVault 3.x reference only.** This document describes the former online-only release and is superseded by `AVENLOCK_UPGRADE_GUIDE.md`, `docs/PWA_DEPLOYMENT.md`, and `docs/OFFLINE_VAULT_WORKFLOW.md`. Do not use its older offline/backup instructions for AVENLOCK 4.0.
+
 # Vault access, sync, backups, and app updates
 
 - After account sign-in, select a **cloud vault** (existing or new), or **Work offline** and create/import a device-only vault.

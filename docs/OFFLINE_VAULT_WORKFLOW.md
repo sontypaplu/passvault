@@ -1,39 +1,26 @@
-> **Historical document — superseded for Ciphora 4.0.** See `docs/CIPHORA_OFFLINE_GUIDE.md` for the current offline design.
+# AVENLOCK — independent offline vaults vs. account-based cloud vaults
 
-# PassVault — cloud vault vs. device-only vault
+## Independent device vault (AVENLOCK 4.0)
 
-## What happens after login
+From sign-in select **Work offline**. When a cached application starts with no internet connection, AVENLOCK selects the device-vault workspace automatically. Local vaults use a synthetic local identity; no Supabase account is required. A device-vault card loads the existing encrypted envelope and prompts for its original master password and optional secret pepper. Unlocking/decryption occurs in the browser.
 
-You sign in **online** to your regular account. The signed-in vault chooser displays your existing cloud vaults and a **Work offline** action.
+Create a new vault or import an existing `.pvault.json` encrypted backup. Every local vault is assigned a reserved `device-` ID, and its **encrypted** envelope is committed transactionally to IndexedDB after edits. The app stores the envelope, a storage revision and a timestamp — **not plaintext credentials or master secrets**. Each tab tracks the expected revision; if another tab has saved the vault, saving blocks with a conflict instead of overwriting.
 
-- **Cloud path**: select a cloud vault, enter its original master password, and use the normal unlocked workspace. When **Cloud sync** is on, new vault edits are encrypted in your browser and uploaded using the existing Supabase revision-checked save flow. Turn **Cloud sync** off in **Overview**, **Settings → Encrypted backups**, or the account vault dashboard to prevent *future* vault uploads. Already uploaded records are not deleted. An upload already transmitted cannot be cancelled. When sync is re-enabled, outstanding local changes can be uploaded; the UI asks for confirmation.
-- **Device-only path → Create new offline vault**: choose a vault name, master password, and any existing encryption options. It opens the **same** unlocked workspace but uses a never-cloud-saved, `device-`-prefixed vault ID, revision 0, and no cloud writes. The two-cloud-vault-per-account cap does not limit locally created vaults.
-- **Device-only path → Import encrypted offline vault**: select a `.pvault.json` file and enter the master password (plus pepper if needed). This also uses a new `device-`-prefixed ID with no cloud revision. The import does not replace or overwrite a cloud vault.
+An encrypted save must finish before manual lock/exit; on failure the vault stays open so the user can export a separate backup. Forced security locks may use the prior encrypted localStorage recovery checkpoint. Store backups independently; browser storage is not permanent or device-independent.
 
-**Device-only mode and the Cloud sync switch are different things.** Opening or creating a device-only vault does **not** flip your saved account-wide sync preference. The switch is disabled and clearly shows device-only mode while a device-only vault is unlocked; it becomes available again when you return to a cloud vault. Cloud save checks both the flag and a reserved local ID prefix; this prevents accidental promotion by the interface.
+## Cloud vault
 
-## Backup and sign-out safety
+Cloud vaults remain account-scoped and require an online Supabase session. Existing Argon2id/AES-GCM encryption and server revision checks remain unchanged. Turning cloud sync off affects **future** encrypted uploads; an in-flight request may finish and older cloud copies are not deleted. A device-only vault can never be promoted into a cloud vault by toggling sync; import/export is explicit.
 
-Your device-only vault or a cloud vault with sync switched off is **not autosaved into a file**. Edits are in unlocked browser memory until you export. A best-effort encrypted recovery checkpoint can be written on secure lock, but it depends on browser storage and is not a substitute for backups. To preserve your changes:
+## Migration from older PassVault device-only mode
 
-1. Select **Download encrypted backup** from Overview or Settings.
-2. If the download does not start automatically (especially on iOS Safari), expand **Download didn't start?** and tap the encrypted-file save link. The fallback appears only after a backup has been prepared.
-3. Confirm the file actually exists in your device's Files/Downloads. **Test re-import with a disposable vault before relying on the feature.** Store backups securely. Avoid sharing backups or master secrets.
-4. Before voluntary sign-out **with unsynced edits**, a dialog requires an up-to-date encrypted backup to be prepared and your acknowledgment that you saved and verified it. Decline to keep working. Browser JavaScript cannot independently prove a file was downloaded or stored safely.
+Older versions created account-associated local-only vaults whose content was kept in memory/manual encrypted exports/recovery checkpoints. Those are **not automatically migrated** to independent IndexedDB vaults. Before updating, export and verify each old device-only vault. In AVENLOCK, enter Work offline, import its encrypted file, unlock, and verify that the imported data was committed locally. The cryptographic format stays the same and credentials are never sent to the server by the independent local store.
 
-Automatic account inactivity timeout **still locks after 15 minutes**, even if the backup dialog was never completed. It attempts encrypted local recovery and clears unlocked secrets. Browser termination, local-storage failure, device loss, and quota/privacy settings can all cause unsaved edits to be lost. Export frequently and before manual lock, switching vaults, or closing the page.
+## Critical distinctions
 
-## Privacy and network scope
+- Offline launch only works after one online installation and complete PWA caching on the same browser/origin.
+- Cloud sign-in, email verification, password recovery, and cloud vault listing require internet.
+- Clearing browser storage, uninstalling the browser, private/incognito sessions, or losing the device can erase device-only vaults even if autosave previously succeeded.
+- Local IndexedDB is not a backup. Export and test restoration of encrypted `.pvault.json` files.
 
-**This is device-only vault storage, not a fully offline web application.** Account login, cloud vault listing, update checks, and other existing account/profile features can still contact Supabase; some profile data (such as a profile image when saved) is intentionally uploaded through those separate account features. The device-only promise applies to the encrypted **vault content** upload path. The site remains an online-only PWA; network outages can trigger the existing secure-lock behavior. Disabling sync does not remove previously uploaded vault data from the server. Do not rely on this flow to guarantee that *all* application network communication stops.
-
-## Security and deployment
-
-- No modifications were made to the Argon2id/AES-GCM vault format, backend schema, user authentication logic, KDF parameters, or provider access tokens.
-- Existing vault cloud data is not migrated, overwritten, or deleted by selecting device-only mode. The file parser performs existing size/format/safe-URL validation, and decryption stays local.
-- Cloud uploads check account sync status, device-only flag, reserved ID prefix, account/epoch/selection, and server revision. An already transmitted cloud request cannot be undone.
-- Run `npm ci`, `npm run test:device-only`, `npm run test:offline-flow`, all regression tests, `npm run build`, and `npm run verify` before deploying.
-- Upload the **contents of `passvault-main/`** into the GitHub repository root, preserving `.github/`, `src/`, `tools/`, and `package-lock.json`. Do **not** upload the ZIP as a file inside the public website. Deploy from a feature branch with a real-device test first.
-- Use disposable test vaults for testing imports, creation, signing out, exporting after edits, disabled sync, interrupted uploads, and restore on mobile Safari/Chrome and desktop before keeping real credentials.
-
-These changes are not an independent penetration test or a security audit. A browser-side feature alone cannot guarantee protection against malicious extensions, a compromised browser, a replaced site deployment, or a compromised device.
+See `../AVENLOCK_UPGRADE_GUIDE.md` for full deployment and acceptance testing steps.

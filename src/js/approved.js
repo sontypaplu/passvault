@@ -37,7 +37,9 @@ let basketCreateTarget='everyday',basketRenameTarget=null,basketMoveTarget=null,
 const ready=()=>!state.locked && !!state.vault && uiState.accessGranted;
 const getItems=()=>ready()?state.vault.credentials:[];
 const itemKind=(item)=>['login','note','card'].includes(item.kind)?item.kind:'login';
-const vaults=()=>cloud.loaded?cloud.vaults.map(v=>({id:v.vault_id,name:v.label})):[];
+const vaults=()=>window.AvenlockLocal?.active
+ ? window.AvenlockLocal.cachedList.filter(v=>v.source==='device').map(v=>({id:v.id,name:'Device vault · '+new Date(v.savedAt).toLocaleDateString()}))
+ : cloud.loaded?cloud.vaults.map(v=>({id:v.vault_id,name:v.label})):[];
 const activeVault=()=>cloud.selectedVaultId;
 function findItem(id){return getItems().find(x=>x.id===id);}
 function basicWeak(password){return (password||'').length<12 || /^(password|1234|qwerty|admin|welcome)/i.test(password||'') || /^(.)\1{5,}$/.test(password||'');}
@@ -74,7 +76,7 @@ const pvSettingsSectionMeta={
  recycle:['Recycle Bin','','trash'],
  account:['Account security','Manage your account password.','key'],
  management:['Vault & account management','Review vaults and sensitive account actions.','shield-check'],
- application:['Install & updates','Install Ciphora or check for a newer release.','download']
+ application:['Install & updates','Install AVENLOCK or check for a newer release.','download']
 };
 function showSettingsHome(){
  $('pvSettingsHome').hidden=false;$('pvSettingsDetail').hidden=true;
@@ -82,6 +84,9 @@ function showSettingsHome(){
 }
 function openSettingsSection(key){
  const meta=pvSettingsSectionMeta[key];if(!meta)return;
+ if (window.AvenlockLocal?.active && (key==='account' || key==='management')) {
+  tip('Cloud account management is unavailable in device-only mode. Open the vault chooser to manage your device vaults.'); return;
+ }
  $('pvSettingsHome').hidden=true;$('pvSettingsDetail').hidden=false;
  document.querySelectorAll('#approvedUI [data-settings-panel]').forEach(panel=>panel.hidden=panel.dataset.settingsPanel!==key);
  $('pvSettingsDetailTitle').textContent=meta[0];$('pvSettingsDetailDescription').textContent=meta[1];$('pvSettingsDetailDescription').hidden=!meta[1];
@@ -92,6 +97,7 @@ function openSettingsSection(key){
 }
 function navigate(target,push=true){
  if(!ready()||!pageTitles[target])return;
+ if(window.AvenlockLocal?.active && target==='profile') { tip('Cloud account profiles are unavailable in device-only mode.'); return; }
  // A chosen destination dismisses desktop pinning, without changing hover expansion.
  $('approvedSidebar').classList.remove('pinned');
  $('openMenu').setAttribute('aria-expanded','false');
@@ -99,7 +105,7 @@ function navigate(target,push=true){
  $('openMenu').title='Pin navigation open';
  if(target==='settings')showSettingsHome();
  page=target;closeMenu();if(target==='profile')void loadAccountProfile();$('flowsMenu').classList.add('hidden');$('flowsToggle').setAttribute('aria-expanded','false');
- $('crumb').textContent=pageTitles[target];document.title=pageTitles[target]+' | Ciphora';
+ $('crumb').textContent=pageTitles[target];document.title=pageTitles[target]+' | AVENLOCK';
  document.querySelectorAll('#approvedUI [data-page].navitem').forEach(x=>{
   x.classList.toggle('active',x.dataset.page===target);
   if(x.dataset.page===target)x.setAttribute('aria-current','page');else x.removeAttribute('aria-current');
@@ -373,7 +379,7 @@ function profileAvatarInto(node,src){
  else node.textContent=profileInitials();
 }
 function renderAccountIdentity(){
- const label=accountProfile?.nickname||accountProfile?.name||'Your account';
+ const label=window.AvenlockLocal?.active?'Device-only workspace':accountProfile?.nickname||accountProfile?.name||'Your account';
  $('approvedIdentityName').textContent=label;
  const email=document.querySelector('#approvedUI .identity small');if(email)email.textContent=cloud.email||'Signed in';
  profileAvatarInto($('approvedSidebarAvatar'),profileAvatarUrl);
@@ -400,7 +406,7 @@ function resetAccountProfile(){
  renderAccountIdentity();
 }
 async function loadAccountProfile(force=false){
- if(!cloud.client||!cloud.userId||cloud.localMode)return;
+ if(!cloud.client||!cloud.userId)return;
  const requested=cloud.userId;
  if(!force&&profileLoadedUserId===requested){if(page==='profile'&&!profileSaving)profileDraw();return;}
  if(profileLoading)return profileLoading;
@@ -491,10 +497,11 @@ function render(){
  $('recentTable').replaceChildren(buildTable([...items].sort((a,b)=>(b.updatedAt||'').localeCompare(a.updatedAt||'')).slice(0,4),'Nothing here yet.',false));
  $('fullTable').replaceChildren(buildTable(filtered(items).filter(x=>filter==='all'||itemKind(x)===filter),'No items match these filters.'));
  $('favoritesTable').replaceChildren(buildTable(filtered(items.filter(x=>x.favorite)),'No favorite items yet.'));
- $('vaultUsed').textContent=vs.length;$('capacityBar').style.width=(vs.length/2*100)+'%';
- $('capLabel').textContent=vs.length>=2?'Limit reached':`${2-vs.length} slot${2-vs.length===1?'':'s'} left`;
- $('quickCreateVault').disabled=vs.length>=2;$('newVaultButton').disabled=vs.length>=2;$('topNew').disabled=vs.length>=2;$('topNew').title=vs.length>=2?'Two-vault limit reached':'Create new vault';
- $('vaultCountTag').textContent=vs.length+' of 2 used';$('manageVaults').replaceChildren(...vs.map(vaultTile));
+ const localMode=!!window.AvenlockLocal?.active;
+ $('vaultUsed').textContent=vs.length;$('capacityBar').style.width=(Math.min(2,vs.length)/2*100)+'%';
+ $('capLabel').textContent=localMode?`${vs.length} encrypted on device`:vs.length>=2?'Limit reached':`${2-vs.length} slot${2-vs.length===1?'':'s'} left`;
+ $('quickCreateVault').disabled=!localMode&&vs.length>=2;$('newVaultButton').disabled=!localMode&&vs.length>=2;$('topNew').disabled=!localMode&&vs.length>=2;$('topNew').title=localMode?'Create encrypted device vault':vs.length>=2?'Two-vault limit reached':'Create new vault';
+ $('vaultCountTag').textContent=localMode?`${vs.length} saved on device`:vs.length+' of 2 used';$('manageVaults').replaceChildren(...vs.map(vaultTile));
  const checks=[{title:'Weak passwords',body:'Short, patterned, or common-prefix login passwords',count:h.weak,icon:'alert',good:h.weak===0},{title:'Reused passwords',body:'Logins sharing an identical password',count:h.reused,icon:'refresh',good:h.reused===0},{title:'Logins without local warnings',body:'No issues found by these basic local checks',count:h.good,icon:'shield-check',good:true}];
  const issueArea=$('securityIssues');issueArea.replaceChildren();
  for(const c of checks){
@@ -506,11 +513,11 @@ function render(){
    const review=actionButton('linkbtn',{'data-open':x.id});review.textContent='Review →';row.append(content,review);issueArea.append(row);
   }
  }
- const syncLabel=cloud.deviceOnly?(state.dirty?'Saving on device':'Saved on device'):!cloud.syncEnabled?'Sync off':cloud.conflict?'Sync conflict':state.dirty?'Unsaved changes':cloud.saveInProgress?'Syncing…':'Unlocked';
- const failure=(!isCloudSyncAllowed() ? (state.dirty && !cloud.deviceOnly ? 'Cloud sync is paused. Changes are not uploaded; download an encrypted backup.' : '') : cloud.lastSaveError) || (cloud.conflict?'Another device saved a newer version. Download a backup and reconcile before continuing.':cloud.autoLockDeferred?'Automatic lock deferred while changes are unsaved. Retry sync or download an encrypted backup.':'');
+ const syncLabel=window.AvenlockLocal?.active?(state.dirty?'Saving encrypted changes…':'Saved on device'):cloud.deviceOnly?'Device-only':!cloud.syncEnabled?'Sync off':cloud.conflict?'Sync conflict':state.dirty?'Unsaved changes':cloud.saveInProgress?'Syncing…':'Unlocked';
+ const failure=(window.AvenlockLocal?.active ? (window.AvenlockLocal.saveError || '') : (!isCloudSyncAllowed() ? (state.dirty ? 'Changes are not syncing. Download an encrypted backup before closing or locking this vault.' : '') : cloud.lastSaveError)) || (cloud.conflict?'Another device saved a newer version. Download a backup and reconcile before continuing.':cloud.autoLockDeferred?'Automatic lock deferred while changes are unsaved. Retry sync or download an encrypted backup.':'');
  $('approvedSyncNotice').hidden=!failure;
  $('approvedSyncMessage').textContent=failure;
- $('approvedSyncRetry').disabled=!isCloudSyncAllowed() || !!cloud.conflict || cloud.saveInProgress;
+ $('approvedSyncRetry').disabled=window.AvenlockLocal?.active ? !window.AvenlockLocal.saveError : (!isCloudSyncAllowed() || !!cloud.conflict || cloud.saveInProgress);
  $('approvedVaultStatus').title=failure||syncLabel;
  renderSyncControls();
  $('approvedVaultStatus').replaceChildren(el('span','dot'),document.createTextNode(' '+(cloud.vaultLabel||state.vault.name||'Your vault')+' · '+syncLabel));
@@ -726,22 +733,31 @@ async function copyValue(value){
 function makePassword(length,upper=true,lower=true,numbers=true,symbols=true){return generatePassword({length,upper,lower,numbers,symbols});}
 function createQuick(){try{quick=makePassword(20);$('quickPassword').textContent=quick;}catch(e){tip(e.message);}}
 function createMain(){try{generated=makePassword(Number($('passwordLength').value),$('optUpper').checked,$('optLower').checked,$('optNumbers').checked,$('optSymbols').checked);$('approvedGeneratedPassword').textContent=generated;}catch(e){tip(e.message);}}
-function selectVault(id){
+async function selectVault(id){
  if(!cloud.loaded||!cloud.userId)return;
  if(id===activeVault()){navigate('items');return;}
+ if(window.AvenlockLocal?.active){
+  if(!state.locked && !await secureLockWithCheckpoint('Local vault locked.'))return;
+  try{await window.AvenlockLocal.open(id);}catch(error){tip(error.message||'Unable to open device vault.');}
+  return;
+ }
  displayVaultDashboard();if(!state.locked)return;
  void openVaultById(id); // Real vault unlock flow, never simulated.
 }
+async function createOfflineVaultFromWorkspace(){
+ if(!state.locked && !await secureLockWithCheckpoint('Local vault locked.'))return;
+ prepareDeviceOnlyVault();
+}
 function createVault(){
+ if(window.AvenlockLocal?.active){void createOfflineVaultFromWorkspace();return;}
  if(!cloud.loaded)return tip('Vault list is not ready.');
- if(cloud.localMode){ displayVaultDashboard(); if(state.locked)prepareDeviceOnlyVault(); return; }
  if(vaults().length>=2)return tip('Maximum two encrypted vaults per account.');
  displayVaultDashboard();if(!state.locked)return;
  prepareNewVault(); // Native validated master-password creation form.
 }
 function createVaultModal(){
+ if(window.AvenlockLocal?.active){void createOfflineVaultFromWorkspace();return;}
  if(!cloud.loaded)return tip('Vault list is not ready.');
- if(cloud.localMode){ displayVaultDashboard(); if(state.locked)prepareDeviceOnlyVault(); return; }
  if(vaults().length>=2)return tip('Maximum two encrypted vaults per account.');
  $('vaultName').value='';$('vaultDialog').showModal();$('vaultName').focus();
 }
@@ -787,37 +803,56 @@ function closeVaultGate(){
  document.body.classList.remove('approved-gate-active');
 }
 function showVaultGate(){
- if (gateLastUserId !== cloud.userId) { gateStorageChoice='cloud'; gateLastUserId=cloud.userId; }
+ if (gateLastUserId !== cloud.userId) { gateStorageChoice=window.AvenlockLocal?.active?'offline':'cloud'; gateLastUserId=cloud.userId; }
  $('app').inert=true; // The dashboard behind the password gate cannot be operated.
  document.body.classList.add('approved-gate-active');
  const unlocking=uiState.accessScreen==='unlock' && !!cloud.selectedVaultId && !!state.pendingImport;
  $('approvedGateBack').hidden=!unlocking;
- $('approvedGateRefresh').hidden=unlocking || gateStorageChoice==='offline';
- $('approvedGateCreate').hidden=unlocking || gateStorageChoice==='offline';
- $('approvedGateOffline').hidden=unlocking || gateStorageChoice==='offline';
+ $('approvedGateRefresh').hidden=unlocking || gateStorageChoice==='offline' || window.AvenlockLocal?.active;
+ $('approvedGateCreate').hidden=unlocking || gateStorageChoice==='offline' || window.AvenlockLocal?.active;
+ $('approvedGateOffline').hidden=unlocking || gateStorageChoice==='offline' || window.AvenlockLocal?.active;
  gateVaultList.hidden=unlocking || gateStorageChoice==='offline';
- $('approvedGateOffline').textContent=cloud.localMode?'New / import vault':'Use on this device';
- $('approvedGateCreate').hidden=cloud.localMode || unlocking || gateStorageChoice==='offline';
- $('approvedGateRefresh').textContent=cloud.localMode?'Refresh local vaults':'Refresh vaults';
  $('approvedGateOfflineChoice').hidden=unlocking || gateStorageChoice!=='offline';
+ $('approvedGateSignOut').textContent=window.AvenlockLocal?.active?'Exit offline workspace':'Sign out';
  gateSecureForm.hidden=!unlocking;
  if(unlocking){
   $('approvedGateEyebrow').textContent='UNLOCK ENCRYPTED VAULT';
   $('approvedGateTitle').textContent=cloud.vaultLabel||'Unlock vault';
-  $('approvedGateDescription').textContent=cloud.importSource==='device-file'
+  $('approvedGateDescription').textContent=cloud.importSource==='device-local'
+    ? 'Saved on this device. Enter the master password to decrypt it locally.'
+    : cloud.importSource==='device-file'
     ? 'Offline backup selected. Enter its master password to unlock it. Your cloud vaults will not change.'
     : "Enter this vault's master password to decrypt it on your device.";
-  $('approvedGateHelper').textContent=cloud.deviceOnly
-    ? 'Encrypted vault saved on this device. Keep a separate downloaded backup for recovery.'
+  $('approvedGateHelper').textContent=window.AvenlockLocal?.active
+    ? 'Device-only vault. Changes are encrypted and saved on this device.'
+    : cloud.deviceOnly
+    ? 'Device-only vault. Export a separate recovery backup periodically.'
     : !cloud.syncEnabled ? 'Cloud sync is off. Your new edits will not be uploaded.' : 'Your master password is never sent to the cloud.';
   if(nativeUnlockCard.parentNode!==gateSecureForm)gateSecureForm.append(nativeUnlockCard);
  }else{
   restoreNativeUnlockCard();
   $('approvedGateEyebrow').textContent='VAULT ACCESS';
-  $('approvedGateTitle').textContent=gateStorageChoice==='offline' ? 'On-device vaults' : (cloud.localMode?'Vaults on this device':'Choose your vault');
+  $('approvedGateTitle').textContent=gateStorageChoice==='offline' ? (window.AvenlockLocal?.active?'Your device vaults':'Work offline') : 'Choose your vault';
   $('approvedGateDescription').textContent=gateStorageChoice==='offline'
-    ? 'Create a vault or open a backup.'
-    : cloud.localMode?'Select a locally encrypted vault. No account or internet required.':'Choose a cloud vault, or create one stored on this device.';
+    ? 'Open a saved local vault, create a private vault, or import an encrypted backup.'
+    : 'Choose an encrypted workspace or use the private device-only option.';
+  const localList=$('avenlockLocalVaultList');localList.replaceChildren();
+  if(window.AvenlockLocal?.active && gateStorageChoice==='offline') {
+    const saved=window.AvenlockLocal.cachedList;
+    if (!saved.length) localList.append(el('p','avenlock-local-empty','No saved device vaults yet. Create one or import an encrypted backup.'));
+    for(const entry of saved) {
+      const button=el('button','avenlock-local-card');button.type='button';
+      const symbol=el('span','avenlock-local-symbol','◈');symbol.setAttribute('aria-hidden','true');
+      const name=el('strong','',entry.source==='recovery'?'Recover unsaved changes':'Device vault');
+      const date=el('small','',`${entry.source==='recovery'?'Encrypted recovery checkpoint':'Encrypted on this device'} · ${new Date(entry.savedAt).toLocaleDateString()}`);
+      button.append(symbol,name,date);button.addEventListener('click',async()=>{
+        try { if(entry.source==='recovery') await window.AvenlockLocal.openRecovery(entry.id);
+          else await window.AvenlockLocal.open(entry.id); }
+        catch(error){$('approvedGateHelper').textContent=error.message;}
+      });
+      localList.append(button);
+    }
+  }
   $('approvedGateCreate').disabled=!cloud.loaded || cloud.vaults.length>=2;
   $('approvedOfflineCreate').disabled=!cloud.loaded;
   $('approvedOfflineImport').disabled=!cloud.loaded;
@@ -829,7 +864,7 @@ function showVaultGate(){
    gateVaultList.append(message);
   }else if(!cloud.vaults.length){
    const message=document.createElement('p');
-   message.textContent=cloud.localMode?'No encrypted on-device vaults yet. Create or import one to begin.':'No cloud vaults yet. Create your first vault.';
+   message.textContent='No cloud vaults yet. Create your first vault.';
    gateVaultList.append(message);
   }else{
    for(const vault of cloud.vaults){
@@ -839,7 +874,7 @@ function showVaultGate(){
     const lock=document.createElement('span');lock.className='approved-gate-lock';lock.textContent='🔒';lock.setAttribute('aria-hidden','true');
     const body=document.createElement('span');body.className='approved-gate-vault-label';
     const name=document.createElement('strong');name.textContent=vault.label||'Encrypted vault';
-    const description=document.createElement('small');description.textContent=cloud.localMode?'Encrypted on this device · Master password required':'Encrypted cloud vault · Master password required';
+    const description=document.createElement('small');description.textContent='Encrypted · Master password required';
     body.append(name,description);
     const arrow=document.createElement('span');arrow.className='approved-gate-arrow';arrow.textContent='→';arrow.setAttribute('aria-hidden','true');
     button.append(lock,body,arrow);
@@ -858,9 +893,24 @@ function showVaultGate(){
  }
  if(!gate.open)gate.showModal();
 }
-$('approvedGateBack').addEventListener('click',()=>{gateStorageChoice='cloud';displayVaultDashboard();});
-$('approvedGateOffline').addEventListener('click',()=>{clearStatus(els.unlockStatus);gateStorageChoice='offline';showVaultGate();});
-$('approvedOfflineBack').addEventListener('click',()=>{gateStorageChoice='cloud';showVaultGate();});
+$('approvedGateBack').addEventListener('click',()=>{gateStorageChoice=window.AvenlockLocal?.active?'offline':'cloud';displayVaultDashboard();});
+$('approvedGateOffline').addEventListener('click',async()=>{
+ clearStatus(els.unlockStatus);
+ if (!window.AvenlockLocal?.active && cloud.userId) {
+  $('approvedGateHelper').textContent='Closing your cloud session before opening an independent device workspace…';
+  await handleSignOut();
+  if (!cloud.userId) {
+   if (!await window.AvenlockLocal.enter()) return;
+   gateStorageChoice='offline';showVaultGate();
+  } else {
+   $('approvedGateHelper').textContent='Cloud sign-out could not be completed. Sign out securely, then choose Work offline on the sign-in screen.';
+  }
+  return;
+ }
+ gateStorageChoice='offline';showVaultGate();
+});
+window.addEventListener('avenlock-local-list',()=>{if(window.AvenlockLocal?.active && gate.open && uiState.accessScreen==='dashboard')showVaultGate();});
+$('approvedOfflineBack').addEventListener('click',()=>{if(window.AvenlockLocal?.active)return;gateStorageChoice='cloud';showVaultGate();});
 $('approvedOfflineCreate').addEventListener('click',()=>{prepareDeviceOnlyVault();syncVisible();});
 $('approvedOfflineImport').addEventListener('click',()=>{
  if(!state.locked || !cloud.loaded)return;
@@ -889,13 +939,12 @@ $('approvedGateRefresh').addEventListener('click',async()=>{
 });
 gate.addEventListener('cancel',e=>{e.preventDefault();if(uiState.accessScreen==='unlock')displayVaultDashboard();});
 function syncVisible(){
- document.body.classList.toggle('ciphora-local-mode',!!cloud.localMode);
  renderSyncControls();
  if(ready()){
   closeVaultGate();
   $('approvedUI').hidden=false;
   if(profileLoadedUserId && profileLoadedUserId!==cloud.userId)resetAccountProfile();
-  if(!cloud.localMode && profileLoadedUserId!==cloud.userId && !profileLoading)void loadAccountProfile();
+  if(!window.AvenlockLocal?.active && profileLoadedUserId!==cloud.userId && !profileLoading)void loadAccountProfile();
   const saved=new URL(location.href).searchParams.get('view');
   if(!window.__pvApprovedWasUnlocked){window.__pvApprovedWasUnlocked=true;createMain();createQuick();navigate(pageTitles[saved]?saved:'overview',false);
    if(window.matchMedia('(max-width:760px)').matches){try{if(!sessionStorage.getItem('pv-mobile-greeted')){sessionStorage.setItem('pv-mobile-greeted','1');tip('Welcome back · Your vault is ready');}}catch{}}
@@ -933,17 +982,17 @@ function renderSyncControls(){
   setting.checked=enabled;
   // Device-only vaults are never promoted via a sync setting. This preference
   // applies to cloud vaults, and remains unchanged when working device-only.
-  setting.disabled=!!cloud.deviceOnly;
+  setting.disabled=cloud.deviceOnly && !state.locked;
   const label=setting.closest('label')?.querySelector('span');
   if(label) label.textContent=cloud.deviceOnly?'Unavailable':enabled?'Enabled':'Paused';
  }
- const command=document.querySelector('#approvedUI [data-unwired="Encrypted cloud sync"]');
- if(command)command.textContent=enabled?'Sync encrypted vault':'Cloud sync settings';
- const text=cloud.deviceOnly
-  ? 'Device-only · Encrypted changes save on this device. Keep a separate backup; never uploaded.'
+ const text=window.AvenlockLocal?.active
+  ? 'Device vault · Encrypted changes save automatically on this device. Export a separate recovery backup periodically.'
+  : cloud.deviceOnly
+  ? 'Device-only · No uploads. Download a backup after edits.'
   :enabled
     ? 'Cloud sync on · Encrypted changes upload to your account.'
-    : 'Cloud sync paused · New edits stay in this session until you download a backup. An in-progress upload may finish.';
+    : 'Cloud sync paused · New edits stay here. An in-progress upload may finish. Download a backup before leaving.';
  for(const id of ['pvSettingsSyncDescription','pvBackupSyncSummary']){const node=$(id);if(node)node.textContent=text;}
 }
 $('pvSettingsSyncToggle').addEventListener('change',event=>{
@@ -981,7 +1030,7 @@ $('flowsToggle').addEventListener('click',()=>{closeAccountMenu();const visible=
 $('lockShortcut').addEventListener('click',()=>lockVault('Manual lock'));
 $('accountShortcut').addEventListener('click',()=>{$('flowsMenu').classList.add('hidden');$('flowsToggle').setAttribute('aria-expanded','false');const open=$('accountMenu').classList.toggle('hidden');$('accountShortcut').setAttribute('aria-expanded',String(!open));if(!open)$('accountMenu button').focus();});
 $('topNew').addEventListener('click',createVaultModal);
-$('approvedSyncRetry').addEventListener('click',()=>void saveCloudVault(true));
+$('approvedSyncRetry').addEventListener('click',()=>void (window.AvenlockLocal?.active?window.AvenlockLocal.flush():saveCloudVault(true)));
 $('approvedSyncBackup').addEventListener('click',async()=>{
  await handleExportVault();
  if(els.downloadVaultLink.dataset.objectUrl){
@@ -1045,7 +1094,7 @@ $('approvedUI').addEventListener('click',e=>{
  const moveBasket=target.closest('[data-basket-move]');if(moveBasket){basketMoveTarget=moveBasket.dataset.basketMove;const x=findItem(basketMoveTarget);if(!x)return;$('pvbMoveDescription').textContent=x.title;const sel=$('pvbMoveSelect');sel.replaceChildren();for(const b of basketDefs()){const opt=document.createElement('option');opt.value=b.id;opt.textContent=basketName(b.id);opt.selected=b.id===itemBasket(basketMoveTarget);sel.append(opt);}$('pvbMoveDialog').showModal();return;}
  const settingsChoice=target.closest('[data-settings-section]');if(settingsChoice){openSettingsSection(settingsChoice.dataset.settingsSection);return;}
  const settingsBack=target.closest('[data-settings-back]');if(settingsBack){showSettingsHome();$('pvSettingsHome').querySelector('[data-settings-section]').focus({preventScroll:true});return;}
- const profileAction=target.closest('[data-profile-action]');if(profileAction){if(profileAction.dataset.profileAction==='password'){navigate('settings');openSettingsSection('account');$('changeAccountPasswordForm').scrollIntoView({behavior:'smooth',block:'center'});$('currentAccountPassword').focus();}return;}
+ const profileAction=target.closest('[data-profile-action]');if(profileAction){if(window.AvenlockLocal?.active){tip('A cloud account is required for account password changes.');return;}if(profileAction.dataset.profileAction==='password'){navigate('settings');openSettingsSection('account');$('changeAccountPasswordForm').scrollIntoView({behavior:'smooth',block:'center'});$('currentAccountPassword').focus();}return;}
  const close=target.closest('[data-close]');if(close){$(close.dataset.close).close();return;}
  const to=target.closest('[data-page]');if(to){closeAccountMenu();navigate(to.dataset.page);
   // Pointer activation leaves focus on the menu button; that otherwise keeps
@@ -1059,10 +1108,9 @@ $('approvedUI').addEventListener('click',e=>{
  const v=target.closest('[data-selectvault]');if(v){selectVault(v.dataset.selectvault);return;}
  const flow=target.closest('[data-flow]');if(flow){closeAccountMenu();if(flow.dataset.flow==='signout')void handleSignOut();else if(flow.dataset.flow==='lock')lockVault('Manual lock');else navigate('vaults');return;}
  const unw=target.closest('[data-unwired]');if(unw){
-  if(cloud.localMode && /Account password change|Protected deletion confirmation/.test(unw.dataset.unwired)){tip('Account controls require an online signed-in account.');return;}
   switch(unw.dataset.unwired){
   case 'Encrypted backup export':case 'Backup export': void handleExportVault();break;
-  case 'Encrypted cloud sync':if(!isCloudSyncAllowed()){navigate('settings');openSettingsSection('backups');tip('Cloud sync is paused. Enable it in settings to upload.');}else void saveCloudVault(true);break;
+  case 'Encrypted cloud sync':void (window.AvenlockLocal?.active?window.AvenlockLocal.flush():saveCloudVault(true));break;
   case 'Account password change':navigate('settings');openSettingsSection('account');$('changeAccountPasswordForm').scrollIntoView({behavior:'smooth',block:'center'});$('currentAccountPassword').focus();break;
   case 'Protected deletion confirmation':navigate('settings');openSettingsSection('account');$('approvedAccountManagement').scrollIntoView({behavior:'smooth',block:'start'});break;
   default:info('Account management','Use the protected account controls in Settings.');

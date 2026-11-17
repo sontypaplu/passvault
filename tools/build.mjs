@@ -59,29 +59,55 @@ releaseHasher.update(html);
 addBuildInputs(join(target, 'src'), 'src/');
 addBuildInputs(join(target, 'icons'), 'icons/');
 releaseHasher.update(readFileSync(join(target, 'manifest.webmanifest')));
-releaseHasher.update(readFileSync(join(root, 'sw.js')));
 const buildId = releaseHasher.digest('hex').slice(0, 16);
 html = html.replace('name="passvault-build" content="development"', `name="passvault-build" content="${buildId}"`);
 html = html.replace(/((?:src|href)="\.\/src\/[^"?]+)(")/g, `$1?pv=${buildId}$2`);
 writeFileSync(join(target, 'index.html'), html, 'utf8');
-writeFileSync(join(target, 'app-version.json'), JSON.stringify({ version: '4.0.0', build: buildId, offlineCapable: true }) + '\n');
-// Pre-cache ONLY public, immutable app-shell assets. No account data or API
-// responses are ever included. The URL query matches the published HTML.
-const staticFiles = ['./','./index.html','./manifest.webmanifest'];
-for(const path of ['src/js','src/css','icons']) {
-  function scan(dir,rel) {
-    for(const file of readdirSync(dir,{withFileTypes:true})) {
-      const f=rel+'/'+file.name;
-      if(file.isDirectory())scan(join(dir,file.name),f);
-      else if(file.isFile())staticFiles.push('./'+f+((path==='src/js'||path==='src/css')?'?pv='+buildId:''));
+writeFileSync(join(target, 'app-version.json'), JSON.stringify({ version: '4.0.0', build: buildId, onlineOnly: false, offlineCapable: true }) + '\n');
+// The service worker caches ONLY same-origin public application resources.
+// NEVER add API responses, tokens, backup files or decrypted vault data.
+const staticFiles = ['index.html','manifest.webmanifest',
+  ...(() => {
+    const names = [];
+    function collect(dir, prefix = '') {
+      for (const file of readdirSync(dir, { withFileTypes:true })) {
+        if (file.isDirectory()) collect(join(dir,file.name),prefix+file.name+'/');
+        else if (file.isFile()) names.push(prefix+file.name);
+      }
     }
+    collect(join(target,'src'),'src/');collect(join(target,'icons'),'icons/');
+    return names;
+  })()];
+const cachePaths = staticFiles.map(file => './' + file + (file.startsWith('src/') ? '?pv=' + buildId : ''));
+const serviceWorker = `/* AVENLOCK static-only offline shell: ${buildId} */
+'use strict';
+const CACHE = 'avenlock-shell-${buildId}';
+const STATIC = ${JSON.stringify(cachePaths)};
+const ALLOWED = new Set(STATIC.map(path => new URL(path, self.registration.scope).href));
+self.addEventListener('install', event => {
+  event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(STATIC)).then(() => self.skipWaiting()));
+});
+self.addEventListener('activate', event => {
+  event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key.startsWith('avenlock-shell-') && key !== CACHE).map(key => caches.delete(key)))).then(() => self.clients.claim()));
+});
+self.addEventListener('fetch', event => {
+  const request = event.request;
+  if (request.method !== 'GET') return;
+  const url = new URL(request.url);
+  if (url.origin !== self.location.origin || !url.pathname.startsWith(new URL(self.registration.scope).pathname)) return;
+  if (url.pathname.endsWith('/app-version.json')) return; // Never cache release checks.
+  if (request.mode === 'navigate') {
+    event.respondWith(fetch(request).catch(async () => {
+      const cached = await caches.open(CACHE);
+      return (await cached.match('./index.html')) || Response.error();
+    }));
+    return;
   }
-  scan(join(target,path),path);
-}
-let sw = readFileSync(join(root,'sw.js'),'utf8')
-  .replace('__CIPHORA_BUILD__',buildId)
-  .replace('__CIPHORA_FILES__',JSON.stringify(staticFiles));
-writeFileSync(join(target,'sw.js'),sw,'utf8');
+  if (!ALLOWED.has(request.url)) return;
+  event.respondWith(caches.match(request).then(hit => hit || fetch(request)));
+});
+`;
+writeFileSync(join(target,'sw.js'),serviceWorker,'utf8');
 const digest = createHash('sha256').update(sdkBytes).digest('hex');
-writeFileSync(join(target, 'DEPENDENCY_INFO.txt'), `Supabase JS 2.119.0 (self-hosted from npm package)\nSHA-256: ${digest}\n`, 'utf8');
+writeFileSync(join(target, 'DEPENDENCY_INFO.txt'), `Supabase JS 2.118.0 (self-hosted from locked npm package)\nSHA-256: ${digest}\n`, 'utf8');
 console.log(`Built ${target} | release ${buildId} | SDK SHA-256 ${digest} | CSP ${validUrl ? 'project-scoped' : 'preview-only'}`);

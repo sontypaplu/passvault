@@ -10,7 +10,7 @@ function initializeSyncPreference(userId) {
   cloud.lastBackup = null;
   window.dispatchEvent(new Event('passvault-sync-change'));
 }
-function isCloudSyncAllowed() { return !cloud.localMode && cloud.syncEnabled && !cloud.deviceOnly && !String(cloud.selectedVaultId || '').startsWith('device-'); }
+function isCloudSyncAllowed() { return cloud.syncEnabled && !cloud.deviceOnly && !String(cloud.selectedVaultId || '').startsWith('device-'); }
 function setCloudSyncEnabled(enabled) {
   if (!cloud.userId) return false;
   if (enabled && cloud.deviceOnly) {
@@ -93,13 +93,8 @@ async function resetCloudUserState() {
 }
 
 async function loadAccountVault(session) {
-  if (window.PassVaultAuth?.recoveryPending || cloud.localMode) return;
-  // An installed app must not force users into a failed remote-vault load just
-  // because Supabase has a cached tab session when launching without internet.
-  if (navigator.onLine === false && state.locked && !cloud.userId && session?.user?.id) {
-    setStatus(els.accessStatus, 'Offline: cloud accounts need internet. Choose Use on this device to open encrypted local vaults.', 'warning');
-    return;
-  }
+  if (window.AvenlockLocal?.active) return;
+  if (window.PassVaultAuth?.recoveryPending) return;
   if (!session?.user?.id) { await resetCloudUserState(); return; }
   const userId = session.user.id;
   if (cloud.userId === userId) return;
@@ -132,14 +127,7 @@ async function loadAccountVault(session) {
 const ACCOUNT_IDLE_LIMIT_MS = 15 * 60 * 1000;
 let idleSignOutPending = false;
 async function updateAccountInactivity() {
-  if (!cloud.userId || idleSignOutPending) return;
-  if (cloud.localMode) {
-    if (Date.now()-state.lastActivity >= ACCOUNT_IDLE_LIMIT_MS) {
-      await secureLockWithCheckpoint('Device vault locked after inactivity.');
-      state.lastActivity=Date.now();
-    }
-    return;
-  }
+  if (window.AvenlockLocal?.active || !cloud.userId || idleSignOutPending) return;
   if (Date.now() - state.lastActivity < ACCOUNT_IDLE_LIMIT_MS) return;
   idleSignOutPending = true;
   try {
@@ -187,7 +175,7 @@ function confirmBackupBeforeSignOut() {
     ack.disabled = !ready;
     confirmButton.disabled = !ready || !ack.checked;
     status.textContent = ready
-      ? 'Encrypted backup prepared. Verify the file in Downloads/Files; use the manual save link if required. Confirm only after checking it.'
+      ? 'Backup download requested. Check your Downloads or Files app. If nothing downloaded, expand “Download didn\'t start?” to save it manually. Confirm only after checking the file.'
       : 'Download the latest encrypted backup before signing out. Verify it is saved on your device.';
   };
   refresh();
@@ -224,7 +212,11 @@ function confirmBackupBeforeSignOut() {
   return signOutBackupPrompt;
 }
 async function handleSignOut() {
-  if (cloud.localMode) { await window.CiphoraLocal.exit(); return; }
+  if (typeof window !== 'undefined' && window.AvenlockLocal?.active) {
+    try { await window.AvenlockLocal.leave(); }
+    catch(error) { setGlobalStatus(error.message || 'Device vault could not be safely closed.', 'error'); }
+    return;
+  }
   if (!cloud.client) return;
   if (!await confirmBackupBeforeSignOut()) return;
   // Signing out always locks immediately. Unsaved changes are encrypted into

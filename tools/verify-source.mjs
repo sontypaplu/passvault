@@ -18,5 +18,5 @@ if(!/vault_limit_reached/.test(sql) || !/pg_advisory_xact_lock/.test(sql) || !/B
 if(!premium.includes('saveCloudVault(true)') || !premium.includes('state.vault.credentials') || !js.includes('validateVaultPlaintext')) throw new Error('Expected encrypted vault integration missing');
 if(/<script\b(?![^>]*\bsrc=)/i.test(html)) throw new Error('Inline script is forbidden');
 if(html.includes('cdn.jsdelivr.net') || html.includes('style=')) throw new Error('External CDN or inline styles found');
-if(!/script-src 'self' 'wasm-unsafe-eval'/.test(html) || !/worker-src blob:/.test(html)) throw new Error('Encryption worker CSP not preserved');
-console.log(`Ciphora 4.0 source checks passed (${ids.length} unique ids).`);
+if(!/script-src 'self' 'wasm-unsafe-eval'/.test(html) || !/worker-src 'self' blob:/.test(html)) throw new Error('Encryption worker CSP not preserved');
+console.log(`AVENLOCK source checks passed (${ids.length} unique ids).`);

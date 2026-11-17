@@ -133,8 +133,8 @@
     if(!ui.init || !canRead()) return;
     txt('pv3Email',cloud.email||'Signed in');
     txt('pv3VaultTitle',cloud.vaultLabel||state.vault.name||'Your vault');
-    txt('pv3Sync',!isCloudSyncAllowed()?'Device-only · no cloud sync':cloud.conflict?'Sync conflict':state.dirty?'Unsaved changes':cloud.saveInProgress?'Saving…':'Encrypted cloud sync');
-    txt('pv3SaveText', !isCloudSyncAllowed()?'Cloud uploads are paused. Download an encrypted backup after editing.':cloud.conflict?'A newer cloud revision exists. Export a backup before making further changes.':state.dirty?'Changes are pending encrypted cloud save.':'Vault encryption is performed in your browser.');
+    txt('pv3Sync',window.AvenlockLocal?.active?(state.dirty?'Saving on device…':'Saved on device'):!isCloudSyncAllowed()?'Device-only · no cloud sync':cloud.conflict?'Sync conflict':state.dirty?'Unsaved changes':cloud.saveInProgress?'Saving…':'Encrypted cloud sync');
+    txt('pv3SaveText',window.AvenlockLocal?.active?(window.AvenlockLocal.saveError||'Encrypted edits are automatically saved on this device. Keep an independent recovery backup.'):!isCloudSyncAllowed()?'Cloud uploads are paused. Download an encrypted backup after editing.':cloud.conflict?'A newer cloud revision exists. Export a backup before making further changes.':state.dirty?'Changes are pending encrypted cloud save.':'Vault encryption is performed in your browser.');
     renderVaults();renderItems();renderHealth();
   }
   function clean() {
@@ -173,20 +173,30 @@
     for(const b of pv('premiumApp').querySelectorAll('[data-pv-view]')) {const active=b.dataset.pvView===view;b.classList.toggle('active',active);if(active)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');}
     txt('pv3Crumb',({overview:'Overview',items:'All items',favorites:'Favorites',vault:cloud.vaultLabel,security:'Security center',generator:'Password generator',settings:'Settings'})[view]);
     if(push){ const url = new URL(location.href);url.searchParams.set('view',view);url.searchParams.delete('auth');if(url.href!==location.href)history.pushState({pvView:view},'',url); }
-    document.title = `${({overview:'Overview',items:'All items',favorites:'Favorites',vault:'My vault',security:'Security center',generator:'Password generator',settings:'Settings'})[view]} | Ciphora`;
+    document.title = `${({overview:'Overview',items:'All items',favorites:'Favorites',vault:'My vault',security:'Security center',generator:'Password generator',settings:'Settings'})[view]} | AVENLOCK`;
     closeMobileNav();renderItems();
     const main=pv('pv3Main'); if(main)main.scrollTop=0;
     window.scrollTo({top:0,behavior:'instant'});
     if(moveFocus){const heading=pv(`pv3View-${view}`)?.querySelector('h1');if(heading){heading.tabIndex=-1;heading.focus({preventScroll:true});}}
   }
-  function selectVault(id) {
+  async function selectVault(id) {
     if (!cloud.userId || !cloud.loaded) return;
+    if (window.AvenlockLocal?.active) {
+      if (id===cloud.selectedVaultId) {navigate('vault');return;}
+      if (!state.locked && !await secureLockWithCheckpoint('Local vault locked.'))return;
+      try { await window.AvenlockLocal.open(id); } catch(err){notify(err.message||'Device vault could not be opened.');}
+      return;
+    }
     if(id===cloud.selectedVaultId) {navigate('vault');return;}
     displayVaultDashboard();
     if(!state.locked) return; // user declined discard confirmation
     void openVaultById(id);
   }
   function createVault() {
+    if (window.AvenlockLocal?.active) {
+      void (async()=>{if(!state.locked && !await secureLockWithCheckpoint('Local vault locked.'))return;prepareDeviceOnlyVault();})();
+      return;
+    }
     if(!cloud.loaded) return notify('Vault list is not ready.');
     if(cloud.vaults.length>=2) return notify('Limit reached: two encrypted vaults per account.');
     displayVaultDashboard();if(!state.locked)return;
@@ -329,7 +339,7 @@
     pv('pv3Sort').addEventListener('change',()=>{ui.sort=pv('pv3Sort').value;renderItems();});
     for(const id of ['pv3CreateVault','pv3CreateVaultSide'])pv(id).addEventListener('click',createVault);
     for(const id of ['pv3ManageVaults','pv3AllVaults','pv3SettingsManage'])pv(id).addEventListener('click',displayVaultDashboard);
-    for(const id of ['pv3Save','pv3SettingsSave'])pv(id).addEventListener('click',()=>void saveCloudVault(true));
+    for(const id of ['pv3Save','pv3SettingsSave'])pv(id).addEventListener('click',()=>void (window.AvenlockLocal?.active?window.AvenlockLocal.flush():saveCloudVault(true)));
     for(const id of ['pv3Backup','pv3SettingsBackup'])pv(id).addEventListener('click',()=>void handleExportVault());
     pv('pv3Lock').addEventListener('click',()=>lockVault('Manual lock'));
     pv('pv3SignOut').addEventListener('click',()=>void handleSignOut());
