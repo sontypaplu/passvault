@@ -1,119 +1,245 @@
-/* Approved AVENLOCK concept — login, onboarding, vault chooser and offline access only.
-   Existing unlocked-vault theme/tokens are deliberately untouched. */
-#loginView { --al-navy:#0c1d30; --al-ink:#15283f; --al-sub:#65758a; --al-blue:#345edc;
-  --al-pale:#f6f8fc; --al-border:#e5eaf1; font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
-#loginView .avenlock-auth-shell { display:grid; grid-template-columns:minmax(360px,47%) minmax(0,1fr);min-height:100dvh; }
-#loginView .avenlock-art { background:radial-gradient(ellipse at 72% 22%,#234466 0,transparent 48%),linear-gradient(140deg,#0b1c2d,#12314e 78%,#173c56);padding:54px clamp(34px,6vw,100px);display:flex;flex-direction:column;position:relative;isolation:isolate;overflow:hidden;color:#fff; }
-#loginView .avenlock-art:after { content:"";position:absolute;width:550px;height:550px;border:1px solid #ffffff19;right:-215px;bottom:-165px;border-radius:50%;box-shadow:0 0 0 70px #ffffff09,0 0 0 155px #ffffff05;z-index:-1;pointer-events:none; }
-#loginView .avenlock-brand { display:flex;align-items:center;gap:12px;letter-spacing:.1em;font-size:19px; }
-#loginView .avenlock-brand strong { display:block;font-weight:800; }
-#loginView .avenlock-brand small { display:block;font-size:9px;letter-spacing:.23em;opacity:.7;margin-top:4px;font-weight:650; }
-#loginView .avenlock-brand-icon { width:44px;height:44px;border:1px solid rgba(255,255,255,.3);border-radius:13px;display:grid;place-items:center;background:rgba(255,255,255,.08); }
-#loginView .avenlock-brand-icon svg { width:29px;height:29px; }
-#loginView .avenlock-art-body { margin:auto 0;padding:80px 0; }
-#loginView .avenlock-eyebrow { font-size:11px;color:#adc7e6;letter-spacing:.2em;font-weight:800;margin-bottom:24px; }
-#loginView .avenlock-art h1 { margin:0 0 22px;font-size:clamp(40px,4.4vw,71px);line-height:1.08;letter-spacing:-.052em;font-weight:650;max-width:560px;color:#fff; }
-#loginView .avenlock-art h1 em { font-style:normal;color:#97bafb; }
-#loginView .avenlock-art-body p { font-size:17px;line-height:1.75;color:#b9cbdf;max-width:430px;margin:0; }
-#loginView .avenlock-art-foot { display:flex;flex-wrap:wrap;gap:14px 25px;font-size:12px;color:#b6cadd; }
-#loginView .avenlock-art-foot span:before { content:"✓";font-weight:bold;color:#8ed3b8;margin-right:8px; }
-#loginView .avenlock-auth-content { background:var(--surface,#fff);display:flex;flex-direction:column;min-width:0;padding:22px clamp(26px,6vw,94px) 14px; }
-#loginView .entry-topbar { min-height:52px;padding:0;justify-content:flex-end;gap:24px;border:0;background:none;box-shadow:none; }
-#loginView .entry-topbar>.brand { display:none; }
-#loginView .avenlock-auth-nav { display:flex;align-items:center;gap:18px; }
-#loginView .avenlock-auth-nav button { background:transparent;border:0;color:var(--al-sub);font-size:13px;font-weight:650;padding:8px 0;cursor:pointer; }
-#loginView .avenlock-auth-nav button:hover { color:var(--al-blue); }
-#loginView .theme-toggle { flex-shrink:0;font-size:12px; }
-#loginView .entry-main { padding:42px 0;display:flex;align-items:center;justify-content:center;flex:1;max-width:none;width:100%;margin:0;min-height:0; }
-#loginView .approved-auth-intro { display:none!important; }
-#loginView .entry-card { box-sizing:border-box;display:block;width:100%;max-width:440px;margin:0 auto;padding:0;border:0;border-radius:0;box-shadow:none;background:none; }
-#loginView .entry-card.hidden { display:none!important; }
-#loginView .entry-symbol { display:none; }
-#loginView .entry-eyebrow { color:#5474b8;font-size:11px;letter-spacing:.22em;font-weight:800;margin:0 0 18px; }
-#loginView .entry-eyebrow .entry-dot { display:none; }
-#loginView .entry-card h1 { font-size:clamp(30px,3.25vw,38px);line-height:1.18;letter-spacing:-.045em;font-weight:750;margin:0 0 10px;color:var(--text-strong,var(--al-ink)); }
-#loginView .entry-subtitle { margin:10px 0 30px;color:var(--muted,var(--al-sub));line-height:1.65;font-size:15px; }
-#loginView .entry-card .field { margin:18px 0; }
-#loginView .entry-card .field label { display:block;font-size:13px;font-weight:680;margin-bottom:10px;color:var(--text-strong,var(--al-ink)); }
-#loginView .entry-card input:not([type=checkbox]) { width:100%;height:51px;padding:0 16px;border:1px solid var(--border,#d9e1ee);border-radius:12px;background:var(--input,#fff);color:var(--text,#15283f);font-size:14px;box-shadow:none; }
-#loginView .entry-card input:focus { border-color:#486cf0;box-shadow:0 0 0 3px #6a83f723; }
-#loginView .entry-card .access-submit { display:block;width:100%;min-height:51px;border-radius:12px;background:#345edc;color:#fff;font-weight:700;font-size:14px;box-shadow:0 7px 18px #3159ce26;margin:18px 0 0; }
-#loginView .entry-card .access-submit:hover { background:#244cbe; }
-#loginView .account-register-button { display:none; }
-#loginView .entry-card .auth-link { border:0;background:transparent;color:#3657bb;font-weight:650;font-size:13px;padding:9px 0;margin-top:14px; }
-#loginView .entry-card .auth-link:hover { text-decoration:underline; }
-#loginView .entry-install { display:none; }
-#loginView .entry-install-status { display:none; }
-#loginView .entry-disclaimer { margin:22px 0 0;font-size:12px;color:var(--muted); }
-#loginView .avenlock-auth-extra { border-top:1px solid var(--border);padding-top:18px;margin-top:23px; }
-#loginView .avenlock-offline-btn { display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 14px;width:100%;border-radius:12px;background:var(--surface-subtle,#f7f9fe);border:1px solid var(--border,#e1e8f1);font-size:14px;color:var(--text-strong);font-weight:700;text-align:left;cursor:pointer; }
-#loginView .avenlock-offline-btn:hover { border-color:#a7bde8; }
-#loginView .avenlock-auth-extra p { margin:7px 0 0;font-size:11px;color:var(--muted);line-height:1.6; }
-#loginView .entry-footer { padding:14px 0;border:0;background:none;text-align:center;font-size:11px;color:var(--muted); }
-#loginView .avenlock-install-step { padding:14px 0;display:flex;flex-direction:column;gap:7px;border-top:1px solid var(--border); }
-#loginView .avenlock-install-step strong { font-size:14px;color:var(--text-strong); }
-#loginView .avenlock-install-step span { font-size:13px;line-height:1.6;color:var(--muted); }
-/* The vault picker now uses the approved full-page card layout, not a tiny modal. */
-dialog#approvedVaultGate { position:fixed;inset:0;width:100vw;max-width:none;height:100dvh;max-height:none;margin:0;border:0;border-radius:0;padding:0;overflow-y:auto;background:var(--bg,#f6f8fc);color:var(--text,#15283f);box-shadow:none; }
-#approvedVaultGate::backdrop { background:rgba(15,28,45,.07); }
-#approvedVaultGate .avenlock-gate-top { max-width:1120px;margin:0 auto;padding:35px 30px;display:flex;align-items:center;justify-content:space-between;gap:15px; }
-#approvedVaultGate .avenlock-gate-brand { display:flex;align-items:center;gap:12px;font-size:19px;letter-spacing:.1em;font-weight:850;color:var(--text-strong,#15283f); }
-#approvedVaultGate .avenlock-gate-brand-icon { width:42px;height:42px;display:grid;place-items:center;border-radius:12px;background:#eaf0ff;color:#345edc; }
-#approvedVaultGate .avenlock-gate-brand-icon svg { width:27px;height:27px; }
-#approvedVaultGate .avenlock-gate-brand small { display:block;font-size:9px;font-weight:650;letter-spacing:.21em;color:var(--muted);margin-top:2px; }
-#approvedVaultGate .avenlock-gate-protected { color:var(--muted);font-size:12px; }
-#approvedVaultGate .dialog-head { display:flex;flex-direction:column;align-items:center;text-align:center;max-width:800px;margin:12px auto 36px;padding:0 22px;border:0;background:none; }
-#approvedVaultGate .dialog-head>div { width:100%; }
-#approvedVaultGate .dialog-head .approved-gate-mark { display:none; }
-#approvedVaultGate .dialog-head h2 { font-size:clamp(27px,4vw,38px);line-height:1.18;letter-spacing:-.05em;color:var(--text-strong);margin:10px 0 14px;font-weight:750; }
-#approvedVaultGate .dialog-head p { font-size:15px;line-height:1.7;color:var(--muted);margin:0; }
-#approvedVaultGate .pv-gate-overline { font-size:11px;letter-spacing:.21em;color:#5474b8;font-weight:800; }
-#approvedVaultGate .dialog-body { max-width:1120px;width:100%;margin:0 auto;padding:0 30px;overflow:visible; }
-#approvedVaultGate .approved-gate-vaults { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px; }
-#approvedVaultGate .approved-gate-vault { min-height:205px;display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;border:1px solid var(--border,#e5eaf1);border-radius:18px;padding:26px;text-align:left;background:var(--surface,#fff);box-shadow:0 10px 38px #263f5908;transition:border-color .18s,transform .18s; }
-#approvedVaultGate .approved-gate-vault:hover { border-color:#a9bbec;transform:translateY(-2px); }
-#approvedVaultGate .approved-gate-lock { width:50px;height:50px;border-radius:14px;display:grid;place-items:center;background:#eef2fd;color:#3457c8;font-size:22px; }
-#approvedVaultGate .approved-gate-vault-label { display:block;flex:1;padding:19px 0 5px; }
-#approvedVaultGate .approved-gate-vault-label strong { font-size:19px;font-weight:760;display:block;letter-spacing:-.03em;color:var(--text-strong); }
-#approvedVaultGate .approved-gate-vault-label small { display:block;font-size:13px;line-height:1.6;color:var(--muted);padding-top:6px; }
-#approvedVaultGate .approved-gate-arrow { align-self:flex-end;font-size:22px;color:#345bd2; }
-#approvedVaultGate .pv-offline-choices { width:100%;padding:0;margin:0; }
-#approvedVaultGate .avenlock-local-list { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;margin-bottom:18px; }
-#approvedVaultGate .avenlock-local-card,#approvedVaultGate .pv-offline-choice { display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:10px;border:1px solid var(--border,#e5eaf1);background:var(--surface,#fff);border-radius:18px;padding:24px;min-height:190px;text-align:left;box-shadow:0 10px 38px #263f5908;cursor:pointer; }
-#approvedVaultGate .avenlock-local-card:hover,#approvedVaultGate .pv-offline-choice:hover { border-color:#a9bbec; }
-#approvedVaultGate .avenlock-local-card strong { font-size:18px;color:var(--text-strong); }
-#approvedVaultGate .avenlock-local-card small { font-size:12px;color:var(--muted); }
-#approvedVaultGate .avenlock-local-card .avenlock-local-symbol { width:49px;height:49px;background:#e7f6ef;color:#168361;border-radius:13px;display:grid;place-items:center;font-size:24px; }
-#approvedVaultGate .pv-offline-choice { display:inline-flex;width:calc(50% - 12px);min-height:160px;vertical-align:top;margin:0 16px 16px 0; }
-#approvedVaultGate .pv-offline-choice .pv-choice-symbol { width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:#eef2fd;color:#345bd2; }
-#approvedVaultGate .pv-offline-choice .pv-choice-body strong { display:block;color:var(--text-strong);font-size:18px;margin:0 0 7px; }
-#approvedVaultGate .pv-offline-choice .pv-choice-body small { color:var(--muted);line-height:1.5; }
-#approvedVaultGate .pv-choice-chevron { display:none; }
-#approvedVaultGate .pv-device-note { padding:15px 18px;border-radius:13px;background:#e9f5f0;color:#286956;font-size:12px;line-height:1.6;margin:0 0 20px; }
-#approvedVaultGate .pv-device-note .pv-device-note-icon { color:#168361;margin-right:8px; }
-#approvedVaultGate .approved-gate-form { max-width:520px;margin:auto; }
-#approvedVaultGate .approved-gate-form .access-card { max-width:100%;margin:0 auto; }
-#approvedVaultGate .approved-gate-helper { color:var(--muted);font-size:12px;line-height:1.6;text-align:center;padding:18px 0 0; }
-#approvedVaultGate .dialog-foot { max-width:1120px;width:100%;margin:32px auto 0;padding:23px 30px 45px;border-top:1px solid var(--border);display:flex;gap:12px;flex-wrap:wrap;justify-content:center;background:none; }
-#approvedVaultGate .dialog-foot button { min-height:43px;border-radius:11px;padding:10px 17px;font-size:13px; }
-#approvedVaultGate .pv-offline-back { display:none; }
-@media(min-width:850px){#approvedVaultGate .approved-gate-vaults:has(>.approved-gate-vault:nth-child(3)) { grid-template-columns:repeat(3,minmax(0,1fr)); }}
-@media(max-width:850px){
- #loginView .avenlock-auth-shell { grid-template-columns:1fr; }
- #loginView .avenlock-art { min-height:270px;padding:26px; }
- #loginView .avenlock-art-body { padding:22px 0; }
- #loginView .avenlock-art h1 { font-size:40px; }
- #loginView .avenlock-art-body p { font-size:13px; }
- #loginView .avenlock-art-foot { font-size:10px; }
- #loginView .avenlock-auth-content { padding:16px 25px; }
- #loginView .entry-main { padding:35px 0; }
- #loginView .avenlock-auth-nav { gap:12px; }
- #loginView .avenlock-auth-nav button { font-size:12px; }
- #approvedVaultGate .approved-gate-vaults,#approvedVaultGate .avenlock-local-list { grid-template-columns:1fr; }
- #approvedVaultGate .pv-offline-choice { width:100%;min-height:135px;margin-right:0; }
- #approvedVaultGate .dialog-head { margin-bottom:22px; }
- #approvedVaultGate .dialog-body { padding:0 20px; }
- #approvedVaultGate .avenlock-gate-top { padding:22px 20px; }
- #approvedVaultGate .approved-gate-vault { min-height:180px; }
+/* AVENLOCK entry design v4.0.1 — isolated from the user's unlocked-vault theme.
+   Reference: design/approved-ui-overview.png. No global theme tokens are changed. */
+#loginView {
+  --al-navy:#0c1d30; --al-ink:#15283f; --al-muted:#65758a;
+  --al-blue:#345edc; --al-line:#e5eaf1;
+  font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
 }
-@media(max-width:500px){#loginView .entry-topbar { gap:7px;flex-wrap:wrap; }#loginView .theme-toggle .theme-label{display:none}#approvedVaultGate .avenlock-gate-protected { display:none; }}
+#loginView .avenlock-auth-shell {
+  display:grid;grid-template-columns:minmax(390px,47%) minmax(0,1fr);
+  width:100%;min-height:100dvh;
+}
+#loginView .avenlock-art {
+  position:relative;isolation:isolate;overflow:hidden;
+  background:radial-gradient(ellipse at 72% 22%,#234466 0,transparent 48%),linear-gradient(140deg,#0b1c2d,#12314e 78%,#173c56);
+  color:#fff;padding:54px clamp(44px,6vw,100px);
+  display:flex;flex-direction:column;min-width:0;
+}
+#loginView .avenlock-art::after {
+  content:"";position:absolute;z-index:-1;pointer-events:none;
+  width:560px;height:560px;bottom:-180px;right:-200px;border:1px solid #ffffff19;
+  border-radius:50%;box-shadow:0 0 0 70px #ffffff09,0 0 0 155px #ffffff05;
+}
+#loginView .avenlock-brand {display:flex;align-items:center;gap:12px;color:#fff;font-size:19px;letter-spacing:.1em}
+#loginView .avenlock-brand strong {display:block;color:#fff;font-weight:800}
+#loginView .avenlock-brand small {display:block;font-size:9px;letter-spacing:.22em;color:#b7c9df;font-weight:650;margin-top:4px}
+#loginView .avenlock-brand-icon {width:44px;height:44px;display:grid;place-items:center;border:1px solid #ffffff4d;border-radius:13px;background:#ffffff14}
+#loginView .avenlock-brand-icon svg {width:28px;height:28px}
+#loginView .avenlock-art-body {margin:auto 0;padding:70px 0;position:relative;z-index:1}
+#loginView .avenlock-eyebrow {color:#adc7e6;letter-spacing:.2em;font-size:11px;font-weight:800;margin:0 0 22px}
+/* More specific than the legacy html[data-theme] #loginView h1/p rules. */
+html[data-theme] #loginView .avenlock-art h1 {
+  font-size:clamp(40px,4vw,62px);font-weight:700;line-height:1.105;
+  letter-spacing:-.052em;max-width:590px;margin:0 0 22px;color:#fff;
+}
+html[data-theme] #loginView .avenlock-art h1 em {font-style:normal;color:#9bbdff}
+html[data-theme] #loginView .avenlock-art-body p {font-size:16px;line-height:1.72;color:#b9cbdf;max-width:440px;margin:0}
+#loginView .avenlock-art-foot {display:flex;gap:15px 25px;flex-wrap:wrap;font-size:12px;color:#bbcbde}
+#loginView .avenlock-art-foot span::before {content:"✓";margin-right:8px;font-weight:750;color:#95d9c6}
+#loginView .avenlock-auth-content {min-width:0;background:var(--surface,#fff);padding:36px clamp(34px,7vw,108px) 24px;display:flex;flex-direction:column}
+#loginView .avenlock-auth-content .entry-topbar {display:flex;justify-content:flex-end;align-items:center;min-height:36px;width:100%;padding:0;max-width:none;border:0;box-shadow:none;background:none;margin:0}
+#loginView .avenlock-auth-nav {display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12px}
+#loginView .avenlock-auth-nav button {cursor:pointer;font-size:12px;font-weight:730;padding:8px 2px;color:#345edc;background:none;border:none}
+#loginView .avenlock-auth-nav button:hover{text-decoration:underline}
+#loginView .avenlock-auth-nav .avenlock-nav-existing {display:none}
+#loginView[data-auth-view="signup"] .avenlock-auth-nav .avenlock-nav-new {display:none}
+#loginView[data-auth-view="signup"] .avenlock-auth-nav .avenlock-nav-existing {display:inline}
+#loginView .avenlock-auth-content .entry-main {
+  display:flex;justify-content:center;align-items:center;flex:1;min-width:0;
+  width:100%;max-width:none;min-height:0;margin:0;padding:44px 0 26px;gap:0;
+}
+#loginView .approved-auth-intro {display:none}
+#loginView .entry-main>.entry-card:not(.hidden) {
+  display:block;flex:0 1 440px;width:100%;max-width:440px;min-width:0;
+  margin:0 auto;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;
+}
+#loginView .entry-symbol,#loginView .entry-eyebrow .entry-dot {display:none}
+#loginView .entry-eyebrow {display:block;margin:0 0 17px;color:#5172b7;font-size:11px;letter-spacing:.19em;font-weight:800}
+#loginView .entry-main>.entry-card h1 {font-size:clamp(28px,2.7vw,37px);font-weight:760;line-height:1.18;letter-spacing:-.045em;color:var(--text-strong,#15283f);margin:0 0 12px}
+#loginView .entry-card .entry-subtitle {margin:0 0 28px;color:var(--muted,#65758a);font-size:15px;line-height:1.65}
+#loginView .entry-card .field {margin:0 0 20px}
+#loginView .entry-card .field label {display:block;color:var(--text-strong,#15283f);font-size:13px;font-weight:710;margin:0 0 9px}
+#loginView .entry-card .field input:not([type="checkbox"]) {
+  display:block;width:100%;box-sizing:border-box;height:49px;border:1px solid var(--border,#d8e1ee);
+  border-radius:11px;background:var(--input,#fff);color:var(--text-strong,#15283f);
+  font-size:14px;padding:0 15px;box-shadow:none;
+}
+#loginView .entry-card .field input:focus {border-color:#416ad9;box-shadow:0 0 0 3px #416ad920;outline:none}
+#loginView .entry-main .entry-card .access-submit {
+  display:block;width:100%;min-height:49px;margin:17px 0 0;padding:11px 16px;
+  background:#345edc;color:#fff;border:1px solid #345edc;border-radius:11px;
+  font-size:14px;font-weight:740;box-shadow:0 7px 18px #3159ce22;
+}
+#loginView .entry-main .entry-card .access-submit:hover {background:#294bb5;color:#fff}
+#loginView .entry-card .account-register-button {display:none}
+#loginView .entry-card .auth-link {display:block;margin:14px auto 0;padding:9px 12px;min-height:37px;background:transparent;border:0;color:#345edc;font-weight:670;font-size:12px}
+#loginView .entry-card .auth-link:hover {background:transparent;text-decoration:underline}
+#loginView .avenlock-auth-extra {text-align:center;margin:18px 0 0;padding:17px 0 0;border-top:1px solid var(--border,#e5eaf1);color:var(--muted,#65758a);font-size:12px;line-height:1.6}
+#loginView .avenlock-offline-btn {display:inline;padding:2px 3px;border:0;background:transparent;color:#345edc;font-weight:750;font-size:12px;cursor:pointer}
+#loginView .avenlock-offline-btn:hover {text-decoration:underline}
+#loginView .entry-disclaimer {border-top:1px solid var(--border,#e5eaf1);padding:20px 0 0;margin:21px 0 0;font-size:11px;line-height:1.6;color:var(--muted,#65758a)}
+#loginView .entry-install,#loginView .entry-install-status {display:none}
+#loginView .entry-footer {display:flex;justify-content:space-between;align-items:center;gap:20px;width:100%;padding:12px 0 0;margin:0;border:0;text-align:left;font-size:11px;color:var(--muted,#65758a)}
+#loginView .avenlock-entry-footer-actions {display:flex;gap:15px;align-items:center}
+#loginView .avenlock-footer-install {background:none;border:0;padding:8px 1px;font-size:11px;color:var(--muted,#65758a);cursor:pointer}
+#loginView .avenlock-footer-install:hover {color:#345edc;text-decoration:underline}
+#loginView .entry-footer .theme-toggle {min-height:32px;font-size:11px;padding:5px 8px;box-shadow:none}
+#loginView .entry-footer .theme-label {font-size:10px}
+#loginView .avenlock-install-step {padding:14px 0;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:5px}
+#loginView .avenlock-install-step strong{font-size:13px;color:var(--text-strong)}
+#loginView .avenlock-install-step span{font-size:12px;line-height:1.5;color:var(--muted)}
+
+/* The gate lives INSIDE #approvedUI: #approvedUI .dialog is more specific than
+   dialog#approvedVaultGate, which previously forced the 560px left-side modal.
+   Explicitly scope each override to #approvedUI #approvedVaultGate. */
+#approvedUI dialog#approvedVaultGate {
+  --al-page:#f6f8fc;--al-card:#fff;--al-ink:#15283f;
+  --al-muted:#65758a;--al-line:#e5eaf1;--al-blue:#345edc;
+  position:fixed;inset:0;box-sizing:border-box;width:100vw;max-width:none;
+  height:100dvh;max-height:none;min-height:0;margin:0;padding:0;
+  overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;
+  border:0;border-radius:0;background:var(--al-page);color:var(--al-ink);
+  box-shadow:none;font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+#approvedUI dialog#approvedVaultGate::backdrop {background:var(--al-page)}
+body.approved-gate-active {overflow:hidden}
+#approvedUI #approvedVaultGate [hidden] {display:none!important}
+#approvedUI #approvedVaultGate .avenlock-gate-stage {box-sizing:border-box;width:100%;min-height:100%;max-width:1196px;margin:0 auto;padding:34px 38px 56px}
+#approvedUI #approvedVaultGate .avenlock-gate-top {display:flex;align-items:center;justify-content:space-between;gap:20px;margin:0 0 70px;padding:0}
+#approvedUI #approvedVaultGate .avenlock-gate-brand {display:flex;align-items:center;gap:11px;color:var(--al-ink);font-size:19px;font-weight:810;letter-spacing:.1em;line-height:1.2}
+#approvedUI #approvedVaultGate .avenlock-gate-brand small {display:block;margin:3px 0 0;font-size:9px;font-weight:680;letter-spacing:.21em;color:var(--al-muted)}
+#approvedUI #approvedVaultGate .avenlock-gate-brand-icon {display:grid;place-items:center;flex:0 0 42px;width:42px;height:42px;border-radius:12px;background:#eaf0ff;color:#345edc;border:1px solid #dce5fd}
+#approvedUI #approvedVaultGate .avenlock-gate-brand-icon svg {width:27px;height:27px}
+#approvedUI #approvedVaultGate .avenlock-gate-top-actions {display:flex;align-items:center;gap:12px}
+#approvedUI #approvedVaultGate .avenlock-gate-protected {font-size:12px;color:var(--al-muted);white-space:nowrap}
+#approvedUI #approvedVaultGate .avenlock-gate-top-link {cursor:pointer;font-size:12px;font-weight:650;padding:9px 12px;border:1px solid var(--al-line);border-radius:9px;background:var(--al-card);color:var(--al-ink)}
+#approvedUI #approvedVaultGate .avenlock-gate-top-link:hover {border-color:#a7bce6;color:var(--al-blue)}
+#approvedUI #approvedVaultGate .dialog-head {
+  display:block;max-width:740px;padding:0;margin:0 auto 43px;
+  text-align:center;background:none;border:0;gap:0;
+}
+#approvedUI #approvedVaultGate .dialog-head>div {width:100%}
+#approvedUI #approvedVaultGate .pv-gate-overline {font-size:11px;font-weight:800;letter-spacing:.18em;color:#4d73be;margin:0 0 14px}
+#approvedUI #approvedVaultGate .dialog-head h2 {font-size:clamp(29px,3vw,38px);font-weight:770;letter-spacing:-.047em;line-height:1.18;color:var(--al-ink);margin:0 0 14px}
+#approvedUI #approvedVaultGate .dialog-head p {margin:0 auto;max-width:660px;font-size:14px;line-height:1.7;color:var(--al-muted)}
+#approvedUI #approvedVaultGate .dialog-body {box-sizing:border-box;width:100%;max-width:none;margin:0;padding:0;min-width:0;overflow:visible}
+#approvedUI #approvedVaultGate .avenlock-cloud-grid {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;align-items:stretch}
+#approvedUI #approvedVaultGate .approved-gate-vaults {display:contents}
+#approvedUI #approvedVaultGate .approved-gate-vaults>p {grid-column:span 2;color:var(--al-muted);background:var(--al-card);border:1px dashed var(--al-line);padding:26px;border-radius:17px;line-height:1.6}
+#approvedUI #approvedVaultGate .approved-gate-vault,
+#approvedUI #approvedVaultGate .avenlock-device-choice {
+  box-sizing:border-box;display:flex;flex-direction:column;align-items:flex-start;
+  width:100%;min-width:0;min-height:292px;margin:0;padding:27px;
+  background:var(--al-card);border:1px solid var(--al-line);border-radius:19px;
+  text-align:left;color:var(--al-ink);box-shadow:0 10px 38px #263f5908;
+  cursor:pointer;transition:transform .2s,border-color .2s,box-shadow .2s;
+}
+#approvedUI #approvedVaultGate .approved-gate-vault:hover,
+#approvedUI #approvedVaultGate .avenlock-device-choice:hover {transform:translateY(-2px);border-color:#a9bbec;box-shadow:0 15px 35px #263f5912}
+#approvedUI #approvedVaultGate .approved-gate-vault:disabled {cursor:wait;opacity:.7;transform:none}
+#approvedUI #approvedVaultGate .approved-gate-lock,
+#approvedUI #approvedVaultGate .avenlock-device-symbol {width:51px;height:51px;flex:none;display:grid;place-items:center;border-radius:14px;background:#eef2fd;color:#3457c8;font-size:25px;margin-bottom:25px}
+#approvedUI #approvedVaultGate .avenlock-device-symbol {background:#e7f6ef;color:#14765c}
+#approvedUI #approvedVaultGate .approved-gate-vault-label {display:block;padding:0;flex:1;min-width:0}
+#approvedUI #approvedVaultGate .approved-gate-vault-label strong,
+#approvedUI #approvedVaultGate .avenlock-device-choice>strong {display:block;font-size:19px;letter-spacing:-.025em;line-height:1.3;color:var(--al-ink);font-weight:740;overflow-wrap:anywhere;margin:0 0 8px}
+#approvedUI #approvedVaultGate .approved-gate-vault-label small,
+#approvedUI #approvedVaultGate .avenlock-device-detail {display:block;font-size:13px;line-height:1.65;color:var(--al-muted);margin:0}
+#approvedUI #approvedVaultGate .avenlock-card-footer {display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;margin-top:auto;padding-top:24px;font-size:12px;color:var(--al-blue);font-weight:700}
+#approvedUI #approvedVaultGate .avenlock-status-pill {display:inline-block;border-radius:100px;padding:5px 9px;background:#e8f6ef;color:#14765c;font-size:11px;font-weight:700;white-space:nowrap}
+#approvedUI #approvedVaultGate .avenlock-status-pill.is-cloud {background:#eaf0ff;color:#345cc9}
+#approvedUI #approvedVaultGate .approved-gate-arrow {font-size:12px;color:var(--al-blue);align-self:auto}
+#approvedUI #approvedVaultGate .avenlock-open-arrow {font-size:12px;color:var(--al-blue)}
+#approvedUI #approvedVaultGate .approved-gate-form {width:100%;max-width:570px;margin:0 auto}
+#approvedUI #approvedVaultGate .approved-gate-form .access-card {width:100%;max-width:100%;box-sizing:border-box;margin:0 auto}
+#approvedUI #approvedVaultGate .dialog-foot {box-sizing:border-box;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:15px;max-width:none;width:100%;margin:30px 0 0;padding:24px 0 0;border-top:1px solid var(--al-line);background:none}
+#approvedUI #approvedVaultGate .avenlock-gate-footer-note {font-size:12px;color:var(--al-muted)}
+#approvedUI #approvedVaultGate .approved-gate-helper {font-size:12px;line-height:1.5;color:var(--al-muted);margin:0;min-width:0;flex:1 1 auto;text-align:center}
+#approvedUI #approvedVaultGate .approved-gate-helper:empty {display:none}
+#approvedUI #approvedVaultGate .avenlock-gate-footer-actions {display:flex;align-items:center;gap:10px;margin-left:auto}
+#approvedUI #approvedVaultGate .approved-gate-foot .btn {min-height:38px;white-space:nowrap;padding:8px 12px;background:transparent;border:0;color:var(--al-blue);font-size:12px;font-weight:740;box-shadow:none}
+#approvedUI #approvedVaultGate .approved-gate-foot .btn:hover {text-decoration:underline;background:transparent}
+/* A focused, centered offline workspace, not a scrollable side modal. */
+#approvedUI #approvedVaultGate .pv-offline-choices {display:block;width:100%;margin:0;min-width:0}
+#approvedUI #approvedVaultGate .avenlock-offline-hero {box-sizing:border-box;max-width:780px;margin:0 auto;padding:39px 46px;background:var(--al-card);border:1px solid var(--al-line);border-radius:22px;box-shadow:0 24px 75px #263f5910}
+#approvedUI #approvedVaultGate .avenlock-offline-header {display:flex;align-items:center;gap:16px;margin:0 0 25px}
+#approvedUI #approvedVaultGate .avenlock-offline-symbol {flex:0 0 49px;width:49px;height:49px;border-radius:14px;display:grid;place-items:center;background:#e9f5f0;color:#14765c;font-size:26px}
+#approvedUI #approvedVaultGate .avenlock-offline-header h3 {font-size:25px;line-height:1.25;font-weight:740;letter-spacing:-.035em;margin:0 0 7px;color:var(--al-ink)}
+#approvedUI #approvedVaultGate .avenlock-offline-header p {margin:0;color:var(--al-muted);font-size:13px;line-height:1.55}
+#approvedUI #approvedVaultGate .avenlock-local-list {display:grid;grid-template-columns:1fr;gap:12px;margin:0 0 19px}
+#approvedUI #approvedVaultGate .avenlock-local-card {display:flex;align-items:center;gap:15px;flex-direction:row;width:100%;min-height:85px;padding:17px 20px;background:#fafcff;border:1px solid var(--al-line);border-radius:14px;box-shadow:none;cursor:pointer;color:var(--al-ink);text-align:left}
+#approvedUI #approvedVaultGate .avenlock-local-card:hover {border-color:#a9bbec}
+#approvedUI #approvedVaultGate .avenlock-local-symbol {width:40px;height:40px;flex:0 0 40px;border-radius:10px;display:grid;place-items:center;background:#eaf0ff;color:#345edc;font-size:20px}
+#approvedUI #approvedVaultGate .avenlock-local-card strong {font-size:14px;font-weight:750;color:var(--al-ink)}
+#approvedUI #approvedVaultGate .avenlock-local-card small {font-size:11px;line-height:1.5;color:var(--al-muted);margin-left:auto}
+#approvedUI #approvedVaultGate .avenlock-local-empty {background:#fafcff;color:var(--al-muted);font-size:13px;line-height:1.6;border:1px dashed var(--al-line);border-radius:13px;padding:18px 20px;margin:0}
+#approvedUI #approvedVaultGate .avenlock-offline-actions {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:0 0 20px}
+#approvedUI #approvedVaultGate .pv-offline-choice {display:flex;flex-direction:row;align-items:center;justify-content:center;gap:9px;box-sizing:border-box;margin:0;width:100%;min-width:0;min-height:46px;padding:11px 13px;background:var(--al-card);border:1px solid var(--al-line);border-radius:10px;box-shadow:none;cursor:pointer;color:var(--al-blue);text-align:center;white-space:normal}
+#approvedUI #approvedVaultGate .pv-offline-choice:hover {border-color:#a9bbec;background:#f7faff}
+#approvedUI #approvedVaultGate .pv-choice-symbol {display:inline;flex:none;width:auto;height:auto;border:0;border-radius:0;background:none;color:var(--al-blue);font-size:18px;line-height:1}
+#approvedUI #approvedVaultGate .pv-choice-body {display:block;min-width:0}
+#approvedUI #approvedVaultGate .pv-offline-choice strong {display:inline;font-size:12px;line-height:1.4;color:var(--al-blue);font-weight:730;margin:0}
+#approvedUI #approvedVaultGate .pv-device-note {display:flex;gap:9px;align-items:flex-start;padding:14px 16px;margin:0;border:0;border-radius:11px;background:#e9f5f0;color:#286956;font-size:11px;line-height:1.65}
+#approvedUI #approvedVaultGate .pv-device-note strong {color:#286956}
+#approvedUI #approvedVaultGate .pv-device-note-icon {display:inline;flex:none;width:auto;height:auto;margin:0;color:#14765c;border:0;font-size:13px}
+#approvedUI #approvedVaultGate .pv-offline-back {display:block;border:0;background:none;color:var(--al-blue);font-size:12px;font-weight:720;margin:15px auto 0;padding:10px;cursor:pointer}
+#approvedUI #approvedVaultGate[data-avenlock-gate-mode="offline"] .avenlock-gate-footer-note,
+#approvedUI #approvedVaultGate[data-avenlock-gate-mode="unlock"] .avenlock-gate-footer-note {display:none}
+#approvedUI #approvedVaultGate[data-avenlock-gate-mode="offline"] .dialog-foot {border-top:0;justify-content:center;margin-top:14px}
+#approvedUI #approvedVaultGate[data-avenlock-gate-mode="unlock"] .dialog-head {margin-bottom:24px}
+html[data-theme="dark"] #approvedUI dialog#approvedVaultGate {--al-page:#0e1622;--al-card:#141e2c;--al-ink:#eaf0fa;--al-muted:#a4b2c4;--al-line:#2a3a50;--al-blue:#9ab8ff}
+html[data-theme="dark"] #approvedUI #approvedVaultGate .avenlock-offline-hero,
+html[data-theme="dark"] #approvedUI #approvedVaultGate .avenlock-local-card,
+html[data-theme="dark"] #approvedUI #approvedVaultGate .avenlock-local-empty {background:var(--al-card)}
+html[data-theme="dark"] #approvedUI #approvedVaultGate .pv-offline-choice:hover {background:#1b2c42}
+html[data-theme="dark"] #approvedUI #approvedVaultGate .pv-device-note {background:#173b31;color:#a6e4ce}
+html[data-theme="dark"] #approvedUI #approvedVaultGate .pv-device-note strong {color:#a6e4ce}
+html[data-theme="dark"] #approvedUI #approvedVaultGate .avenlock-status-pill.is-cloud {background:#203f72;color:#bad1ff}
+html[data-theme="dark"] #approvedUI #approvedVaultGate .avenlock-status-pill {background:#173b31;color:#a6e4ce}
+@media (max-width:900px) {
+ #loginView .avenlock-auth-shell {grid-template-columns:1fr}
+ #loginView .avenlock-art {min-height:245px;padding:27px 32px}
+ #loginView .avenlock-art-body {padding:30px 0}
+ html[data-theme] #loginView .avenlock-art h1 {font-size:41px}
+ html[data-theme] #loginView .avenlock-art-body p {font-size:13px}
+ #loginView .avenlock-auth-content {min-height:520px;padding:26px clamp(24px,6vw,44px)}
+ #loginView .avenlock-auth-content .entry-main {padding:40px 0}
+ #approvedUI #approvedVaultGate .avenlock-gate-stage {padding:26px 24px 45px}
+ #approvedUI #approvedVaultGate .avenlock-gate-top {margin-bottom:48px}
+ #approvedUI #approvedVaultGate .avenlock-cloud-grid {grid-template-columns:repeat(2,minmax(0,1fr))}
+ #approvedUI #approvedVaultGate .approved-gate-vault,
+ #approvedUI #approvedVaultGate .avenlock-device-choice {min-height:240px}
+}
+@media (max-width:620px) {
+ #loginView .avenlock-art {min-height:230px;padding:24px}
+ #loginView .avenlock-art-body {padding:24px 0}
+ html[data-theme] #loginView .avenlock-art h1 {font-size:38px}
+ #loginView .avenlock-art-foot {font-size:10px}
+ #loginView .avenlock-auth-content {padding:24px 20px;min-height:490px}
+ #loginView .entry-footer {gap:10px;flex-wrap:wrap}
+ #loginView .entry-footer .theme-label {display:none}
+ #approvedUI #approvedVaultGate .avenlock-gate-stage {padding:23px 18px 35px}
+ #approvedUI #approvedVaultGate .avenlock-gate-top {margin-bottom:45px}
+ #approvedUI #approvedVaultGate .avenlock-gate-brand {font-size:15px}
+ #approvedUI #approvedVaultGate .avenlock-gate-brand-icon {height:38px;width:38px;flex-basis:38px}
+ #approvedUI #approvedVaultGate .avenlock-gate-protected {display:none}
+ #approvedUI #approvedVaultGate .avenlock-gate-top-actions {gap:5px}
+ #approvedUI #approvedVaultGate .avenlock-gate-top-link {padding:8px;font-size:11px}
+ #approvedUI #approvedVaultGate .dialog-head h2 {font-size:28px}
+ #approvedUI #approvedVaultGate .dialog-head p {font-size:13px}
+ #approvedUI #approvedVaultGate .dialog-head {margin-bottom:30px}
+ #approvedUI #approvedVaultGate .avenlock-cloud-grid {grid-template-columns:1fr;gap:15px}
+ #approvedUI #approvedVaultGate .approved-gate-vault,
+ #approvedUI #approvedVaultGate .avenlock-device-choice {min-height:200px;padding:22px}
+ #approvedUI #approvedVaultGate .approved-gate-vaults>p {grid-column:span 1}
+ #approvedUI #approvedVaultGate .avenlock-offline-hero {padding:24px 20px}
+ #approvedUI #approvedVaultGate .avenlock-offline-actions {grid-template-columns:1fr}
+ #approvedUI #approvedVaultGate .avenlock-local-card {flex-wrap:wrap}
+ #approvedUI #approvedVaultGate .avenlock-local-card small {margin-left:0;flex:1 1 100%}
+ #approvedUI #approvedVaultGate .dialog-foot {align-items:flex-start}
+ #approvedUI #approvedVaultGate .avenlock-gate-footer-note {flex:1 1 100%}
+}
+@media (prefers-reduced-motion:reduce) {
+ #approvedUI #approvedVaultGate .approved-gate-vault,
+ #approvedUI #approvedVaultGate .avenlock-device-choice {transition:none}
+}
