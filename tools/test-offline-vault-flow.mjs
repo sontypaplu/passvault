@@ -122,6 +122,16 @@ assert(!html.includes('id="vaultImportDeviceOnly"'),'master password form must n
 for(const id of ['approvedGateOffline','approvedOfflineCreate','approvedOfflineImport','approvedOfflineFile','pvOfflineExitDialog',
  'pvExitPrepareBackup','pvExitBackupDownloadLink','pvExitBackupAcknowledged','pvExitConfirm'])
  assert(html.includes(`id="${id}"`), `Missing accessible offline workflow element: ${id}`);
+// The main vault-dashboard Create button must never create a cloud vault
+// while the user is operating without an account.
+state.locked=true;state.vault=null;state.dirty=false;
+cloud.localMode=true;cloud.loaded=true;cloud.userId='ciphora-device-session';
+cloud.selectedVaultId=null;cloud.vaults=[];cloud.deviceOnly=true;
+ctx.prepareNewVault();
+assert.equal(mode,'create','the main Create action should open device vault creation in local mode');
+assert.equal(cloud.deviceOnly,true);
+assert.match(cloud.selectedVaultId,/^device-/);
+assert(multi.includes('if (cloud.localMode) prepareDeviceOnlyVault();'),'dashboard Create click must choose the device-only path');
 assert(approved.includes('prepareDeviceOnlyVault();syncVisible();'),'chooser must open device-only creation');
 assert(approved.includes('await handleFileChoose(file)'),'chooser must use validated native encrypted-file parser');
 assert(js.includes("cloud.lastBackup = exportingMutation === cloud.mutation"),'backup may be considered current only for same mutation');
