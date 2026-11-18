@@ -4,6 +4,7 @@ function initializeEvents() {
     await window.AvenlockLocal.enter();
   }));
   window.PassVaultAuth.initialize();
+  window.PassVaultOnboarding.initialize();
   els.lockedSignOutButton.addEventListener("click", handleSignOut);
   initializeMultiVaultEvents();
   els.unlockedSignOutButton.addEventListener("click", handleSignOut);
@@ -15,6 +16,10 @@ function initializeEvents() {
     button.addEventListener("click", () => showAppPage(button.dataset.pageTarget));
   });
   els.createVaultForm.addEventListener("submit", handleCreateVault);
+  $("masterPasswordNoticeDismiss").addEventListener("click", () => {
+    $("masterPasswordNotice").hidden = true;
+    els.newMaster.focus();
+  });
   els.newMaster.addEventListener("input", updateMasterStrength);
   els.newPepperEnabled.addEventListener("change", () => {
     const enabled = els.newPepperEnabled.checked;

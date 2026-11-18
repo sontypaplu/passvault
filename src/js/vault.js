@@ -468,6 +468,7 @@ async function handleCreateVault(event) {
   if (cloud.deviceOnly && (!String(cloud.selectedVaultId).startsWith('device-') || cloud.importSource !== 'device-new')) return setStatus(els.createStatus, "Invalid device-only vault state; start again from Work offline.", "error");
   if (cloud.revision > 0) return setStatus(els.createStatus, "Selected vault already exists. Open it or create another from My vaults.", "error");
   if (!cloud.deviceOnly && cloud.vaults.length >= 2) return setStatus(els.createStatus, 'Cloud vault limit reached: only two cloud vaults are permitted.','error');
+  if (!cloud.deviceOnly && window.PassVaultOnboarding?.isFirstVault() && !window.PassVaultOnboarding.accepted()) return setStatus(els.createStatus, 'Acknowledge the Privacy Policy before creating a cloud vault.', 'error');
   const initialUserId = cloud.userId;
   const initialVaultId = cloud.selectedVaultId;
   const initialEpoch = cloud.epoch;
@@ -509,6 +510,7 @@ async function handleCreateVault(event) {
     setDirty(true);
     state.locked = false;
     state.failedAttempts = 0;
+    window.PassVaultOnboarding?.vaultCreated();
     setActiveView();
     renderVault();
     resetCredentialEditor();
@@ -841,10 +843,31 @@ function renderVault() {
 
 // Presentation routing: every screen is a separate view, never an anchor jump.
 function showAccessScreen(screen = "unlock") {
-  uiState.accessScreen = screen === "dashboard" ? "dashboard" : (screen === "create" && cloud.loaded && cloud.revision === 0 ? "create" : "unlock");
+  const wasCreating = uiState.accessScreen === "create";
+  uiState.accessScreen = ['privacy', 'tour'].includes(screen) && window.PassVaultOnboarding?.isFirstVault()
+    ? screen : screen === "dashboard" ? "dashboard" : (screen === "create" && cloud.loaded && cloud.revision === 0 ? "create" : "unlock");
+  // Re-show the warning each time a new cloud or device-only creation flow opens.
+  // Re-rendering the same view must not reopen an acknowledged notice.
+  if (uiState.accessScreen === "create" && !wasCreating) $("masterPasswordNotice").hidden = false;
+  if (uiState.accessScreen !== "create") $("masterPasswordNotice").hidden = true;
   els.unlockVaultScreen.classList.toggle("hidden", uiState.accessScreen !== "unlock");
   els.createVaultScreen.classList.toggle("hidden", uiState.accessScreen !== "create");
   $("vaultDashboardScreen").classList.toggle("hidden", uiState.accessScreen !== "dashboard");
+  $("privacyOnboardingScreen").classList.toggle("hidden", uiState.accessScreen !== "privacy");
+  $("tourOnboardingScreen").classList.toggle("hidden", uiState.accessScreen !== "tour");
+  const firstCreation = uiState.accessScreen === 'create' && !cloud.deviceOnly && !!window.PassVaultOnboarding?.isFirstVault();
+  $("lockedView").classList.toggle('al-first-creation', firstCreation);
+  $('lockedView').classList.toggle('al-onboarding-active', ['privacy', 'tour'].includes(uiState.accessScreen) || firstCreation);
+  $("alFirstVaultAside").hidden = !firstCreation;
+  $("createVaultScreen").querySelector('.access-screen-head h1').textContent = firstCreation ? 'Create your first cloud vault.' : 'Create a new vault';
+  if (firstCreation) {
+    $('createVaultScreen').querySelector('.page-kicker').textContent = 'STEP 3 OF 3 · CLOUD VAULT SETUP';
+    $('createVaultModeDescription').textContent = 'You have verified your email and reviewed privacy. Set your vault master password below.';
+    els.createVaultButton.textContent = 'Create encrypted cloud vault →';
+  } else {
+    $('createVaultScreen').querySelector('.page-kicker').textContent = 'GET STARTED';
+  }
+  $("createBackButton").textContent = firstCreation ? '← Back to tour' : '← My vaults / offline options';
   window.scrollTo(0, 0);
 }
 

@@ -89,6 +89,7 @@ async function resetCloudUserState() {
   cloud.revision = 0; cloud.conflict = false; cloud.encryptedEnvelope = null;
   cloud.importSource = 'cloud'; cloud.deviceOnly = false; cloud.lastBackup = null; state.pendingImport = null;
   clearSensitiveFieldsEverywhere(); uiState.accessGranted = false;
+  window.PassVaultOnboarding?.clear();
   cloudStatus('CLOUD'); setActiveView();
 }
 
@@ -114,6 +115,16 @@ async function loadAccountVault(session) {
     await reloadVaultList();
     if (requestEpoch !== cloud.epoch || cloud.userId !== userId) return;
     cloud.loaded = true;
+    // Only first-time cloud users enter onboarding. Never bury a local unsynced recovery.
+    if (cloud.vaults.length === 0 && !listUnsyncedNewVaultRecoveries(userId).length &&
+        !window.AvenlockLocal?.active && state.locked) {
+      const onboardingLookup = window.PassVaultOnboarding.begin(userId);
+      setActiveView(); // Immediately replace the empty vault chooser while consent is checked.
+      await onboardingLookup;
+      if (requestEpoch !== cloud.epoch || cloud.userId !== userId) return;
+    } else {
+      window.PassVaultOnboarding.clear();
+    }
     setActiveView(); renderVaultDashboard(); cloudStatus(cloud.syncEnabled ? 'SYNC READY' : 'SYNC PAUSED');
     setGlobalStatus('Your encrypted vaults are ready.', 'success');
   } catch(error) {

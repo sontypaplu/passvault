@@ -106,6 +106,7 @@ function navigate(target,push=true){
  if(target==='settings')showSettingsHome();
  page=target;closeMenu();if(target==='profile')void loadAccountProfile();$('flowsMenu').classList.add('hidden');$('flowsToggle').setAttribute('aria-expanded','false');
  $('crumb').textContent=pageTitles[target];document.title=pageTitles[target]+' | AVENLOCK';
+ $('alWorkspaceBack').hidden = target==='overview';
  document.querySelectorAll('#approvedUI [data-page].navitem').forEach(x=>{
   x.classList.toggle('active',x.dataset.page===target);
   if(x.dataset.page===target)x.setAttribute('aria-current','page');else x.removeAttribute('aria-current');
@@ -530,11 +531,11 @@ window.pvRenderApprovedStatus=()=>{if(ready())render();};
 function addCustom(label='',value='',fieldType='secret'){
  const holder=$('approvedCustomFields');if(holder.children.length>=10){tip('Maximum 10 custom fields');return;}
  const div=document.createElement('div');div.className='approved-custom-row pv-custom-field-row';
- const key=document.createElement('input');key.placeholder='Field name';key.maxLength=60;key.value=label;key.autocomplete='off';key.setAttribute('aria-label','Custom field name');
+ const key=document.createElement('input');key.maxLength=60;key.value=label;key.autocomplete='off';key.setAttribute('aria-label','Custom field name');
  const fieldTypeSelect=document.createElement('select');fieldTypeSelect.className='pv-custom-type';fieldTypeSelect.setAttribute('aria-label','Custom field type');
  for(const [v,title] of [['secret','Secret'],['text','Text'],['url','URL'],['date','Date']]){const option=document.createElement('option');option.value=v;option.textContent=title;fieldTypeSelect.append(option);}
  fieldTypeSelect.value=['secret','text','url','date'].includes(fieldType)?fieldType:'secret';
- const val=document.createElement('input');val.type=fieldTypeSelect.value==='secret'?'password':'text';val.placeholder='Field value';val.maxLength=1024;val.value=value;val.autocomplete='off';val.spellcheck=false;val.setAttribute('aria-label','Custom field value');
+ const val=document.createElement('input');val.type=fieldTypeSelect.value==='secret'?'password':'text';val.maxLength=1024;val.value=value;val.autocomplete='off';val.spellcheck=false;val.setAttribute('aria-label','Custom field value');
  fieldTypeSelect.addEventListener('change',()=>{val.type=fieldTypeSelect.value==='secret'?'password':'text';reveal.hidden=fieldTypeSelect.value!=='secret';reveal.textContent='Show';});
  const reveal=document.createElement('button');reveal.type='button';reveal.className='btn btn-light pv-custom-reveal';reveal.textContent='Show';reveal.setAttribute('aria-label','Show custom field value');
  reveal.addEventListener('click',()=>{const shown=val.type==='password';val.type=shown?'text':'password';reveal.textContent=shown?'Hide':'Show';reveal.setAttribute('aria-label',(shown?'Hide':'Show')+' custom field value');});
@@ -961,7 +962,7 @@ function syncVisible(){
  }else{
   if(window.__pvApprovedWasUnlocked){window.__pvApprovedWasUnlocked=false;clearPrivateUI();}
   if(profileLoadedUserId && profileLoadedUserId!==cloud.userId)resetAccountProfile();
-  const choosing=!!cloud.userId && uiState.accessGranted && uiState.accessScreen!=='create';
+  const choosing=!!cloud.userId && uiState.accessGranted && ['dashboard','unlock'].includes(uiState.accessScreen);
   $('approvedUI').hidden=!choosing;
   if(choosing)showVaultGate();else closeVaultGate();
  }
@@ -1336,7 +1337,7 @@ const accountForms=document.querySelector('.account-settings-grid');if(accountFo
 const download=document.getElementById('downloadVaultLink');if(download){download.classList.add('approved-backup-link');$('approvedAccountManagement').append(download);}
 $('autoLock').value=String(state.sessionTimeoutMs/60000);
 $('clipboardTime').value=String(state.clipboardTimeoutMs/1000);
-$('search').placeholder='Search your unlocked vault...';
+
 $('topNew').disabled=false;updateMobileSidebarFocus();
 // Preserve a previously chosen appearance; use the approved light preview on a fresh session.
 let savedTheme=null;try{savedTheme=sessionStorage.getItem('passvault-theme');}catch{}

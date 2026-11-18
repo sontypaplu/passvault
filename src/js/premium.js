@@ -240,8 +240,8 @@
   function addCustom(label='',value='') {
     const box=pv('pv3CustomFields');if(box.childElementCount>=10)return notify('Maximum 10 custom fields');
     const row=el('div','pv3-custom-row');
-    const labelInput=el('input');labelInput.placeholder='Field name';labelInput.maxLength=60;labelInput.value=label;labelInput.setAttribute('aria-label','Custom field name');
-    const valueInput=el('input');valueInput.placeholder='Field value';valueInput.maxLength=1024;valueInput.value=value;valueInput.setAttribute('aria-label','Custom field value');
+    const labelInput=el('input');labelInput.maxLength=60;labelInput.value=label;labelInput.setAttribute('aria-label','Custom field name');
+    const valueInput=el('input');valueInput.maxLength=1024;valueInput.value=value;valueInput.setAttribute('aria-label','Custom field value');
     row.append(labelInput,valueInput,control('×',()=>row.remove(),'pv3-x'));box.append(row);
   }
   function saveItem(event) {
