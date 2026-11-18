@@ -27,6 +27,8 @@ jobs:
         run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Verify source consistency
         run: npm run verify:source
+      - name: Test consent, onboarding, and password recovery routing
+        run: npm run test:onboarding
       - name: Test device-only cloud isolation and offline vault workflows
         run: |
           npm run test:device-only

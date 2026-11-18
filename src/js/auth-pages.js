@@ -1,7 +1,7 @@
 /* Public authentication pages: no passwords or tokens are written to URL or storage. */
 (() => {
   'use strict';
-  const allowed = ['signin', 'signup', 'forgot', 'verify', 'reset','install'];
+  const allowed = ['signin', 'signup', 'forgot', 'verify', 'reset','sent','install'];
   const get = id => document.getElementById(id);
   const recoveryCallback = /(?:^|[&#?])type=recovery(?:&|$)/.test(location.hash + '&' + location.search);
   let recoveryPending = recoveryCallback;
@@ -15,7 +15,7 @@
     const url = new URL(location.href);
     if(next === 'signin') url.searchParams.delete('auth'); else url.searchParams.set('auth', next);
     if(push && url.href !== location.href) history.pushState({pvAuth:next}, '', url);
-    document.title = `${({signin:'Sign in',signup:'Create account',forgot:'Forgot password',verify:'Verify email',reset:'Reset password',install:'Install app'})[next]} | AVENLOCK`;
+    document.title = `${({signin:'Sign in',signup:'Create account',forgot:'Forgot password',verify:'Verify email',reset:'Reset password',sent:'Check your inbox',install:'Install app'})[next]} | AVENLOCK`;
     window.scrollTo({top:0,behavior:'instant'});
   }
   function status(id, text, kind) { setStatus(get(id), text, kind); }
@@ -49,7 +49,7 @@
     e.preventDefault(); if(!cloud.client) return status('forgotStatus','Supabase configuration required.','error');
     busy(e.currentTarget,true);
     try { const {error}=await cloud.client.auth.resetPasswordForEmail(get('forgotEmail').value.trim(),{redirectTo:redirectUrl()}); if(error) throw error;
-      status('forgotStatus','If an account exists for this address, a password reset email will arrive. Check spam too.','success');
+      route('sent');
     } catch(err) { status('forgotStatus',/rate limit|too many/i.test(err.message||'') ? 'Too many requests. Try again later.' : 'Unable to request reset right now.','error'); }
     finally {busy(e.currentTarget,false);}
   }

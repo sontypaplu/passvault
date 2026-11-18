@@ -147,6 +147,7 @@ function prepareNewVault() {
   if (window.AvenlockLocal?.active) return prepareDeviceOnlyVault();
   if (!crypto.randomUUID) return setStatus($('dashboardStatus'),'Your browser does not support secure UUID generation','error');
   if (cloud.vaults.length >= 2) return setStatus($('dashboardStatus'),'Vault limit reached: maximum 2 vaults per account. Delete a vault (after backup) to create another.','error');
+  if (window.PassVaultOnboarding?.isFirstVault() && !window.PassVaultOnboarding.accepted()) return setStatus($('dashboardStatus'),'Review and acknowledge the privacy policy before creating a cloud vault.','error');
   cloud.selectedVaultId=crypto.randomUUID(); cloud.revision=0;
   cloud.encryptedEnvelope=null; cloud.conflict=false; cloud.importSource='cloud'; cloud.deviceOnly=false; cloud.lastBackup=null;
   cloud.vaultLabel='Vault'; state.pendingImport=null;
@@ -291,9 +292,16 @@ function initializeMultiVaultEvents() {
     try { await reloadVaultList();cloud.loaded=true;renderVaultDashboard();clearStatus($('dashboardStatus')); }
     catch(e) {setStatus($('dashboardStatus'),e.message||'Refresh failed','error');}
   });
-  for(const id of ['unlockBackButton','createBackButton','allVaultsButton','settingsAllVaultsButton']) {
+  for(const id of ['unlockBackButton','allVaultsButton','settingsAllVaultsButton']) {
     $(id).addEventListener('click',displayVaultDashboard);
   }
+  $('createBackButton').addEventListener('click', () => {
+    if (window.PassVaultOnboarding?.isFirstVault() && !cloud.deviceOnly) {
+      clearCreateSensitiveFields();
+      cloud.selectedVaultId = null;
+      showAccessScreen('tour');
+    } else displayVaultDashboard();
+  });
   $('dashboardOfflineVault').addEventListener('click',()=>{ if(state.locked) $('dashboardOfflineChoices').hidden=!$('dashboardOfflineChoices').hidden; });
   $('dashboardCreateOfflineVault').addEventListener('click',prepareDeviceOnlyVault);
   $('dashboardImportOfflineFile').addEventListener('change',async event=>{

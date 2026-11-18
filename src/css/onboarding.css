@@ -1,0 +1,130 @@
+/* New account experience only. Existing theme tokens and workspace visuals are not modified. */
+#lockedView.al-onboarding-active .lock-main {width:min(1230px,calc(100% - 40px));max-width:1230px;display:block;min-height:auto;padding:35px 0 70px}
+#lockedView.al-onboarding-active .lock-main .access-shell {width:100%;max-width:none}
+#lockedView .al-onboarding{background:var(--surface,#fff);border:1px solid var(--border,#e3e9f2);border-radius:19px;overflow:hidden;box-shadow:0 18px 55px #24385512;color:var(--text-strong,#142940)}
+#lockedView .al-onboarding-head{text-align:center;padding:47px 32px 31px;background:linear-gradient(115deg,var(--surface,#fff) 38%,rgba(65,106,218,.06))}
+#lockedView .al-eyebrow{display:block;font-size:11px;font-weight:780;letter-spacing:.16em;color:#4d73c2;margin-bottom:13px}
+#lockedView .al-onboarding h1{font-size:clamp(27px,3vw,38px);letter-spacing:-.045em;line-height:1.18;margin:0 0 12px;color:var(--text-strong,#172b45)}
+#lockedView .al-onboarding h2{font-size:19px;line-height:1.26;letter-spacing:-.02em;margin:0 0 8px;color:inherit}
+#lockedView .al-onboarding h3{font-size:15px;line-height:1.35;margin:0 0 8px;color:inherit}
+#lockedView .al-onboarding p{line-height:1.66;font-size:13px;color:var(--muted,#607187);margin:0 0 13px}
+#lockedView .al-onboarding-head p{max-width:650px;margin:auto}
+#lockedView .al-card{background:var(--surface,#fff);border:1px solid var(--border,#dfe6ef);border-radius:13px;padding:22px;box-shadow:0 5px 18px #2438550a}
+#lockedView .al-privacy-grid{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(275px,.75fr);gap:20px;padding:0 34px 40px;align-items:start}
+#lockedView .al-privacy-aside{display:flex;flex-direction:column;gap:14px;min-width:0}
+#lockedView .al-policy-top{display:flex;justify-content:space-between;align-items:center;gap:12px;padding-bottom:15px;border-bottom:1px solid var(--border,#dfe6ef)}
+#lockedView .al-policy-top small{font-size:11px;color:var(--muted,#607187)}
+#lockedView .al-pill{background:#edf3ff;color:#3f65bc;font-size:10px;font-weight:750;padding:7px 10px;border-radius:99px;white-space:nowrap}
+#lockedView .al-policy-scroll,.al-privacy-dialog .al-policy-scroll{max-height:385px;overflow-y:auto;overscroll-behavior:contain;padding:20px 10px 5px 1px;scrollbar-width:thin;outline-offset:4px}
+#lockedView .al-policy-scroll section,.al-privacy-dialog .al-policy-scroll section{padding-bottom:10px}
+#lockedView .al-policy-scroll h3,.al-privacy-dialog .al-policy-scroll h3{font-size:13px;margin-bottom:7px;font-weight:760}
+#lockedView .al-policy-scroll p,.al-privacy-dialog .al-policy-scroll p{font-size:12px;line-height:1.72;color:var(--muted,#64748b)}
+#lockedView .al-icon{display:grid;place-items:center;width:34px;height:34px;border-radius:11px;background:#edf2ff;color:#4368ce;font-size:19px;margin-bottom:13px}
+#lockedView .al-icon.good{background:#e4f7ee;color:#13835a}
+#lockedView .al-consent-check{display:flex;align-items:flex-start;gap:11px;padding:5px 3px 0;font-size:12px;font-weight:650;line-height:1.65;cursor:pointer;color:var(--text-strong,#172b45)}
+#lockedView .al-consent-check input{margin-top:3px;flex:0 0 auto;accent-color:#345edc;width:16px;height:16px}
+#lockedView .al-policy-actions{display:flex;flex-direction:column;gap:5px}
+#lockedView .al-primary,#lockedView .al-secondary{font:inherit;font-weight:740;font-size:13px;min-height:47px;padding:11px 18px;border-radius:9px;cursor:pointer}
+#lockedView .al-primary{background:#345edc;color:white;border:1px solid #345edc;box-shadow:0 6px 18px #3159ce1c}
+#lockedView .al-primary:hover:not(:disabled){background:#294ab7}
+#lockedView .al-primary:disabled{opacity:.48;cursor:not-allowed;box-shadow:none}
+#lockedView .al-secondary{background:var(--surface,#fff);color:var(--text-strong,#142940);border:1px solid var(--border,#dfe6ef)}
+#lockedView .al-secondary:hover{border-color:#89a6e7}
+#lockedView .al-link{font-size:12px;font-weight:680;color:#345edc;padding:8px;cursor:pointer;background:transparent;border:0}
+#lockedView .al-link:hover{text-decoration:underline}
+#lockedView .al-feedback{min-height:0;margin:0;color:#a45413!important;font-weight:600}
+#lockedView .al-feedback:empty{display:none}
+#lockedView .al-caption{font-size:10px;color:var(--muted,#66778e);line-height:1.55}
+#lockedView .al-tour-grid{display:grid;grid-template-columns:minmax(280px,.78fr) minmax(0,1.1fr);min-height:480px}
+#lockedView .al-tour-visual{padding:50px 42px;background:linear-gradient(140deg,#102a43,#1e4a6a);color:#fff}
+#lockedView .al-tour-visual .al-eyebrow{color:#bad4f3}
+#lockedView .al-tour-visual h2{font-size:30px;letter-spacing:-.045em;line-height:1.18;margin:14px 0}
+#lockedView .al-tour-visual p{color:#c4d9e9;margin-bottom:28px}
+#lockedView .al-tour-track{list-style:none;counter-reset:al-tour;display:grid;gap:12px;padding:0;margin:0}
+#lockedView .al-tour-track li{counter-increment:al-tour;display:flex;align-items:center;gap:13px;font-size:12px;font-weight:700;padding:12px;border:1px solid #ffffff25;border-radius:9px;color:#d4e2f3}
+#lockedView .al-tour-track li:before{content:counter(al-tour);display:grid;place-items:center;background:#ffffff15;border-radius:6px;min-width:24px;height:24px;color:#fff}
+#lockedView .al-tour-track li.active{background:#ffffff20;border-color:#ffffff66;color:#fff}
+#lockedView .al-tour-content{padding:50px clamp(28px,5vw,70px);display:flex;flex-direction:column;align-items:flex-start;min-width:0}
+#lockedView .al-progress{display:flex;gap:5px;margin:6px 0 30px;width:105px}
+#lockedView .al-progress i{height:3px;background:var(--border,#dfe6ef);flex:1;border-radius:2px}
+#lockedView .al-progress i.active{background:#345edc}
+#lockedView .al-tour-badge{display:grid;place-items:center;width:57px;height:57px;border-radius:13px;background:#ebf1ff;color:#345edc;font-size:28px;margin-bottom:20px}
+#lockedView #alTourPoints{list-style:none;margin:15px 0 28px;padding:0;display:grid;gap:13px}
+#lockedView #alTourPoints li{font-size:13px;color:var(--muted,#607187);display:flex;align-items:center;gap:12px}
+#lockedView #alTourPoints li::before{content:'✓';font-weight:800;color:#0e9f6e}
+#lockedView .al-tour-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:auto}
+#lockedView .al-tour-content>.al-link{margin-top:12px;text-align:left}
+#lockedView.al-first-creation #createVaultScreen{display:grid;grid-template-columns:minmax(0,1fr) minmax(250px,.72fr);gap:20px;align-items:start}
+#lockedView.al-first-creation #createVaultScreen .access-screen-head{grid-column:1/-1;text-align:center;margin-bottom:6px}
+#lockedView.al-first-creation #createVaultScreen .access-screen-head h1{font-size:32px;letter-spacing:-.04em}
+#lockedView.al-first-creation #createVaultScreen .access-screen-head p{max-width:600px}
+#lockedView.al-first-creation #createVaultScreen .access-card{grid-column:1;padding:27px 30px;border-radius:14px}
+#lockedView.al-first-creation #createVaultScreen .access-switch{grid-column:1/-1;margin-top:0}
+#lockedView.al-first-creation .al-first-vault-aside{grid-column:2;grid-row:2;display:grid;gap:18px}
+#lockedView .al-first-vault-aside[hidden],#lockedView .al-onboarding.hidden{display:none!important}
+#lockedView .al-first-security{background:linear-gradient(140deg,#10314d,#245474);color:#fff;padding:27px;border-radius:13px}
+#lockedView .al-first-security h3{font-size:18px;line-height:1.3;color:#fff;margin:8px 0}
+#lockedView .al-first-security p{font-size:12px;line-height:1.7;color:#d8e8f5}
+#lockedView .al-first-security .al-icon{color:#dbe9ff;background:#ffffff19}
+#lockedView .al-stats{display:flex;gap:10px;margin-top:23px}
+#lockedView .al-stats>div{flex:1;background:#ffffff15;border:1px solid #ffffff24;border-radius:10px;padding:12px}
+#lockedView .al-stats strong{display:block;font-size:22px;color:#fff}
+#lockedView .al-stats small{font-size:10px;color:#deedf9}
+#lockedView .al-first-vault-aside .al-card h3{margin:0 0 10px;font-size:15px}
+#lockedView .al-first-vault-aside .al-card p{font-size:12px;line-height:1.65;color:var(--muted)}
+#loginView .al-email-sent{text-align:center}
+#loginView .al-email-icon{display:grid;place-items:center;width:68px;height:68px;border-radius:17px;background:#e5f7ed;color:#17845f;font-size:30px;margin:0 auto 28px}
+#loginView .al-email-checklist{padding:7px 17px;border:1px solid var(--border,#e2e7f0);background:var(--surface,#fff);border-radius:11px;text-align:left;margin-bottom:24px}
+#loginView .al-email-checklist p{padding:11px 0;margin:0;border-bottom:1px solid var(--border,#e2e7f0)}
+#loginView .al-email-checklist p:last-child{border:0}
+#loginView .al-email-checklist strong{display:block;font-size:12px;color:var(--text-strong,#172b45)}
+#loginView .al-email-checklist span{display:block;font-size:11px;color:var(--muted,#607187);margin-top:4px}
+#loginView .al-email-note{font-size:11px;line-height:1.55;color:var(--muted);margin:13px 0}
+.al-privacy-dialog{width:min(760px,calc(100vw - 30px));max-height:min(85dvh,850px);background:var(--surface,#fff);color:var(--text-strong,#172b45);border:1px solid var(--border,#dfe6ef);border-radius:16px;padding:25px;box-shadow:0 25px 90px #0005}
+.al-privacy-dialog::backdrop{background:#0d253ab5}
+.al-privacy-dialog .al-public-policy-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.al-privacy-dialog .al-public-policy-head h2{font-size:19px;margin:0}
+.al-privacy-dialog .al-public-policy-head button{border:1px solid var(--border,#dfe6ef);border-radius:8px;padding:9px 13px;background:var(--surface,#fff);color:inherit;cursor:pointer}
+.al-privacy-dialog .al-policy-scroll{max-height:calc(min(85dvh,850px) - 110px)}
+[data-avenlock-home]{cursor:pointer;outline-offset:5px}
+[data-avenlock-home]:focus-visible{outline:2px solid #345edc;border-radius:9px}
+#approvedUI #alWorkspaceBack{font-size:12px;font-weight:700;background:transparent;color:var(--text-strong,#172b45);border:1px solid var(--border,#dfe6ef);border-radius:8px;padding:7px 12px;cursor:pointer;margin-right:9px}
+#approvedUI #alWorkspaceBack:hover{color:#345edc;border-color:#8ca4d5}
+#approvedUI #alWorkspaceBack[hidden]{display:none!important}
+html[data-theme="dark"] #lockedView .al-policy-top .al-pill{background:#25385d;color:#bcd2ff}
+html[data-theme="dark"] #lockedView .al-tour-badge{background:#273d5b;color:#bcd1ff}
+html[data-theme="dark"] #loginView .al-email-icon{background:#173d39;color:#9fe4c2}
+@media(max-width:850px){
+ #lockedView.al-onboarding-active .lock-main{width:min(100% - 24px,1230px);padding:15px 0 45px}
+ #lockedView .al-privacy-grid{grid-template-columns:1fr;padding:0 22px 26px}
+ #lockedView .al-privacy-aside{display:grid;grid-template-columns:1fr 1fr}
+ #lockedView .al-privacy-aside .al-consent-check,#lockedView .al-privacy-aside .al-policy-actions,#lockedView .al-privacy-aside .al-feedback,#lockedView .al-privacy-aside .al-caption{grid-column:1/-1}
+ #lockedView .al-tour-grid{grid-template-columns:1fr}
+ #lockedView .al-tour-visual{padding:28px}
+ #lockedView .al-tour-visual h2{font-size:24px}
+ #lockedView .al-tour-content{padding:31px}
+ #lockedView.al-first-creation #createVaultScreen{grid-template-columns:1fr}
+ #lockedView.al-first-creation .al-first-vault-aside{grid-column:1;grid-row:auto}
+ #lockedView.al-first-creation #createVaultScreen .access-card{grid-column:1}
+}
+@media(max-width:570px){
+ #lockedView .al-onboarding-head{padding:30px 18px 25px}
+ #lockedView .al-privacy-grid{padding:0 13px 22px;gap:12px}
+ #lockedView .al-privacy-aside{display:flex}
+ #lockedView .al-privacy-aside>.al-card{padding:15px}
+ #lockedView .al-policy-scroll{max-height:290px}
+ #lockedView .al-policy-top{align-items:flex-start}
+ #lockedView .al-pill{display:none}
+ #lockedView .al-tour-content{padding:26px 20px}
+ #lockedView.al-first-creation #createVaultScreen .access-card{padding:20px 16px}
+ #approvedUI #alWorkspaceBack{padding:6px;margin-right:4px}
+}
+/* Guard against older broad button/heading selectors overriding onboarding contrast. */
+#lockedView .al-tour-visual h2{color:#fff!important}
+#lockedView .al-tour-visual p{color:#c4d9e9!important}
+#lockedView .al-first-security p{color:#d8e8f5!important}
+#lockedView .al-policy-actions .al-link,#lockedView .al-tour-content>.al-link{
+ background:transparent!important;border:0!important;box-shadow:none!important;
+ color:#345edc!important;font-size:12px;min-height:34px;padding:8px 3px;
+}
+#lockedView .al-tour-content>.al-link{font-weight:650}
