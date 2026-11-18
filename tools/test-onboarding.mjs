@@ -12,7 +12,7 @@ const sql = readFileSync(new URL('supabase/migrations/006_privacy_consent.sql',r
 for (const id of ['privacyOnboardingScreen','tourOnboardingScreen','emailSentPanel','alPolicyAgree','alPolicyContinue','alTourNext','alTourBack','alTourSkip','alFirstVaultAside','alWorkspaceBack']) {
  assert(html.includes(`id="${id}"`),`Missing ${id}`);
 }
-assert(!/\splaceholder="/.test(html),'Visual input placeholders should be removed');
+assert(html.includes('id="itemTitle" maxlength="256" required="" placeholder="e.g. Personal email account"'),'New-item guidance placeholder missing');
 assert(auth.includes("route('sent')"),'Forgot password confirmation route missing');
 assert(auth.includes('resetPasswordForEmail('),'Supabase reset request missing');
 assert(auth.includes('startRecovery()'),'Recovery redirect missing');

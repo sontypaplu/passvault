@@ -4,6 +4,33 @@
 const paths={shield:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/>',layout:'<rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/>',key:'<circle cx="7.5" cy="15.5" r="5.5"/><path d="M12 12 21 3l-1 5-4 1-1 4"/>',star:'<path d="m12 2 3 6.4 7 .9-5 4.8 1.3 7-6.3-3.4-6.3 3.4 1.3-7-5-4.8 7-.9Z"/>',folder:'<path d="M3 7a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2v9H3Z"/>',settings:'<path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M19.3 13.5a8.5 8.5 0 0 0 0-3l2-1.5-2-3.4-2.4.9a8 8 0 0 0-2.5-1.5L14 2h-4l-.4 3A8 8 0 0 0 7.1 6.5l-2.4-.9-2 3.4 2 1.5a8.5 8.5 0 0 0 0 3l-2 1.5 2 3.4 2.4-.9A8 8 0 0 0 9.6 19l.4 3h4l.4-3a8 8 0 0 0 2.5-1.5l2.4.9 2-3.4Z"/>',sparkles:'<path d="m12 2 2.5 7.5L22 12l-7.5 2.5L12 22l-2.5-7.5L2 12l7.5-2.5Z"/>',search:'<circle cx="10.8" cy="10.8" r="7.3"/><path d="m16 16 5 5"/>',plus:'<path d="M12 5v14M5 12h14"/>',moon:'<path d="M20.9 13.2A9 9 0 0 1 10.8 3.1 9 9 0 1 0 20.9 13.2Z"/>',sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M19 5l-1.5 1.5m-11 11L5 19"/>',lock:'<rect x="5" y="11" width="14" height="11" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',menu:'<path d="M4 6h16M4 12h16M4 18h16"/>',more:'<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>',chevrons:'<path d="m8 10 4 4 4-4"/>',info:'<circle cx="12" cy="12" r="10"/><path d="M12 11v6m0-10h.01"/>',check:'<path d="m5 12 4 4L19 6"/>',copy:'<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/>',refresh:'<path d="M20 7v5h-5M4 17v-5h5"/><path d="M5.5 9A7 7 0 0 1 18 7l2 5M4 12l2 5a7 7 0 0 0 12.5-2"/>',download:'<path d="M12 3v13m-5-5 5 5 5-5M4 18v3h16v-3"/>',cloud:'<path d="M5 18a4 4 0 1 1 1-7.9 6.5 6.5 0 0 1 12.7 1.4A3.5 3.5 0 1 1 19 18Z"/>','shield-check':'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/>',trash:'<path d="M4 7h16M10 3h4m4 4-1 14H7L6 7m4 3v8m4-8v8"/>',edit:'<path d="m15 5 4 4M4 20l4.5-1 11-11a2.1 2.1 0 0 0-4-4l-11 11L4 20Z"/>',x:'<path d="M5 5l14 14M19 5 5 19"/>',user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>','user-plus':'<circle cx="10" cy="8" r="4"/><path d="M2 21a8 8 0 0 1 16 0M19 8v8m-4-4h8"/>',eye:'<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>',alert:'<path d="m12 3 10 18H2L12 3Z"/><path d="M12 9v5m0 4h.01"/>',arrow:'<path d="M5 12h14m-6-6 6 6-6 6"/>','wallet':'<rect x="3" y="6" width="18" height="15" rx="2"/><path d="M3 9V5a2 2 0 0 1 2-2h13m1 8h2v5h-5a2.5 2.5 0 1 1 0-5h3"/>','briefcase':'<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M8 7V4h8v3M2 13h20"/>','heart':'<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z"/>','book':'<path d="M3 4.5h7a3 3 0 0 1 3 3V21a3 3 0 0 0-3-3H3V4.5Zm10 3a3 3 0 0 1 3-3h5V18h-5a3 3 0 0 0-3 3"/>','globe':'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c-5 5-5 13 0 18M12 3c5 5 5 13 0 18"/>','shopping':'<path d="M4 9h16l-1 12H5L4 9Zm4 0V6a4 4 0 0 1 8 0v3"/>'};
 const icon=(id)=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths[id]||paths.info}</svg>`;
 const $=(id)=>document.getElementById(id);
+
+// Scroll isolation for native dialogs, including item details opened from a basket.
+// No encrypted state, authentication state, or dialog event handlers are modified.
+(function installDialogScrollIsolation(){
+ let saved=null;
+ function refresh(){
+  const active=!!document.querySelector('dialog[open]');
+  const body=document.body,html=document.documentElement;
+  if(active&&!saved){
+   saved={y:window.scrollY,bodyPosition:body.style.position,bodyTop:body.style.top,
+    bodyLeft:body.style.left,bodyRight:body.style.right,bodyWidth:body.style.width,
+    htmlOverflow:html.style.overflow};
+   body.style.position='fixed';body.style.top=`-${saved.y}px`;
+   body.style.left='0';body.style.right='0';body.style.width='100%';
+   html.style.overflow='hidden';
+  }else if(!active&&saved){
+   const old=saved;saved=null;
+   body.style.position=old.bodyPosition;body.style.top=old.bodyTop;
+   body.style.left=old.bodyLeft;body.style.right=old.bodyRight;
+   body.style.width=old.bodyWidth;html.style.overflow=old.htmlOverflow;
+   window.scrollTo(0,old.y);
+  }
+ }
+ new MutationObserver(refresh).observe(document.body,{subtree:true,attributes:true,attributeFilter:['open'],childList:true});
+ refresh();
+})();
+
 // Build user-facing content with DOM APIs; user-provided text is never HTML.
 const el=(tag,css='',text)=>{const n=document.createElement(tag);if(css)n.className=css;if(text!==undefined)n.textContent=String(text);return n;};
 const svgNS='http://www.w3.org/2000/svg';
@@ -42,6 +69,13 @@ const vaults=()=>window.AvenlockLocal?.active
  : cloud.loaded?cloud.vaults.map(v=>({id:v.vault_id,name:v.label})):[];
 const activeVault=()=>cloud.selectedVaultId;
 function findItem(id){return getItems().find(x=>x.id===id);}
+function setEditorPasswordReveal(visible){
+ const input=$('itemPassword'),button=$('editorReveal');
+ input.type=visible?'text':'password';
+ button.querySelector('.pv-reveal-label').textContent=visible?'Hide':'Show';
+ button.setAttribute('aria-label',(visible?'Hide':'Show')+' password');
+ button.setAttribute('aria-pressed',String(visible));
+}
 function basicWeak(password){return (password||'').length<12 || /^(password|1234|qwerty|admin|welcome)/i.test(password||'') || /^(.)\1{5,}$/.test(password||'');}
 function computeHealth(){
  const logins=getItems().filter(x=>itemKind(x)==='login');const counts=new Map();
@@ -570,7 +604,7 @@ function openEditor(id=null,prepass='',targetBasket='everyday'){
  $('approvedTags').value=Array.isArray(x?.tags)?x.tags.join(', '):'';
  for(const f of (x?.customFields||[]))addCustom(f.label,f.value,f.type||'secret');
  $('approvedEditorError').textContent='';$('approvedEditorTitle').textContent=x?'Edit item':'New item';
- $('itemPassword').type='password';$('editorReveal').textContent='Show';changeKind(kind);
+ setEditorPasswordReveal(false);changeKind(kind);
  $('editorDialog').showModal();renderTagSuggestions();$('itemTitle').focus();
 }
 // Quick Access never searches passwords, secure-note bodies, card numbers, or custom-field values.
@@ -771,7 +805,7 @@ function clearGeneratedDisplays(){
  commandClear();detailNoteClose();$('pvTagSuggestions').replaceChildren();
  quick='';generated='';$('quickPassword').textContent='';$('approvedGeneratedPassword').textContent='';
  for(const id of ['itemPassword','itemContent','itemCardnumber','approvedCvv'])$(id).value='';
- $('itemPassword').type='password';$('editorReveal').textContent='Show';
+ setEditorPasswordReveal(false);
  $('detailBody').replaceChildren();
 }
 window.pvClearApprovedSecrets=clearGeneratedDisplays;
@@ -982,7 +1016,7 @@ $('editorForm').addEventListener('submit',saveItem);
 $('deleteItem').addEventListener('click',deleteItem);
 $('editItem').addEventListener('click',()=>{const id=selected;$('detailDialog').close();openEditor(id);});
 $('favoriteDetail').addEventListener('click',()=>{const id=selected;$('detailDialog').close();toggleFavorite(id);});
-$('editorReveal').addEventListener('click',()=>{const input=$('itemPassword');input.type=input.type==='password'?'text':'password';$('editorReveal').textContent=input.type==='password'?'Show':'Hide';});
+$('editorReveal').addEventListener('click',()=>setEditorPasswordReveal($('itemPassword').type==='password'));
 $('approvedAddCustom').addEventListener('click',()=>addCustom());
 function renderSyncControls(){
  const enabled=isCloudSyncAllowed();
